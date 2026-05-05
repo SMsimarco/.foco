@@ -382,27 +382,31 @@ body {
   position: absolute;
   left: 2px;
   right: 2px;
-  border: 1px dashed #27272A;
+  border: 1px solid #3F3F46;
   border-radius: 6px;
-  background: #111;
+  background: #18181B;
   z-index: 5;
-  padding: 6px 8px;
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.6);
 }
 
 .ghost-name-inp {
   width: 100%;
   background: transparent;
   border: none;
+  border-bottom: 1px solid #27272A;
   outline: none;
   color: #fff;
-  font-size: 11px;
+  font-size: 12px;
   font-family: 'Geist', sans-serif;
-  padding: 0;
-  margin-bottom: 6px;
+  padding: 4px 0;
   -webkit-appearance: none;
 }
 
-.ghost-name-inp::placeholder { color: #3F3F46; }
+.ghost-name-inp::placeholder { color: #52525B; }
 
 .ghost-times {
   display: flex;

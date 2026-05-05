@@ -512,7 +512,7 @@ function buildEventEl(ev, date) {
 
   const timeEl = document.createElement('span')
   timeEl.className   = 'ev-time'
-  timeEl.textContent = `${ev.start_time}–${ev.end_time}`
+  timeEl.textContent = `${formatTime(sh, sm)}–${formatTime(eh, em)}`
 
   const delBtn = document.createElement('button')
   delBtn.className   = 'ev-del'
@@ -581,13 +581,12 @@ function showGhost(col, y, iso) {
   gh.style.height = `${Math.max(SLOT_H, toY(endH, endM) - toY(t.h, t.m))}px`
 
   gh.innerHTML = `
-    <input class="ghost-name-inp" type="text" placeholder="nombre del evento…" autocomplete="off">
     <div class="ghost-times">
       <input class="ghost-time-inp" type="text" value="${formatTime(t.h, t.m)}" placeholder="09:00">
       <span class="ghost-sep">→</span>
       <input class="ghost-time-inp" type="text" value="${formatTime(endH, endM)}" placeholder="10:00">
-      <button class="ghost-ok">✓</button>
     </div>
+    <input class="ghost-name-inp" type="text" placeholder="nombre del evento… ↵ para guardar" autocomplete="off">
   `
 
   col.appendChild(gh)
@@ -595,7 +594,6 @@ function showGhost(col, y, iso) {
 
   const nameIn           = gh.querySelector('.ghost-name-inp')
   const [startIn, endIn] = gh.querySelectorAll('.ghost-time-inp')
-  const okBtn            = gh.querySelector('.ghost-ok')
 
   setTimeout(() => nameIn.focus(), 30)
 
@@ -609,11 +607,12 @@ function showGhost(col, y, iso) {
     if (ev) renderWeek()
   }
 
-  okBtn.onclick = save
   nameIn.addEventListener('keydown', e => {
     if (e.key === 'Enter') save()
     if (e.key === 'Escape') gh.remove()
   })
+  startIn.addEventListener('keydown', e => { if (e.key === 'Escape') gh.remove() })
+  endIn.addEventListener('keydown',   e => { if (e.key === 'Escape') gh.remove() })
 }
 
 /* ─────────────────────────────────────────
