@@ -432,17 +432,20 @@ body {
 
 .ghost-sep { font-size: 10px; color: #27272A; }
 
-.ghost-ok {
+.ghost-close {
   background: none;
   border: none;
-  color: #6366F1;
-  font-size: 11px;
-  font-weight: 500;
+  color: #52525B;
+  font-size: 16px;
   cursor: pointer;
   font-family: 'Geist', sans-serif;
   margin-left: auto;
-  padding: 0;
+  padding: 0 2px;
+  line-height: 1;
+  transition: color 0.12s;
 }
+
+.ghost-close:hover { color: #F43F5E; }
 
 /* BOTTOM NAV */
 #bottom-nav {

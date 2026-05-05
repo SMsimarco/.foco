@@ -585,8 +585,9 @@ function showGhost(col, y, iso) {
       <input class="ghost-time-inp" type="text" value="${formatTime(t.h, t.m)}" placeholder="09:00">
       <span class="ghost-sep">→</span>
       <input class="ghost-time-inp" type="text" value="${formatTime(endH, endM)}" placeholder="10:00">
+      <button class="ghost-close">×</button>
     </div>
-    <input class="ghost-name-inp" type="text" placeholder="nombre del evento… ↵ para guardar" autocomplete="off">
+    <input class="ghost-name-inp" type="text" placeholder="nombre del evento… ↵ guardar" autocomplete="off">
   `
 
   col.appendChild(gh)
@@ -594,6 +595,15 @@ function showGhost(col, y, iso) {
 
   const nameIn           = gh.querySelector('.ghost-name-inp')
   const [startIn, endIn] = gh.querySelectorAll('.ghost-time-inp')
+  const closeBtn         = gh.querySelector('.ghost-close')
+
+  closeBtn.onclick = (e) => { e.stopPropagation(); gh.remove() }
+
+  // Cerrar al tocar fuera
+  const onOutsideClick = (e) => {
+    if (!gh.contains(e.target)) { gh.remove(); document.removeEventListener('click', onOutsideClick, true) }
+  }
+  setTimeout(() => document.addEventListener('click', onOutsideClick, true), 50)
 
   setTimeout(() => nameIn.focus(), 30)
 
