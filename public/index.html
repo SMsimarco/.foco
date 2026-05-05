@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#09090B">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <title>foco.</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500&family=Instrument+Serif:ital@1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- AUTH -->
+  <div id="auth-screen" class="auth-screen">
+    <div class="auth-card">
+      <div class="auth-logo">foco.</div>
+      <div class="auth-sub">Organizá tu semana.</div>
+      <div class="auth-fields">
+        <input id="auth-name" class="auth-input hidden" type="text" placeholder="tu nombre" autocomplete="name">
+        <input id="auth-email" class="auth-input" type="email" placeholder="email" autocomplete="email">
+        <input id="auth-password" class="auth-input" type="password" placeholder="contraseña" autocomplete="current-password">
+      </div>
+      <p id="auth-error" class="auth-error"></p>
+      <button id="auth-btn" class="auth-btn">Entrar</button>
+      <div class="auth-toggle">
+        <span id="auth-toggle-text">¿No tenés cuenta?</span>
+        <button class="auth-toggle-btn" onclick="toggleAuthMode()">
+          <span id="auth-toggle-label">Registrate</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- HEADER -->
+  <header id="header" class="hidden">
+    <span id="logo">foco.</span>
+    <div id="week-nav">
+      <button onclick="prevWeek()">‹</button>
+      <span id="week-label">…</span>
+      <button onclick="nextWeek()">›</button>
+    </div>
+  </header>
+
+  <!-- INPUT BAR -->
+  <div id="input-bar" class="hidden">
+    <div id="input-pill">
+      <span class="icon">✦</span>
+      <input id="nl-input" type="text"
+        placeholder="reunión mañana de 10 a 12  ·  dentista 22 de junio a las 14"
+        autocomplete="off" spellcheck="false">
+      <span id="enter-hint">↵ agregar</span>
+    </div>
+  </div>
+
+  <!-- CHIPS -->
+  <div id="chips-bar"></div>
+
+  <!-- CALENDAR AREA -->
+  <div id="cal-area" class="hidden">
+
+    <!-- SEMANA -->
+    <div class="view active" id="view-semana">
+      <div id="day-headers"></div>
+      <div id="grid-wrap">
+        <div id="time-gutter"></div>
+        <div id="day-columns"></div>
+      </div>
+    </div>
+
+    <!-- MES -->
+    <div class="view" id="view-mes">
+      <div class="month-nav-row">
+        <button class="month-nav-btn" onclick="prevMonth()">‹</button>
+        <span class="month-title" id="month-title"></span>
+        <button class="month-nav-btn" onclick="nextMonth()">›</button>
+      </div>
+      <div class="month-dow-row" id="month-dow-row"></div>
+      <div class="month-grid-wrap">
+        <div class="month-grid" id="month-grid"></div>
+      </div>
+    </div>
+
+    <!-- SUGERENCIAS -->
+    <div class="view" id="view-sugerencias">
+      <div class="suggestions-view" id="suggestions-view"></div>
+    </div>
+
+  </div>
+
+  <!-- BOTTOM NAV -->
+  <nav id="bottom-nav" class="hidden">
+    <button class="nav-btn active" id="nav-semana" onclick="switchView('semana')">
+      <span class="nav-icon">▦</span>
+      <span>Semana</span>
+    </button>
+    <button class="nav-btn" id="nav-mes" onclick="switchView('mes')">
+      <span class="nav-icon">◫</span>
+      <span>Mes</span>
+    </button>
+    <button class="nav-btn" id="nav-sugerencias" onclick="switchView('sugerencias')">
+      <span class="nav-icon">✦</span>
+      <span>Sugerencias</span>
+    </button>
+  </nav>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
