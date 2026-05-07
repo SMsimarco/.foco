@@ -5,10 +5,25 @@ const { createClient }  = supabase
 const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
 
 /* ── Constantes ── */
-const SLOT_H     = 48   // px por hora → 24 * 48 = 1152px total
+const SLOT_H     = 48
 const DAYS_ES    = ['Lunes','Martes','Miércoles','Jueves','Viernes','Sábado','Domingo']
 const DAYS_SHORT = ['Lun','Mar','Mié','Jue','Vie','Sáb','Dom']
 const MONTHS_ES  = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre']
+
+const SUPABASE_ERRORS = {
+  'Invalid login credentials':                      'Email o contraseña incorrectos.',
+  'Password should be at least 6 characters':       'La contraseña debe tener al menos 6 caracteres.',
+  'Unable to validate email address: invalid format':'El formato del email no es válido.',
+  'User already registered':                        'Ya existe una cuenta con ese email.',
+  'Email not confirmed':                            'Confirmá tu email antes de entrar.',
+  'Email rate limit exceeded':                      'Demasiados intentos. Esperá un momento.',
+}
+function translateError(msg) {
+  for (const [key, val] of Object.entries(SUPABASE_ERRORS)) {
+    if (msg.includes(key)) return val
+  }
+  return msg
+}
 
 /* ── Estado ── */
 let currentUser    = null
@@ -19,6 +34,8 @@ let currentView    = 'semana'
 let eventsCache    = {}
 let nowLineTimer   = null
 let authMode       = 'login'
+let editingEvent   = null
+let editingDate    = null
 
 /* ─────────────────────────────────────────
    HELPERS
@@ -237,6 +254,7 @@ function toggleAuthMode() {
   authMode = authMode === 'login' ? 'register' : 'login'
   const isReg = authMode === 'register'
   document.getElementById('auth-name').classList.toggle('hidden', !isReg)
+  document.getElementById('auth-forgot').classList.toggle('hidden', isReg)
   document.getElementById('auth-btn').textContent = isReg ? 'Crear cuenta' : 'Entrar'
   document.getElementById('auth-toggle-text').textContent = isReg ? '¿Ya tenés cuenta?' : '¿No tenés cuenta?'
   document.getElementById('auth-toggle-label').textContent = isReg ? 'Iniciá sesión' : 'Registrate'
@@ -252,9 +270,21 @@ async function handleAuth(e) {
   const errorEl  = document.getElementById('auth-error')
   const btn      = document.getElementById('auth-btn')
 
-  if (!email || !password) { errorEl.textContent = 'Completá todos los campos.'; return }
+  if (!email || !password) {
+    errorEl.style.color = '#F43F5E'
+    errorEl.textContent = 'Completá todos los campos.'
+    return
+  }
 
-  btn.disabled = true
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+  if (!emailRegex.test(email)) {
+    errorEl.style.color = '#F43F5E'
+    errorEl.textContent = 'El formato del email no es válido.'
+    return
+  }
+
+  btn.disabled    = true
+  btn.textContent = authMode === 'login' ? 'Entrando…' : 'Creando cuenta…'
   errorEl.textContent = ''
 
   try {
@@ -281,10 +311,36 @@ async function handleAuth(e) {
     }
   } catch (err) {
     errorEl.style.color = '#F43F5E'
-    errorEl.textContent = err.message
+    errorEl.textContent = translateError(err.message)
   } finally {
-    btn.disabled = false
+    btn.disabled    = false
+    btn.textContent = authMode === 'login' ? 'Entrar' : 'Crear cuenta'
   }
+}
+
+async function forgotPassword() {
+  const email   = document.getElementById('auth-email').value.trim()
+  const errorEl = document.getElementById('auth-error')
+  if (!email) {
+    errorEl.style.color = '#F43F5E'
+    errorEl.textContent = 'Ingresá tu email primero.'
+    return
+  }
+  await db.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin })
+  errorEl.style.color = '#10B981'
+  errorEl.textContent = 'Te enviamos un email para recuperar tu contraseña.'
+}
+
+function togglePassword() {
+  const inp  = document.getElementById('auth-password')
+  const btn  = document.querySelector('.auth-eye-btn')
+  const show = inp.type === 'password'
+  inp.type        = show ? 'text' : 'password'
+  btn.textContent = show ? 'ocultar' : 'ver'
+}
+
+async function handleLogout() {
+  if (confirm('¿Cerrar sesión?')) await db.auth.signOut()
 }
 
 async function afterLogin() {
@@ -299,7 +355,20 @@ function showApp() {
   ;['header','input-bar','cal-area','bottom-nav'].forEach(id =>
     document.getElementById(id).classList.remove('hidden')
   )
-  renderWeek()
+  const hash = window.location.hash.slice(1)
+  const view = ['semana', 'mes', 'sugerencias'].includes(hash) ? hash : 'semana'
+  if (view !== 'semana') {
+    currentView = view
+    document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'))
+    document.getElementById(`nav-${view}`).classList.add('active')
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'))
+    document.getElementById(`view-${view}`).classList.add('active')
+    document.getElementById('week-nav').style.visibility = 'hidden'
+    if (view === 'mes') buildMonth()
+    else buildSuggestions()
+  } else {
+    renderWeek()
+  }
 }
 
 function showAuth() {
@@ -308,6 +377,53 @@ function showAuth() {
     document.getElementById(id).classList.add('hidden')
   )
   document.getElementById('chips-bar').classList.remove('show')
+  history.replaceState(null, '', window.location.pathname)
+}
+
+/* ─────────────────────────────────────────
+   EDIT MODAL
+───────────────────────────────────────── */
+function openEditModal(ev, date) {
+  editingEvent = ev
+  editingDate  = date
+  document.getElementById('edit-title').value = ev.title
+  document.getElementById('edit-start').value = ev.start_time
+  document.getElementById('edit-end').value   = ev.end_time
+  document.getElementById('edit-done-btn').textContent = ev.done ? '↩ Marcar pendiente' : '✓ Marcar hecho'
+  document.getElementById('edit-modal').classList.remove('hidden')
+  setTimeout(() => document.getElementById('edit-title').focus(), 50)
+}
+
+function closeEditModal() {
+  document.getElementById('edit-modal').classList.add('hidden')
+  editingEvent = null
+  editingDate  = null
+}
+
+async function saveEditModal() {
+  if (!editingEvent || !editingDate) return
+  const title     = document.getElementById('edit-title').value.trim()
+  const startTime = document.getElementById('edit-start').value.trim()
+  const endTime   = document.getElementById('edit-end').value.trim()
+  if (!title) return
+  const { error } = await db.from('events')
+    .update({ title, start_time: startTime, end_time: endTime })
+    .eq('id', editingEvent.id)
+  if (!error) {
+    editingEvent.title      = title
+    editingEvent.start_time = startTime
+    editingEvent.end_time   = endTime
+  }
+  closeEditModal()
+  renderWeek()
+}
+
+async function toggleDoneFromModal() {
+  if (!editingEvent || !editingDate) return
+  await toggleDone(editingEvent.id, editingDate)
+  document.getElementById('edit-done-btn').textContent = editingEvent.done ? '↩ Marcar pendiente' : '✓ Marcar hecho'
+  closeEditModal()
+  renderWeek()
 }
 
 /* ─────────────────────────────────────────
@@ -401,7 +517,7 @@ function updateChips(raw) {
 /* ─────────────────────────────────────────
    RENDER SEMANA
 ───────────────────────────────────────── */
-function renderWeek() {
+function renderWeek(scrollTo = null) {
   const dates = getWeekDates(weekOffset)
   const mon = dates[0], sun = dates[6]
 
@@ -431,16 +547,16 @@ function renderWeek() {
     headersEl.appendChild(hdr)
   })
 
-  buildCalGrid(dates)
+  buildCalGrid(dates, scrollTo)
 }
 
-function buildCalGrid(dates) {
+function buildCalGrid(dates, scrollTo = null) {
   const gutter   = document.getElementById('time-gutter')
   const colsWrap = document.getElementById('day-columns')
   gutter.innerHTML   = ''
   colsWrap.innerHTML = ''
 
-  // Gutter: 24 celdas de 64px
+  // Gutter: 24 celdas de 48px
   for (let h = 0; h < 24; h++) {
     const cell = document.createElement('div')
     cell.className = 'time-cell'
@@ -458,7 +574,6 @@ function buildCalGrid(dates) {
     col.className = `day-col${isToday(d) ? ' today-col' : ''}`
     col.dataset.iso = iso
 
-    // Líneas de hora
     for (let h = 0; h < 24; h++) {
       const line = document.createElement('div')
       line.className = 'hour-line'
@@ -487,7 +602,11 @@ function buildCalGrid(dates) {
     colsWrap.appendChild(col)
   })
 
-  scrollToNow()
+  if (scrollTo) {
+    scrollToTime(scrollTo.h, scrollTo.m)
+  } else {
+    scrollToNow()
+  }
 }
 
 function buildEventEl(ev, date) {
@@ -519,6 +638,7 @@ function buildEventEl(ev, date) {
   delBtn.textContent = '×'
   delBtn.onclick = async (e) => {
     e.stopPropagation()
+    if (!confirm(`¿Eliminar "${ev.title}"?`)) return
     await deleteEvent(ev.id, date)
     renderWeek()
   }
@@ -527,10 +647,7 @@ function buildEventEl(ev, date) {
   if (height > 30) el.appendChild(timeEl)
   el.appendChild(delBtn)
 
-  el.onclick = async () => {
-    await toggleDone(ev.id, date)
-    el.classList.toggle('done', ev.done)
-  }
+  el.onclick = () => openEditModal(ev, date)
 
   return el
 }
@@ -567,6 +684,12 @@ function scrollToNow() {
   wrap.scrollTop = Math.max(0, top - 2 * SLOT_H)
 }
 
+function scrollToTime(h, m) {
+  const wrap = document.getElementById('grid-wrap')
+  if (!wrap) return
+  wrap.scrollTop = Math.max(0, toY(h, m) - 2 * SLOT_H)
+}
+
 /* ── Ghost block ── */
 function showGhost(col, y, iso) {
   document.querySelectorAll('.ghost-block').forEach(g => g.remove())
@@ -599,7 +722,6 @@ function showGhost(col, y, iso) {
 
   closeBtn.onclick = (e) => { e.stopPropagation(); gh.remove() }
 
-  // Cerrar al tocar fuera
   const onOutsideClick = (e) => {
     if (!gh.contains(e.target)) { gh.remove(); document.removeEventListener('click', onOutsideClick, true) }
   }
@@ -614,7 +736,7 @@ function showGhost(col, y, iso) {
     if (!title) { gh.remove(); return }
     gh.remove()
     const ev = await addEvent(iso, title, startTime, endTime)
-    if (ev) renderWeek()
+    if (ev) renderWeek({ h: t.h, m: t.m })
   }
 
   nameIn.addEventListener('keydown', e => {
@@ -685,15 +807,24 @@ async function buildMonth() {
     cell.appendChild(num)
 
     if (events.length > 0) {
-      const dotsEl = document.createElement('div')
-      dotsEl.className = 'month-dots'
-      events.slice(0, 6).forEach(ev => {
-        const dot = document.createElement('div')
-        dot.className        = 'month-dot'
-        dot.style.background = eventColor(ev.title)
-        dotsEl.appendChild(dot)
+      const labelsEl = document.createElement('div')
+      labelsEl.className = 'month-events'
+      events.slice(0, 2).forEach(ev => {
+        const lbl = document.createElement('div')
+        lbl.className       = 'month-event-label'
+        lbl.style.background  = eventColor(ev.title) + '22'
+        lbl.style.borderLeft  = `2px solid ${eventColor(ev.title)}`
+        lbl.style.color       = eventColor(ev.title)
+        lbl.textContent       = ev.title
+        labelsEl.appendChild(lbl)
       })
-      cell.appendChild(dotsEl)
+      if (events.length > 2) {
+        const more = document.createElement('div')
+        more.className   = 'month-event-more'
+        more.textContent = `+${events.length - 2} más`
+        labelsEl.appendChild(more)
+      }
+      cell.appendChild(labelsEl)
 
       const barWrap = document.createElement('div')
       barWrap.className = 'month-load-bar'
@@ -786,17 +917,24 @@ async function buildSuggestions() {
 
   sv.appendChild(buildAISection(allEvents))
 
+  const tryGenerateSummary = (body) => {
+    body.className   = 'card-body loading'
+    body.textContent = 'Analizando tu semana…'
+    generateWeeklySummary(allEvents)
+      .then(text => { body.textContent = text; body.classList.remove('loading') })
+      .catch(() => {
+        body.classList.remove('loading')
+        body.innerHTML = 'No se pudo generar el resumen. <button class="ai-retry-btn">↻ Reintentar</button>'
+        body.querySelector('.ai-retry-btn').onclick = () => tryGenerateSummary(body)
+      })
+  }
+
+  const body = summaryCard.querySelector('.card-body')
   if (allEvents.length > 0) {
-    generateWeeklySummary(allEvents).then(text => {
-      const body = summaryCard.querySelector('.card-body')
-      if (body) { body.textContent = text; body.classList.remove('loading') }
-    }).catch(() => {
-      const body = summaryCard.querySelector('.card-body')
-      if (body) body.textContent = 'No se pudo generar el resumen.'
-    })
+    tryGenerateSummary(body)
   } else {
-    const body = summaryCard.querySelector('.card-body')
-    if (body) { body.textContent = 'Agregá eventos a tu semana para ver el análisis.'; body.classList.remove('loading') }
+    body.textContent = 'Agregá eventos a tu semana para ver el análisis.'
+    body.classList.remove('loading')
   }
 }
 
@@ -838,16 +976,21 @@ function buildAISection(events) {
     loading.textContent = 'Analizando…'
     wrapper.appendChild(loading)
 
-    try {
-      const text = await askAI(msg, events)
-      loading.textContent = text
-      loading.style.color = ''
-    } catch {
-      loading.textContent = 'Error al conectar con la IA.'
+    const tryAsk = () => {
+      askAI(msg, events)
+        .then(text => { loading.textContent = text; loading.style.color = '' })
+        .catch(() => {
+          loading.innerHTML = 'Error al conectar con la IA. <button class="ai-retry-btn">↻ Reintentar</button>'
+          loading.querySelector('.ai-retry-btn').onclick = () => {
+            loading.textContent = 'Analizando…'
+            loading.style.color = '#3F3F46'
+            tryAsk()
+          }
+        })
+        .finally(() => { sendBtn.disabled = false; sendBtn.textContent = '✦' })
     }
 
-    sendBtn.disabled    = false
-    sendBtn.textContent = '✦'
+    tryAsk()
     input.value = ''
   }
 
@@ -877,7 +1020,7 @@ async function generateWeeklySummary(events) {
   })
 
   const data = await res.json()
-  if (data.error) throw new Error(data.error)
+  if (!res.ok || data.type === 'error') throw new Error(data.error?.message || 'Error de API')
   return data.content[0].text
 }
 
@@ -898,7 +1041,7 @@ async function askAI(userMessage, events) {
   })
 
   const data = await res.json()
-  if (data.error) throw new Error(data.error)
+  if (!res.ok || data.type === 'error') throw new Error(data.error?.message || 'Error de API')
   return data.content[0].text
 }
 
@@ -907,6 +1050,7 @@ async function askAI(userMessage, events) {
 ───────────────────────────────────────── */
 function switchView(view) {
   currentView = view
+  history.replaceState(null, '', '#' + view)
   document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'))
   document.getElementById(`nav-${view}`).classList.add('active')
   document.querySelectorAll('.view').forEach(v => v.classList.remove('active'))
@@ -940,6 +1084,14 @@ async function init() {
   document.getElementById('auth-btn').onclick = handleAuth
   document.getElementById('auth-password').addEventListener('keydown', handleAuth)
 
+  // Edit modal keyboard shortcuts
+  document.getElementById('edit-modal').addEventListener('keydown', e => {
+    if (e.key === 'Escape') closeEditModal()
+  })
+  document.getElementById('edit-title').addEventListener('keydown', e => {
+    if (e.key === 'Enter') saveEditModal()
+  })
+
   const mainInput = document.getElementById('nl-input')
   mainInput.addEventListener('input', e => updateChips(e.target.value))
   mainInput.addEventListener('keydown', async e => {
@@ -964,15 +1116,16 @@ async function init() {
       await loadWeek()
     }
 
-    if (currentView === 'semana') renderWeek()
+    if (currentView === 'semana') renderWeek({ h: parsed.h1, m: parsed.m1 })
     else if (currentView === 'sugerencias') buildSuggestions()
   })
 
+  // Logo: doble click para logout (easter egg conservado)
   let logoTaps = 0
   document.getElementById('logo').addEventListener('click', () => {
     logoTaps++
     if (logoTaps === 1) setTimeout(() => { logoTaps = 0 }, 500)
-    if (logoTaps >= 2) { logoTaps = 0; if (confirm('¿Cerrar sesión?')) db.auth.signOut() }
+    if (logoTaps >= 2) { logoTaps = 0; handleLogout() }
   })
 
   const { data: { session } } = await db.auth.getSession()

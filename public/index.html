@@ -23,7 +23,13 @@
       <div class="auth-fields">
         <input id="auth-name" class="auth-input hidden" type="text" placeholder="tu nombre" autocomplete="name">
         <input id="auth-email" class="auth-input" type="email" placeholder="email" autocomplete="email">
-        <input id="auth-password" class="auth-input" type="password" placeholder="contraseña" autocomplete="current-password">
+        <div class="auth-input-wrap">
+          <input id="auth-password" class="auth-input" type="password" placeholder="contraseña" autocomplete="current-password">
+          <button type="button" class="auth-eye-btn" onclick="togglePassword()">ver</button>
+        </div>
+      </div>
+      <div id="auth-forgot" class="auth-forgot">
+        <button type="button" class="auth-forgot-btn" onclick="forgotPassword()">¿Olvidaste tu contraseña?</button>
       </div>
       <p id="auth-error" class="auth-error"></p>
       <button id="auth-btn" class="auth-btn">Entrar</button>
@@ -36,6 +42,26 @@
     </div>
   </div>
 
+  <!-- EDIT MODAL -->
+  <div id="edit-modal" class="modal-overlay hidden" onclick="closeEditModal()">
+    <div class="modal-card" onclick="event.stopPropagation()">
+      <div class="modal-header">
+        <span class="modal-title">Editar evento</span>
+        <button class="modal-close" onclick="closeEditModal()">×</button>
+      </div>
+      <input id="edit-title" class="modal-input" type="text" placeholder="Título del evento" autocomplete="off">
+      <div class="modal-time-row">
+        <input id="edit-start" class="modal-time-inp" type="text" placeholder="09:00">
+        <span class="modal-arrow">→</span>
+        <input id="edit-end" class="modal-time-inp" type="text" placeholder="10:00">
+      </div>
+      <div class="modal-actions">
+        <button id="edit-done-btn" class="card-btn secondary" onclick="toggleDoneFromModal()">✓ Marcar hecho</button>
+        <button class="card-btn primary" onclick="saveEditModal()">Guardar</button>
+      </div>
+    </div>
+  </div>
+
   <!-- HEADER -->
   <header id="header" class="hidden">
     <span id="logo">foco.</span>
@@ -44,6 +70,7 @@
       <span id="week-label">…</span>
       <button onclick="nextWeek()">›</button>
     </div>
+    <button id="logout-btn" class="logout-btn" onclick="handleLogout()" title="Salir">↪</button>
   </header>
 
   <!-- INPUT BAR -->

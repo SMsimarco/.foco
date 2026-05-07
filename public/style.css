@@ -632,3 +632,171 @@ body {
 .ai-send:disabled { opacity: 0.4; cursor: not-allowed; }
 .ai-response { font-size: 13px; color: #71717A; line-height: 1.7; padding: 14px; background: #111114; border: 1px solid #18181B; border-radius: 12px; animation: fadeIn 0.3s ease; }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+
+/* ── LOGOUT BTN ── */
+.logout-btn {
+  background: none;
+  border: none;
+  color: #3F3F46;
+  font-size: 15px;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-family: 'Geist', sans-serif;
+  transition: all 0.12s;
+  min-width: 36px;
+  text-align: right;
+}
+.logout-btn:hover { color: #F43F5E; background: #18181B; }
+
+/* ── PASSWORD TOGGLE ── */
+.auth-input-wrap {
+  position: relative;
+}
+.auth-input-wrap .auth-input {
+  padding-right: 68px;
+}
+.auth-eye-btn {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: #52525B;
+  font-size: 11px;
+  font-family: 'Geist', sans-serif;
+  cursor: pointer;
+  padding: 4px 6px;
+  border-radius: 4px;
+  transition: color 0.12s;
+  letter-spacing: 0.02em;
+}
+.auth-eye-btn:hover { color: #fff; }
+
+/* ── FORGOT PASSWORD ── */
+.auth-forgot {
+  text-align: center;
+  margin-top: -8px;
+}
+.auth-forgot-btn {
+  background: none;
+  border: none;
+  color: #3F3F46;
+  font-size: 12px;
+  font-family: 'Geist', sans-serif;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  transition: color 0.12s;
+}
+.auth-forgot-btn:hover { color: #71717A; }
+
+/* ── EDIT MODAL ── */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.75);
+  z-index: 300;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  animation: fadeIn 0.15s ease;
+}
+.modal-card {
+  background: #111114;
+  border: 1px solid #27272A;
+  border-radius: 16px;
+  padding: 20px;
+  width: 100%;
+  max-width: 360px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.modal-title { font-size: 13px; font-weight: 500; color: #fff; }
+.modal-close {
+  background: none;
+  border: none;
+  color: #52525B;
+  font-size: 18px;
+  cursor: pointer;
+  line-height: 1;
+  padding: 0 2px;
+  font-family: 'Geist', sans-serif;
+  transition: color 0.12s;
+}
+.modal-close:hover { color: #F43F5E; }
+.modal-input {
+  width: 100%;
+  background: #0C0C0E;
+  border: 1px solid #27272A;
+  border-radius: 8px;
+  padding: 10px 12px;
+  color: #fff;
+  font-family: 'Geist', sans-serif;
+  font-size: 13px;
+  font-weight: 300;
+  outline: none;
+  transition: border-color 0.2s;
+  -webkit-appearance: none;
+}
+.modal-input:focus { border-color: #6366F1; }
+.modal-input::placeholder { color: #3F3F46; }
+.modal-time-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.modal-time-inp {
+  flex: 1;
+  background: #0C0C0E;
+  border: 1px solid #27272A;
+  border-radius: 8px;
+  padding: 8px 10px;
+  color: #fff;
+  font-family: 'Geist', sans-serif;
+  font-size: 12px;
+  text-align: center;
+  outline: none;
+  transition: border-color 0.2s;
+  -webkit-appearance: none;
+}
+.modal-time-inp:focus { border-color: #6366F1; }
+.modal-arrow { font-size: 12px; color: #3F3F46; flex-shrink: 0; }
+.modal-actions { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; }
+
+/* ── MES: etiquetas de evento ── */
+.month-events { display: flex; flex-direction: column; gap: 2px; }
+.month-event-label {
+  font-size: 8px;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding: 1px 4px 1px 3px;
+  border-radius: 2px;
+  line-height: 1.5;
+}
+.month-event-more { font-size: 8px; color: #3F3F46; padding-left: 2px; }
+
+/* ── AI retry ── */
+.ai-retry-btn {
+  background: none;
+  border: 1px solid #27272A;
+  border-radius: 4px;
+  color: #52525B;
+  font-size: 11px;
+  font-family: 'Geist', sans-serif;
+  cursor: pointer;
+  padding: 2px 7px;
+  margin-left: 6px;
+  transition: all 0.12s;
+}
+.ai-retry-btn:hover { color: #6366F1; border-color: #6366F1; }
