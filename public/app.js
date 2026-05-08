@@ -337,6 +337,20 @@ async function toggleDone(id, dateISO) {
   renderSemana();
   updateMomentum();
   if (currentView === 'sugerencias') updateSugStats();
+  updatePattern(ev); // fire-and-forget
+}
+
+async function updatePattern(ev) {
+  if (!currentUser) return;
+  const date = new Date((ev.date || '') + 'T12:00:00');
+  const dayOfWeek = date.getDay();
+  const [hour] = ev.start_time.split(':').map(Number);
+  await db.rpc('update_pattern', {
+    p_user_id: currentUser.id,
+    p_day: dayOfWeek,
+    p_hour: hour,
+    p_completed: ev.done
+  });
 }
 
 async function deleteEvent(id, dateISO) {
