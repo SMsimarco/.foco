@@ -287,6 +287,94 @@ html, body {
   color: var(--text);
 }
 
+/* ── ONBOARDING ── */
+.onboarding-screen {
+  position: fixed;
+  inset: 0;
+  background: var(--bg);
+  z-index: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fadeIn .3s ease;
+}
+
+.onboarding-box {
+  max-width: 340px;
+  width: 90%;
+  padding: 0 8px;
+}
+
+.onboarding-step {
+  display: none;
+  flex-direction: column;
+  gap: 14px;
+  animation: fadeIn .3s ease;
+}
+
+.onboarding-step.active { display: flex; }
+
+.onboarding-num {
+  font-size: 11px;
+  color: var(--text4);
+  letter-spacing: .06em;
+}
+
+.onboarding-title {
+  font-family: 'Instrument Serif', serif;
+  font-size: 28px;
+  color: var(--text);
+  line-height: 1.2;
+}
+
+.onboarding-sub {
+  font-size: 13px;
+  color: var(--text3);
+  margin-bottom: 4px;
+}
+
+.time-options {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.time-option {
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: 10px;
+  padding: 14px 16px;
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--text2);
+  font-family: 'Geist', sans-serif;
+  text-align: left;
+  transition: all .15s;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.time-option:hover { border-color: var(--accent); color: var(--text); }
+.time-option.selected { border-color: var(--accent); background: rgba(99,102,241,.1); color: var(--text); }
+
+.onboarding-dots {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+  margin-top: 28px;
+}
+
+.onboarding-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--border2);
+  transition: background .2s;
+}
+
+.onboarding-dot.active { background: var(--accent); }
+
 /* ── WEEKLY DIGEST ── */
 .digest-overlay {
   position: fixed;

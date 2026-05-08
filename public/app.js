@@ -27,6 +27,9 @@ let ghost = null;
 let notifOn = true;
 let authMode = 'login';
 
+// Onboarding state
+let obSelectedHour = 9;
+
 // Morning brief state
 let morningEnergy = null;
 
@@ -250,6 +253,7 @@ async function showApp() {
   renderSemana();
   setupNotifications();
   loadTemplates();
+  checkOnboarding();
   checkMorningBrief();
   checkWeeklyDigest();
 }
@@ -620,7 +624,9 @@ function renderDayColumns(week) {
   });
 
   const gridWrap = document.getElementById('grid-wrap');
-  const scrollTo = Math.max(0, toY(now.getHours() - 2, 0));
+  const prefHour = getUserStartHour();
+  const scrollHour = prefHour ?? Math.max(0, now.getHours() - 2);
+  const scrollTo = Math.max(0, toY(scrollHour, 0));
   setTimeout(() => { gridWrap.scrollTop = scrollTo; }, 50);
 }
 
@@ -1136,6 +1142,76 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 });
+
+// ── ONBOARDING ──────────────────────────────────────────────
+
+function checkOnboarding() {
+  if (!currentUser) return;
+  const key = `foco_onboarded_${currentUser.id}`;
+  if (localStorage.getItem(key)) return;
+
+  // Usuario existente con eventos = ya usó la app, no mostrar
+  const hasEvents = Object.values(eventsCache).some(evs => evs.length > 0);
+  if (hasEvents) { localStorage.setItem(key, '1'); return; }
+
+  showOnboarding();
+}
+
+function showOnboarding() {
+  const name = currentProfile?.display_name || '';
+  const titleEl = document.getElementById('ob-title-1');
+  if (titleEl) titleEl.textContent = name ? `Hola, ${name.split(' ')[0]}.` : 'Hola.';
+  const nameInp = document.getElementById('ob-name');
+  if (nameInp) nameInp.value = name;
+  document.getElementById('onboarding-screen').style.display = 'flex';
+}
+
+function obGoToStep(step) {
+  [1, 2, 3].forEach(s => {
+    document.getElementById(`ob-step-${s}`).classList.toggle('active', s === step);
+    document.getElementById(`ob-dot-${s}`).classList.toggle('active', s === step);
+  });
+}
+
+async function obNext(step) {
+  if (step === 1) {
+    const name = document.getElementById('ob-name').value.trim();
+    if (!name) return;
+    if (name !== currentProfile?.display_name) {
+      await db.from('profiles').upsert({ id: currentUser.id, display_name: name });
+      if (currentProfile) currentProfile.display_name = name;
+    }
+    obGoToStep(2);
+    setTimeout(() => document.getElementById('ob-goal')?.focus(), 100);
+  } else if (step === 2) {
+    const goal = document.getElementById('ob-goal').value.trim();
+    if (goal) {
+      localStorage.setItem(`foco_week_goal_${currentUser.id}`, goal);
+    }
+    obGoToStep(3);
+  }
+}
+
+function selectObHour(btn, h) {
+  obSelectedHour = h;
+  document.querySelectorAll('.time-option').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+}
+
+async function obFinish() {
+  localStorage.setItem(`foco_start_hour_${currentUser.id}`, obSelectedHour);
+  localStorage.setItem(`foco_onboarded_${currentUser.id}`, '1');
+  document.getElementById('onboarding-screen').style.display = 'none';
+  // Hacer scroll al horario preferido
+  const gridWrap = document.getElementById('grid-wrap');
+  if (gridWrap) gridWrap.scrollTop = Math.max(0, (obSelectedHour - 1) * SLOT_H);
+}
+
+function getUserStartHour() {
+  if (!currentUser) return null;
+  const stored = localStorage.getItem(`foco_start_hour_${currentUser.id}`);
+  return stored ? parseInt(stored) : null;
+}
 
 // ── WEEKLY DIGEST ───────────────────────────────────────────
 

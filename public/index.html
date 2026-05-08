@@ -238,6 +238,56 @@
 
 </div>
 
+<!-- ONBOARDING -->
+<div id="onboarding-screen" class="onboarding-screen" style="display:none">
+  <div class="onboarding-box">
+
+    <!-- Paso 1 -->
+    <div class="onboarding-step active" id="ob-step-1">
+      <div class="onboarding-num">1 de 3</div>
+      <div class="onboarding-title" id="ob-title-1">Hola.</div>
+      <div class="onboarding-sub">Confirmá tu nombre para personalizar la app.</div>
+      <input class="auth-input" id="ob-name" type="text" placeholder="Tu nombre"/>
+      <button class="morning-cta" onclick="obNext(1)">Continuar →</button>
+    </div>
+
+    <!-- Paso 2 -->
+    <div class="onboarding-step" id="ob-step-2">
+      <div class="onboarding-num">2 de 3</div>
+      <div class="onboarding-title">¿Qué querés lograr esta semana?</div>
+      <div class="onboarding-sub">Una sola cosa. Lo más importante.</div>
+      <input class="auth-input" id="ob-goal" type="text" placeholder="Mi objetivo esta semana es..."/>
+      <button class="morning-cta" onclick="obNext(2)">Continuar →</button>
+    </div>
+
+    <!-- Paso 3 -->
+    <div class="onboarding-step" id="ob-step-3">
+      <div class="onboarding-num">3 de 3</div>
+      <div class="onboarding-title">¿A qué hora arrancás el día?</div>
+      <div class="onboarding-sub">Usamos esto para configurar tu calendario.</div>
+      <div class="time-options">
+        <button class="time-option" data-h="7" onclick="selectObHour(this, 7)">
+          Temprano <span style="color:var(--text4)">7–9hs</span>
+        </button>
+        <button class="time-option" data-h="9" onclick="selectObHour(this, 9)">
+          A la mañana <span style="color:var(--text4)">9–11hs</span>
+        </button>
+        <button class="time-option" data-h="11" onclick="selectObHour(this, 11)">
+          A la tarde <span style="color:var(--text4)">11hs+</span>
+        </button>
+      </div>
+      <button class="morning-cta" id="ob-finish-btn" onclick="obFinish()" style="margin-top:8px">Arrancar →</button>
+    </div>
+
+    <div class="onboarding-dots">
+      <div class="onboarding-dot active" id="ob-dot-1"></div>
+      <div class="onboarding-dot" id="ob-dot-2"></div>
+      <div class="onboarding-dot" id="ob-dot-3"></div>
+    </div>
+
+  </div>
+</div>
+
 <!-- WEEKLY DIGEST -->
 <div id="digest-overlay" class="digest-overlay" style="display:none">
   <div class="digest-box">
