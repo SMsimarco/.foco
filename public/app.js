@@ -627,7 +627,10 @@ function renderDayColumns(week) {
 
       const block = document.createElement('div');
       block.className = 'event-block' + (ev.done ? ' done' : '') + (conflict ? ' conflict' : '');
-      block.style.cssText = `top:${y}px;height:${h}px;background:${color}30;border-left:3px solid ${color}`;
+      block.style.cssText = `top:${y}px;height:${h}px`;
+      block.style.setProperty('--event-color', color);
+      block.style.setProperty('--event-color-30', color + '30');
+      block.style.setProperty('--event-color-15', color + '15');
       block.innerHTML = `
         <div class="ev-title">${ev.title}</div>
         ${h > 24 ? `<div class="ev-time">${ev.start_time}–${ev.end_time}</div>` : ''}
@@ -1066,6 +1069,13 @@ async function setView(view) {
     const btn = document.getElementById('nav-' + v);
     if (btn) btn.classList.toggle('active', v === view);
   });
+
+  const viewEl = document.getElementById('view-' + view);
+  if (viewEl) {
+    viewEl.style.animation = 'none';
+    viewEl.offsetHeight;
+    viewEl.style.animation = 'viewEnter 0.28s cubic-bezier(.4,0,.2,1)';
+  }
 
   const weekNav = document.getElementById('week-nav');
   if (weekNav) weekNav.style.visibility = view === 'semana' ? 'visible' : 'hidden';
@@ -1513,8 +1523,11 @@ function openEventPanel(ev, dateISO) {
   document.getElementById('panel-meta').textContent =
     `${ev.start_time} – ${ev.end_time} · ${dayStr}`;
 
+  const color = eventColor(ev.title);
+  document.getElementById('event-panel').style.setProperty('--event-color', color);
+
   const doneBtn = document.getElementById('panel-done-btn');
-  doneBtn.textContent = ev.done ? 'Desmarcar hecho' : 'Marcar como hecho';
+  doneBtn.textContent = ev.done ? '✓ Desmarcar hecho' : '✓ Marcar como hecho';
   doneBtn.classList.toggle('done', !!ev.done);
 
   document.getElementById('panel-goal').value = '';
@@ -1545,7 +1558,7 @@ async function panelToggleDone() {
   panelEvent = (eventsCache[panelDateISO] || []).find(e => e.id === panelEvent.id);
   if (!panelEvent) { closeEventPanel(); return; }
   const doneBtn = document.getElementById('panel-done-btn');
-  doneBtn.textContent = panelEvent.done ? 'Desmarcar hecho' : 'Marcar como hecho';
+  doneBtn.textContent = panelEvent.done ? '✓ Desmarcar hecho' : '✓ Marcar como hecho';
   doneBtn.classList.toggle('done', !!panelEvent.done);
 }
 
@@ -1558,7 +1571,7 @@ async function panelDeleteEvent() {
 async function selectPanelEnergy(e) {
   panelEnergy = e;
   document.querySelectorAll('.panel-energy-btn').forEach(btn => {
-    btn.classList.toggle('selected', parseInt(btn.dataset.e) === e);
+    btn.classList.toggle('selected', parseInt(btn.dataset.energy) === e);
   });
   // Guardar energy_weight en el evento
   if (panelEvent && panelDateISO) {
@@ -1577,15 +1590,27 @@ function toggleRecDay(d) {
 
 function renderPanelRecDays() {
   document.querySelectorAll('.rec-day-btn').forEach(btn => {
-    btn.classList.toggle('active', panelRecDays.includes(parseInt(btn.dataset.d)));
+    btn.classList.toggle('active', panelRecDays.includes(parseInt(btn.dataset.day)));
   });
 }
 
 function updateTimerDisplay() {
   const m = Math.floor(focusTimerSeconds / 60);
   const s = focusTimerSeconds % 60;
-  const el = document.getElementById('panel-timer');
+  const el = document.getElementById('focus-timer');
   if (el) el.textContent = `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+  updateTimerRing(focusTimerSeconds, 25 * 60);
+}
+
+function updateTimerRing(secondsLeft, totalSeconds) {
+  const ring = document.querySelector('.timer-ring-progress');
+  if (!ring) return;
+  const circumference = 408;
+  const progress = 1 - (secondsLeft / totalSeconds);
+  ring.style.strokeDashoffset = circumference * (1 - progress);
+  if (progress < 0.5) ring.style.stroke = '#6366F1';
+  else if (progress < 0.8) ring.style.stroke = '#F59E0B';
+  else ring.style.stroke = '#F43F5E';
 }
 
 function toggleFocusTimer() {
@@ -1595,9 +1620,9 @@ function toggleFocusTimer() {
 
 function startFocusTimer() {
   focusTimerRunning = true;
-  document.getElementById('panel-timer').classList.add('running');
+  document.getElementById('focus-timer').classList.add('running');
   document.getElementById('focus-start-btn').classList.add('running');
-  document.getElementById('focus-start-btn').textContent = '■  Detener';
+  document.getElementById('focus-start-btn').textContent = '■ Detener';
 
   focusTimerInterval = setInterval(() => {
     if (focusTimerSeconds <= 0) {
@@ -1614,13 +1639,14 @@ function stopFocusTimer() {
   focusTimerRunning = false;
   clearInterval(focusTimerInterval);
   focusTimerInterval = null;
-  const display = document.getElementById('panel-timer');
+  const display = document.getElementById('focus-timer');
   const btn = document.getElementById('focus-start-btn');
   if (display) display.classList.remove('running');
   if (btn) {
     btn.classList.remove('running');
-    btn.textContent = '▶  Iniciar foco';
+    btn.textContent = '▶ Iniciar foco';
   }
+  updateTimerRing(25 * 60, 25 * 60);
 }
 
 async function saveFocusSession(completed) {

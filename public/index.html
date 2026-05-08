@@ -314,21 +314,33 @@
 
 <!-- EVENT PANEL -->
 <div id="event-panel" class="event-panel">
-  <div class="panel-drag"></div>
-  <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:4px">
-    <div style="flex:1;min-width:0">
-      <div class="panel-title" id="panel-title">—</div>
-      <div class="panel-meta" id="panel-meta">—</div>
-    </div>
-    <button onclick="closeEventPanel()" style="background:none;border:none;color:var(--text3);font-size:22px;cursor:pointer;padding:0 0 0 12px;line-height:1;flex-shrink:0">×</button>
+  <div class="panel-drag-wrap">
+    <div class="panel-drag"></div>
   </div>
 
-  <div class="focus-timer-display" id="panel-timer">25:00</div>
-  <button class="focus-start-btn" id="focus-start-btn" onclick="toggleFocusTimer()">▶  Iniciar foco</button>
+  <div class="panel-header">
+    <div class="panel-title" id="panel-title">—</div>
+    <div class="panel-meta" id="panel-meta">—</div>
+  </div>
+
+  <div class="panel-timer-section">
+    <div class="timer-ring-wrap">
+      <svg class="timer-ring-svg" viewBox="0 0 140 140">
+        <circle class="timer-ring-bg" cx="70" cy="70" r="65"/>
+        <circle class="timer-ring-progress" cx="70" cy="70" r="65"/>
+      </svg>
+      <div class="timer-display-wrap">
+        <div class="focus-timer-display" id="focus-timer">25:00</div>
+      </div>
+    </div>
+    <div style="display:flex;justify-content:center">
+      <button class="focus-start-btn" id="focus-start-btn" onclick="toggleFocusTimer()">▶ Iniciar foco</button>
+    </div>
+  </div>
 
   <div class="panel-actions">
-    <button class="panel-done-btn" id="panel-done-btn" onclick="panelToggleDone()">Marcar como hecho</button>
-    <button class="panel-delete-btn" onclick="panelDeleteEvent()">Eliminar</button>
+    <button class="panel-action-btn done-btn" id="panel-done-btn" onclick="panelToggleDone()">✓ Marcar como hecho</button>
+    <button class="panel-action-btn delete-btn" onclick="panelDeleteEvent()">Eliminar</button>
   </div>
 
   <div class="panel-section">
@@ -344,22 +356,22 @@
   <div class="panel-section">
     <div class="panel-section-label">⚡ ¿Cómo saliste?</div>
     <div class="panel-energy-row">
-      <button class="panel-energy-btn" data-e="1" onclick="selectPanelEnergy(1)">😫</button>
-      <button class="panel-energy-btn" data-e="2" onclick="selectPanelEnergy(2)">😐</button>
-      <button class="panel-energy-btn" data-e="3" onclick="selectPanelEnergy(3)">🙂</button>
-      <button class="panel-energy-btn" data-e="4" onclick="selectPanelEnergy(4)">⚡</button>
-      <button class="panel-energy-btn" data-e="5" onclick="selectPanelEnergy(5)">🚀</button>
+      <button class="panel-energy-btn" data-energy="1" onclick="selectPanelEnergy(1)">😫</button>
+      <button class="panel-energy-btn" data-energy="2" onclick="selectPanelEnergy(2)">😐</button>
+      <button class="panel-energy-btn" data-energy="3" onclick="selectPanelEnergy(3)">🙂</button>
+      <button class="panel-energy-btn" data-energy="4" onclick="selectPanelEnergy(4)">⚡</button>
+      <button class="panel-energy-btn" data-energy="5" onclick="selectPanelEnergy(5)">🚀</button>
     </div>
   </div>
 
   <div class="panel-section">
-    <div class="panel-section-label">🔁 Repetir esta semana</div>
+    <div class="panel-section-label">Repetir esta semana</div>
     <div class="recurring-days">
-      <button class="rec-day-btn" data-d="1" onclick="toggleRecDay(1)">Lun</button>
-      <button class="rec-day-btn" data-d="2" onclick="toggleRecDay(2)">Mar</button>
-      <button class="rec-day-btn" data-d="3" onclick="toggleRecDay(3)">Mié</button>
-      <button class="rec-day-btn" data-d="4" onclick="toggleRecDay(4)">Jue</button>
-      <button class="rec-day-btn" data-d="5" onclick="toggleRecDay(5)">Vie</button>
+      <button class="rec-day-btn" data-day="1" onclick="toggleRecDay(1)">Lun</button>
+      <button class="rec-day-btn" data-day="2" onclick="toggleRecDay(2)">Mar</button>
+      <button class="rec-day-btn" data-day="3" onclick="toggleRecDay(3)">Mié</button>
+      <button class="rec-day-btn" data-day="4" onclick="toggleRecDay(4)">Jue</button>
+      <button class="rec-day-btn" data-day="5" onclick="toggleRecDay(5)">Vie</button>
     </div>
   </div>
 </div>
