@@ -1,97 +1,95 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <meta name="theme-color" content="#09090B">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="theme-color" content="#09090B"/>
   <title>foco.</title>
-  <link rel="manifest" href="manifest.json">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500&family=Instrument+Serif:ital@1&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css">
+  <link rel="manifest" href="/manifest.json"/>
+  <link rel="stylesheet" href="/style.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500&family=Instrument+Serif:ital@1&display=swap" rel="stylesheet"/>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 </head>
 <body>
 
-  <!-- AUTH -->
-  <div id="auth-screen" class="auth-screen hidden">
-    <div class="auth-card">
-      <div class="auth-logo">foco.</div>
-      <div class="auth-sub">Organizá tu semana.</div>
-      <div class="auth-fields">
-        <input id="auth-name" class="auth-input hidden" type="text" placeholder="tu nombre" autocomplete="name">
-        <input id="auth-email" class="auth-input" type="email" placeholder="email" autocomplete="email">
-        <div class="auth-input-wrap">
-          <input id="auth-password" class="auth-input" type="password" placeholder="contraseña" autocomplete="current-password">
-          <button type="button" class="auth-eye-btn" onclick="togglePassword()">ver</button>
-        </div>
-      </div>
-      <div id="auth-forgot" class="auth-forgot">
-        <button type="button" class="auth-forgot-btn" onclick="forgotPassword()">¿Olvidaste tu contraseña?</button>
-      </div>
-      <p id="auth-error" class="auth-error"></p>
-      <button id="auth-btn" class="auth-btn">Entrar</button>
-      <div class="auth-toggle">
-        <span id="auth-toggle-text">¿No tenés cuenta?</span>
-        <button class="auth-toggle-btn" onclick="toggleAuthMode()">
-          <span id="auth-toggle-label">Registrate</span>
-        </button>
-      </div>
-    </div>
-  </div>
+<!-- AUTH SCREEN -->
+<div id="auth-screen" class="auth-screen">
+  <div class="auth-box">
+    <div class="auth-logo">foco.</div>
+    <p class="auth-tagline">Organizá tu semana.</p>
 
-  <!-- EDIT MODAL -->
-  <div id="edit-modal" class="modal-overlay hidden" onclick="closeEditModal()">
-    <div class="modal-card" onclick="event.stopPropagation()">
-      <div class="modal-header">
-        <span class="modal-title">Editar evento</span>
-        <button class="modal-close" onclick="closeEditModal()">×</button>
-      </div>
-      <input id="edit-title" class="modal-input" type="text" placeholder="Título del evento" autocomplete="off">
-      <div class="modal-time-row">
-        <input id="edit-start" class="modal-time-inp" type="text" placeholder="09:00">
-        <span class="modal-arrow">→</span>
-        <input id="edit-end" class="modal-time-inp" type="text" placeholder="10:00">
-      </div>
-      <div class="modal-actions">
-        <button id="edit-done-btn" class="card-btn secondary" onclick="toggleDoneFromModal()">✓ Marcar hecho</button>
-        <button class="card-btn primary" onclick="saveEditModal()">Guardar</button>
-      </div>
+    <div class="auth-tabs">
+      <button class="auth-tab active" id="tab-login" onclick="switchTab('login')">Entrar</button>
+      <button class="auth-tab" id="tab-register" onclick="switchTab('register')">Registrarme</button>
     </div>
+
+    <div id="field-name" style="display:none">
+      <input id="auth-name" type="text" class="auth-input" placeholder="Tu nombre"/>
+    </div>
+    <input id="auth-email" type="email" class="auth-input" placeholder="Email"/>
+    <input id="auth-password" type="password" class="auth-input" placeholder="Contraseña"/>
+
+    <button class="auth-btn" id="auth-btn" onclick="handleAuth()">Entrar</button>
+    <div class="auth-error" id="auth-error"></div>
   </div>
+</div>
+
+<!-- APP -->
+<div id="app" style="display:none">
 
   <!-- HEADER -->
-  <header id="header" class="hidden">
-    <span id="logo">foco.</span>
-    <div id="week-nav">
-      <button onclick="prevWeek()">‹</button>
-      <span id="week-label">…</span>
-      <button onclick="nextWeek()">›</button>
+  <div id="header">
+    <span class="logo">foco.</span>
+
+    <div class="week-nav" id="week-nav">
+      <button class="week-nav-btn" onclick="changeWeek(-1)">‹</button>
+      <span class="week-label" id="week-label">—</span>
+      <button class="week-nav-btn" onclick="changeWeek(1)">›</button>
     </div>
-    <button id="logout-btn" class="logout-btn" onclick="handleLogout()" title="Salir">↪</button>
-  </header>
+
+    <div class="header-right">
+      <button class="notif-btn" id="notif-btn" onclick="toggleNotif()">
+        <div class="notif-dot"></div>
+        <span id="notif-label">notif</span>
+      </button>
+      <div class="momentum-wrap">
+        <div class="momentum-ring">
+          <svg width="30" height="30" viewBox="0 0 30 30">
+            <circle cx="15" cy="15" r="11" fill="none" stroke="#18181B" stroke-width="2.5"/>
+            <circle id="momentum-arc" cx="15" cy="15" r="11" fill="none" stroke="#6366F1"
+              stroke-width="2.5" stroke-dasharray="0 69" stroke-linecap="round"/>
+          </svg>
+          <div class="momentum-num" id="momentum-num">0</div>
+        </div>
+        <div class="momentum-label">
+          <span id="momentum-label-top">—</span>
+          semana
+        </div>
+      </div>
+    </div>
+  </div>
 
   <!-- INPUT BAR -->
-  <div id="input-bar" class="hidden">
-    <div id="input-pill">
-      <span class="icon">✦</span>
+  <div id="input-bar">
+    <div class="input-pill" onclick="document.getElementById('nl-input').focus()">
+      <i class="icon">✦</i>
       <input id="nl-input" type="text"
-        placeholder="reunión mañana de 10 a 12  ·  dentista 22 de junio a las 14"
-        autocomplete="off" spellcheck="false">
-      <span id="enter-hint">↵ agregar</span>
+        placeholder='"reunión mañana de 10 a 12"  ·  "dentista 22 de junio a las 14"'/>
+      <span class="enter-hint">Enter ↵</span>
     </div>
   </div>
 
   <!-- CHIPS -->
-  <div id="chips-bar"></div>
+  <div id="chips-bar">
+    <span id="chips-content"></span>
+    <span class="chip-hint">Enter para agregar</span>
+  </div>
 
-  <!-- CALENDAR AREA -->
-  <div id="cal-area" class="hidden">
+  <!-- MAIN -->
+  <div id="main">
 
     <!-- SEMANA -->
-    <div class="view active" id="view-semana">
+    <div id="view-semana">
       <div id="day-headers"></div>
       <div id="grid-wrap">
         <div id="time-gutter"></div>
@@ -100,42 +98,115 @@
     </div>
 
     <!-- MES -->
-    <div class="view" id="view-mes">
-      <div class="month-nav-row">
-        <button class="month-nav-btn" onclick="prevMonth()">‹</button>
-        <span class="month-title" id="month-title"></span>
-        <button class="month-nav-btn" onclick="nextMonth()">›</button>
+    <div id="view-mes" style="display:none">
+      <div class="mes-header">
+        <span class="mes-title" id="mes-title">—</span>
+        <div class="mes-nav">
+          <button class="mes-nav-btn" onclick="changeMes(-1)">‹</button>
+          <button class="mes-nav-btn" onclick="changeMes(1)">›</button>
+        </div>
       </div>
-      <div class="month-dow-row" id="month-dow-row"></div>
-      <div class="month-grid-wrap">
-        <div class="month-grid" id="month-grid"></div>
+      <div class="mes-day-names">
+        <div class="mes-day-name">Lun</div>
+        <div class="mes-day-name">Mar</div>
+        <div class="mes-day-name">Mié</div>
+        <div class="mes-day-name">Jue</div>
+        <div class="mes-day-name">Vie</div>
+        <div class="mes-day-name">Sáb</div>
+        <div class="mes-day-name">Dom</div>
       </div>
+      <div class="mes-grid" id="mes-grid"></div>
     </div>
 
     <!-- SUGERENCIAS -->
-    <div class="view" id="view-sugerencias">
-      <div class="suggestions-view" id="suggestions-view"></div>
-    </div>
+    <div id="view-sugerencias" style="display:none">
 
+      <!-- Resumen -->
+      <div class="sug-card" id="sug-resumen">
+        <div class="sug-tag">
+          <div class="sug-tag-dot" style="background:#6366F1"></div>
+          <span style="color:#6366F1">Resumen semanal</span>
+        </div>
+        <div class="sug-stats">
+          <div class="sug-stat">
+            <div class="sug-stat-n" id="sug-done">—</div>
+            <div class="sug-stat-l">hechas</div>
+          </div>
+          <div class="sug-stat">
+            <div class="sug-stat-n" id="sug-momentum" style="color:#6366F1">—</div>
+            <div class="sug-stat-l">momentum</div>
+          </div>
+          <div class="sug-stat">
+            <div class="sug-stat-n" id="sug-total">—</div>
+            <div class="sug-stat-l">total</div>
+          </div>
+        </div>
+        <div class="sug-desc" id="sug-resumen-text">Cargando análisis...</div>
+      </div>
+
+      <!-- Conflictos (se generan dinámicamente) -->
+      <div id="sug-conflicts"></div>
+
+      <!-- Sugerencias IA -->
+      <div class="sug-card suggestion" id="sug-ia-card">
+        <div class="sug-tag">
+          <div class="sug-tag-dot" style="background:#6366F1"></div>
+          <span style="color:#6366F1">Sugerencia de IA</span>
+        </div>
+        <div class="sug-title">El jueves está vacío</div>
+        <div class="sug-desc">
+          Si tenés tareas pendientes, los jueves a la mañana son un buen momento
+          para planificar o avanzar con trabajo de foco.
+        </div>
+      </div>
+
+      <!-- Weekly review -->
+      <div class="sug-card review" id="sug-review">
+        <div class="sug-tag">
+          <div class="sug-tag-dot" style="background:#8B5CF6"></div>
+          <span style="color:#8B5CF6">Weekly review</span>
+        </div>
+        <div class="sug-title">¿Cómo estuvo la semana?</div>
+        <div class="sug-desc" id="sug-review-text">
+          Completá una reflexión corta para cerrar la semana.
+        </div>
+      </div>
+
+      <!-- Input IA -->
+      <div class="sug-card">
+        <div class="sug-tag">
+          <div class="sug-tag-dot" style="background:#52525B"></div>
+          <span style="color:#52525B">Pedile algo a tu semana</span>
+        </div>
+        <div class="ai-input-wrap">
+          <input class="ai-inp" id="ai-inp" type="text"
+            placeholder='"reorganizame la semana, tengo mucho el martes"'/>
+          <button class="ai-send" onclick="handleAI()">Enviar ✦</button>
+        </div>
+        <div class="ai-response" id="ai-response"></div>
+      </div>
+
+    </div>
   </div>
 
   <!-- BOTTOM NAV -->
-  <nav id="bottom-nav" class="hidden">
-    <button class="nav-btn active" id="nav-semana" onclick="switchView('semana')">
+  <div id="bottom-nav">
+    <button class="nav-btn active" id="nav-semana" onclick="setView('semana')">
       <span class="nav-icon">▦</span>
       <span>Semana</span>
     </button>
-    <button class="nav-btn" id="nav-mes" onclick="switchView('mes')">
+    <button class="nav-btn" id="nav-mes" onclick="setView('mes')">
       <span class="nav-icon">◫</span>
       <span>Mes</span>
     </button>
-    <button class="nav-btn" id="nav-sugerencias" onclick="switchView('sugerencias')">
+    <button class="nav-btn" id="nav-sugerencias" onclick="setView('sugerencias')">
       <span class="nav-icon">✦</span>
       <span>Sugerencias</span>
     </button>
-  </nav>
+  </div>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-<script src="app.js"></script>
+</div>
+
+<script src="/app.js"></script>
 </body>
 </html>
