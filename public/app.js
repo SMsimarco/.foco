@@ -1227,9 +1227,9 @@ async function checkWeeklyDigest() {
     .select('id')
     .eq('user_id', currentUser.id)
     .eq('week_start', weekStart)
-    .maybeSingle();
+    .limit(1);
 
-  if (!data) {
+  if (!data || !data.length) {
     const digest = await generateWeeklyDigest();
     if (digest) showDigestModal(digest);
   }
@@ -1327,9 +1327,9 @@ async function checkMorningBrief() {
     .select('id')
     .eq('user_id', currentUser.id)
     .eq('date', toISO(new Date()))
-    .maybeSingle();
+    .limit(1);
 
-  if (!data) showMorningBrief();
+  if (!data || !data.length) showMorningBrief();
 }
 
 function showMorningBrief() {
