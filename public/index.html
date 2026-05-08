@@ -37,6 +37,25 @@
 <!-- APP -->
 <div id="app" style="display:none">
 
+  <!-- MORNING BRIEF -->
+  <div id="morning-screen" class="morning-screen" style="display:none">
+    <div class="morning-box">
+      <div class="morning-greeting" id="morning-greeting">Buenos días.</div>
+      <div class="morning-sub" id="morning-sub">Cargando tu día...</div>
+      <div class="morning-section-label">¿Cómo llegás hoy?</div>
+      <div class="energy-btns">
+        <button class="energy-btn" data-e="1" onclick="selectMorningEnergy(1)">😴</button>
+        <button class="energy-btn" data-e="2" onclick="selectMorningEnergy(2)">😐</button>
+        <button class="energy-btn" data-e="3" onclick="selectMorningEnergy(3)">🙂</button>
+        <button class="energy-btn" data-e="4" onclick="selectMorningEnergy(4)">⚡</button>
+        <button class="energy-btn" data-e="5" onclick="selectMorningEnergy(5)">🚀</button>
+      </div>
+      <div class="morning-section-label" style="margin-top:20px">¿Cuál es la cosa más importante?</div>
+      <input class="morning-inp" id="morning-intention" type="text" placeholder="Lo más importante hoy es..."/>
+      <button class="morning-cta" id="morning-cta" onclick="submitMorningBrief()">Arrancar el día →</button>
+    </div>
+  </div>
+
   <!-- HEADER -->
   <div id="header">
     <span class="logo">foco.</span>

@@ -27,6 +27,9 @@ let ghost = null;
 let notifOn = true;
 let authMode = 'login';
 
+// Morning brief state
+let morningEnergy = null;
+
 // Panel state
 let panelEvent = null;
 let panelDateISO = null;
@@ -247,6 +250,7 @@ async function showApp() {
   renderSemana();
   setupNotifications();
   loadTemplates();
+  checkMorningBrief();
 }
 
 // ── CARGA DE DATOS ──────────────────────────────────────────
@@ -988,6 +992,64 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 });
+
+// ── MORNING BRIEF ───────────────────────────────────────────
+
+async function checkMorningBrief() {
+  if (!currentUser) return;
+  if (new Date().getHours() >= 11) return;
+
+  const { data } = await db
+    .from('daily_checkins')
+    .select('id')
+    .eq('user_id', currentUser.id)
+    .eq('date', toISO(new Date()))
+    .maybeSingle();
+
+  if (!data) showMorningBrief();
+}
+
+function showMorningBrief() {
+  const firstName = (currentProfile?.display_name || '').split(' ')[0] || 'ahí';
+  document.getElementById('morning-greeting').textContent = `Buenos días, ${firstName}.`;
+
+  const today = toISO(new Date());
+  const count = (eventsCache[today] || []).length;
+  document.getElementById('morning-sub').textContent =
+    count === 0 ? 'No tenés nada agendado hoy todavía.' :
+    count === 1 ? 'Hoy tenés 1 cosa agendada.' :
+    `Hoy tenés ${count} cosas agendadas.`;
+
+  document.getElementById('morning-screen').style.display = 'flex';
+  document.getElementById('morning-intention').focus();
+}
+
+function selectMorningEnergy(e) {
+  morningEnergy = e;
+  document.querySelectorAll('.energy-btn').forEach(btn => {
+    btn.classList.toggle('selected', parseInt(btn.dataset.e) === e);
+  });
+}
+
+async function submitMorningBrief() {
+  const btn = document.getElementById('morning-cta');
+  btn.disabled = true;
+
+  const intention = document.getElementById('morning-intention').value.trim();
+  const moodMap = ['bad', 'tired', 'ok', 'good', 'great'];
+
+  await db.from('daily_checkins').upsert({
+    user_id: currentUser.id,
+    date: toISO(new Date()),
+    energy: morningEnergy,
+    intention: intention || null,
+    mood: morningEnergy ? moodMap[morningEnergy - 1] : null
+  });
+
+  document.getElementById('morning-screen').style.display = 'none';
+  morningEnergy = null;
+  btn.disabled = false;
+}
 
 // ── TEMPLATES BAR ───────────────────────────────────────────
 
