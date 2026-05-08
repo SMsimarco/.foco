@@ -246,6 +246,7 @@ async function showApp() {
   await loadWeek();
   renderSemana();
   setupNotifications();
+  loadTemplates();
 }
 
 // ── CARGA DE DATOS ──────────────────────────────────────────
@@ -987,6 +988,67 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 });
+
+// ── TEMPLATES BAR ───────────────────────────────────────────
+
+async function loadTemplates() {
+  if (!currentUser) return;
+  const since = toISO(new Date(Date.now() - 30 * 86400000));
+  const { data } = await db
+    .from('events')
+    .select('title, start_time, end_time')
+    .eq('user_id', currentUser.id)
+    .gte('date', since);
+
+  if (!data || !data.length) return;
+
+  const groups = {};
+  data.forEach(ev => {
+    const key = ev.title.toLowerCase().trim();
+    if (!groups[key]) groups[key] = { title: ev.title, starts: [], ends: [], count: 0 };
+    groups[key].count++;
+    groups[key].starts.push(timeToMin(ev.start_time));
+    groups[key].ends.push(timeToMin(ev.end_time));
+  });
+
+  const top5 = Object.values(groups)
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 5)
+    .map(g => ({
+      title: g.title,
+      avgStart: Math.round(g.starts.reduce((a, b) => a + b, 0) / g.starts.length),
+      avgEnd: Math.round(g.ends.reduce((a, b) => a + b, 0) / g.ends.length)
+    }));
+
+  renderTemplates(top5);
+}
+
+function renderTemplates(templates) {
+  const bar = document.getElementById('templates-bar');
+  if (!bar || !templates.length) return;
+
+  bar.style.display = 'flex';
+  bar.innerHTML = '';
+
+  templates.forEach(t => {
+    const startH = Math.floor(t.avgStart / 60), startM = t.avgStart % 60;
+    const endH = Math.floor(t.avgEnd / 60), endM = t.avgEnd % 60;
+    const pill = document.createElement('button');
+    pill.className = 'template-pill';
+    pill.innerHTML = `<span class="template-plus">+</span>${t.title}`;
+    pill.addEventListener('click', () =>
+      addFromTemplate(t.title, fmtTime(startH, startM), fmtTime(endH, endM))
+    );
+    bar.appendChild(pill);
+  });
+}
+
+async function addFromTemplate(title, startTime, endTime) {
+  const today = toISO(new Date());
+  if (!getWeekDates(weekOffset).some(d => toISO(d) === today)) weekOffset = 0;
+  await addEvent(today, title, startTime, endTime);
+  if (currentView !== 'semana') setView('semana');
+}
 
 // ── EVENT PANEL ─────────────────────────────────────────────
 
