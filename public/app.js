@@ -735,6 +735,108 @@ function changeMes(dir) {
   renderMes();
 }
 
+// ── RENDER PATRONES ─────────────────────────────────────────
+
+async function renderPatrones() {
+  const grid = document.getElementById('heatmap-grid');
+  const insightEl = document.getElementById('hm-insight');
+  grid.innerHTML = '';
+
+  const { data, error } = await db
+    .from('patterns')
+    .select('day_of_week, hour, completion_rate, sample_count')
+    .eq('user_id', currentUser.id);
+
+  if (error || !data || !data.length) {
+    grid.innerHTML = `<div class="hm-empty" style="grid-column:1/-1">
+      Todavía no hay datos.<br>
+      <span style="color:var(--text4);font-size:11px">Marcá eventos como hechos para ver tus patrones.</span>
+    </div>`;
+    insightEl.style.display = 'none';
+    return;
+  }
+
+  // Índice por día+hora
+  const map = {};
+  data.forEach(p => { map[`${p.day_of_week}-${p.hour}`] = p; });
+
+  // Días en orden lun-dom (1-7, donde 7=dom=0)
+  const dayOrder = [1, 2, 3, 4, 5, 6, 0];
+  const dayLabels = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
+
+  // Header vacío + días
+  const emptyHeader = document.createElement('div');
+  grid.appendChild(emptyHeader);
+  dayLabels.forEach(d => {
+    const h = document.createElement('div');
+    h.className = 'hm-header';
+    h.textContent = d;
+    grid.appendChild(h);
+  });
+
+  // Filas por hora
+  for (let h = 0; h < 24; h++) {
+    const label = document.createElement('div');
+    label.className = 'hm-hour-label';
+    label.textContent = h + 'h';
+    grid.appendChild(label);
+
+    dayOrder.forEach(dow => {
+      const p = map[`${dow}-${h}`];
+      const cell = document.createElement('div');
+      cell.className = 'hm-cell';
+
+      if (!p || p.sample_count === 0) {
+        cell.dataset.rate = 'none';
+      } else if (p.completion_rate >= 0.7) {
+        cell.dataset.rate = 'high';
+      } else if (p.completion_rate >= 0.3) {
+        cell.dataset.rate = 'mid';
+      } else {
+        cell.dataset.rate = 'low';
+      }
+
+      cell.title = p
+        ? `${dayLabels[dayOrder.indexOf(dow)]} ${h}h — ${Math.round(p.completion_rate * 100)}% (${p.sample_count} eventos)`
+        : '';
+      grid.appendChild(cell);
+    });
+  }
+
+  // Insight: mejor hora y mejor día
+  let bestHour = null, bestDay = null, bestHourRate = -1, bestDayRate = -1;
+  const dayRates = dayOrder.map(() => ({ sum: 0, count: 0 }));
+  const hourRates = Array.from({ length: 24 }, () => ({ sum: 0, count: 0 }));
+
+  data.forEach(p => {
+    const di = dayOrder.indexOf(p.day_of_week);
+    if (di !== -1) {
+      dayRates[di].sum += p.completion_rate;
+      dayRates[di].count++;
+    }
+    hourRates[p.hour].sum += p.completion_rate;
+    hourRates[p.hour].count++;
+  });
+
+  dayRates.forEach((d, i) => {
+    if (d.count && d.sum / d.count > bestDayRate) {
+      bestDayRate = d.sum / d.count;
+      bestDay = dayLabels[i];
+    }
+  });
+  hourRates.forEach((h, i) => {
+    if (h.count && h.sum / h.count > bestHourRate) {
+      bestHourRate = h.sum / h.count;
+      bestHour = i;
+    }
+  });
+
+  if (bestDay && bestHour !== null) {
+    insightEl.style.display = 'block';
+    insightEl.textContent = `Tu mejor momento es el ${bestDay} a las ${bestHour}h — completás el ${Math.round(bestHourRate * 100)}% de lo que agendás ahí. Priorizá tareas importantes en esos horarios.`;
+  }
+}
+
 // ── RENDER SUGERENCIAS ──────────────────────────────────────
 
 async function renderSugerencias() {
@@ -865,7 +967,7 @@ async function handleAI() {
 async function setView(view) {
   currentView = view;
 
-  ['semana', 'mes', 'sugerencias'].forEach(v => {
+  ['semana', 'mes', 'patrones', 'sugerencias'].forEach(v => {
     const el = document.getElementById('view-' + v);
     if (el) el.style.display = v === view ? 'flex' : 'none';
 
@@ -882,6 +984,8 @@ async function setView(view) {
     renderSemana();
   } else if (view === 'mes') {
     await renderMes();
+  } else if (view === 'patrones') {
+    await renderPatrones();
   } else if (view === 'sugerencias') {
     await renderSugerencias();
   }
