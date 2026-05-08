@@ -386,6 +386,14 @@ function parseNL(raw) {
       `desde las ${nowH}:${String(nowM).padStart(2, '0')}`);
   }
 
+  // Normalizar minutos en español → "HH:MM"
+  s = s.replace(/(\d{1,2})\s+y\s+media\b/gi, (_, h) => `${h}:30`);
+  s = s.replace(/(\d{1,2})\s+y\s+cuarto\b/gi, (_, h) => `${h}:15`);
+  s = s.replace(/(\d{1,2})\s+y\s+(\d{1,2})\b/gi, (_, h, m) => `${h}:${String(m).padStart(2,'0')}`);
+  // "18 30" → "18:30" solo si el segundo número es minutos válidos (01-59)
+  s = s.replace(/\b(\d{1,2})\s+(\d{2})\b/g, (full, h, m) =>
+    parseInt(m) >= 1 && parseInt(m) <= 59 ? `${h}:${m}` : full);
+
   const MONTHS = {
     enero:0,febrero:1,marzo:2,abril:3,mayo:4,junio:5,
     julio:6,agosto:7,septiembre:8,octubre:9,noviembre:10,diciembre:11
