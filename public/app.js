@@ -103,6 +103,39 @@ function calcMomentum() {
   return { done, total, pct: total ? Math.round(done / total * 100) : 0 };
 }
 
+function calcCommitmentScore() {
+  const week = getWeekDates(weekOffset);
+  const now = new Date();
+  let totalPoints = 0, counted = 0;
+
+  week.forEach(d => {
+    (eventsCache[toISO(d)] || []).forEach(ev => {
+      const [eh, em] = ev.end_time.split(':').map(Number);
+      const evEnd = new Date(`${toISO(d)}T${String(eh).padStart(2,'0')}:${String(em).padStart(2,'0')}:00`);
+      if (evEnd >= now) return; // eventos futuros no cuentan aún
+
+      counted++;
+      const r = ev.rescheduled_count || 0;
+      if (ev.done) {
+        totalPoints += r === 0 ? 100 : 70;
+      } else {
+        if (r >= 2) totalPoints += 20;
+        else if (r === 1) totalPoints += 50;
+        // r === 0 && !done && past → 0pts
+      }
+    });
+  });
+
+  return { pct: counted ? Math.round(totalPoints / (counted * 100) * 100) : 0, counted };
+}
+
+function commitmentColor(pct) {
+  if (pct > 80) return '#10B981';
+  if (pct > 60) return '#6366F1';
+  if (pct > 40) return '#F59E0B';
+  return '#F43F5E';
+}
+
 function momentumLabel(pct) {
   if (pct >= 80) return 'excelente';
   if (pct >= 60) return 'buena semana';
@@ -591,12 +624,21 @@ function commitGhost(dateISO) {
 }
 
 function updateMomentum() {
-  const { done, total, pct } = calcMomentum();
+  const { pct: commitPct, counted } = calcCommitmentScore();
+  const { pct: momPct } = calcMomentum();
+
+  // Usar commitment score si hay eventos pasados, momentum si todo es futuro
+  const pct = counted > 0 ? commitPct : momPct;
+  const color = commitmentColor(pct);
+
   const circ = 2 * Math.PI * 11;
   const dash = (pct / 100) * circ;
 
   const arc = document.getElementById('momentum-arc');
-  if (arc) arc.setAttribute('stroke-dasharray', `${dash.toFixed(1)} ${circ.toFixed(1)}`);
+  if (arc) {
+    arc.setAttribute('stroke-dasharray', `${dash.toFixed(1)} ${circ.toFixed(1)}`);
+    arc.setAttribute('stroke', color);
+  }
 
   const numEl = document.getElementById('momentum-num');
   if (numEl) numEl.textContent = pct;
@@ -1004,11 +1046,17 @@ async function panelDeleteEvent() {
   closeEventPanel();
 }
 
-function selectPanelEnergy(e) {
+async function selectPanelEnergy(e) {
   panelEnergy = e;
   document.querySelectorAll('.panel-energy-btn').forEach(btn => {
     btn.classList.toggle('selected', parseInt(btn.dataset.e) === e);
   });
+  // Guardar energy_weight en el evento
+  if (panelEvent && panelDateISO) {
+    await db.from('events').update({ energy_weight: e }).eq('id', panelEvent.id);
+    const ev = (eventsCache[panelDateISO] || []).find(ev => ev.id === panelEvent.id);
+    if (ev) ev.energy_weight = e;
+  }
 }
 
 function toggleRecDay(d) {
