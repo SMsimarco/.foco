@@ -15,7 +15,18 @@ const SLOT_H = 48; // px por hora — NO CAMBIAR
 const DAYS = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
 const DAYS_FULL = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
 const MONTHS_FULL = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
-const COLORS = ['#6366F1','#8B5CF6','#06B6D4','#10B981','#F43F5E','#F59E0B','#F97316','#EC4899','#14B8A6','#3B82F6'];
+const COLORS = [
+  '#6366F1', // indigo
+  '#8B5CF6', // violeta
+  '#06B6D4', // cyan
+  '#10B981', // esmeralda
+  '#F43F5E', // rosa
+  '#F59E0B', // amber
+  '#3B82F6', // azul
+  '#EC4899', // rosa fuerte
+  '#14B8A6', // teal
+  '#A78BFA', // lavanda
+];
 
 let currentUser = null;
 let currentProfile = null;
@@ -251,6 +262,7 @@ async function showApp() {
   document.getElementById('app').style.display = 'flex';
   await loadWeek();
   renderSemana();
+  setTimeout(scrollToCurrentTime, 80);
   setupNotifications();
   loadTemplates();
   checkOnboarding();
@@ -508,6 +520,15 @@ function parseNL(raw) {
 
 // ── RENDER SEMANA ───────────────────────────────────────────
 
+function scrollToCurrentTime() {
+  const gridWrap = document.getElementById('grid-wrap');
+  if (!gridWrap) return;
+  const now = new Date();
+  const prefHour = getUserStartHour();
+  const targetHour = prefHour ?? Math.max(0, now.getHours() - 2);
+  gridWrap.scrollTop = Math.max(0, targetHour * SLOT_H);
+}
+
 function renderSemana() {
   const week = getWeekDates(weekOffset);
 
@@ -590,7 +611,7 @@ function renderDayColumns(week) {
 
       const block = document.createElement('div');
       block.className = 'event-block' + (ev.done ? ' done' : '') + (conflict ? ' conflict' : '');
-      block.style.cssText = `top:${y}px;height:${h}px;background:${color}22;border-left:2px solid ${color}`;
+      block.style.cssText = `top:${y}px;height:${h}px;background:${color}30;border-left:3px solid ${color}`;
       block.innerHTML = `
         <div class="ev-title">${ev.title}</div>
         ${h > 24 ? `<div class="ev-time">${ev.start_time}–${ev.end_time}</div>` : ''}
@@ -655,11 +676,6 @@ function renderDayColumns(week) {
     container.appendChild(col);
   });
 
-  const gridWrap = document.getElementById('grid-wrap');
-  const prefHour = getUserStartHour();
-  const scrollHour = prefHour ?? Math.max(0, now.getHours() - 2);
-  const scrollTo = Math.max(0, toY(scrollHour, 0));
-  setTimeout(() => { gridWrap.scrollTop = scrollTo; }, 50);
 }
 
 function commitGhost(dateISO) {
@@ -685,24 +701,20 @@ function updateMomentum() {
   const { pct: commitPct, counted } = calcCommitmentScore();
   const { pct: momPct } = calcMomentum();
 
-  // Usar commitment score si hay eventos pasados, momentum si todo es futuro
   const pct = counted > 0 ? commitPct : momPct;
   const color = commitmentColor(pct);
 
-  const circ = 2 * Math.PI * 11;
+  const circ = 2 * Math.PI * 12;
   const dash = (pct / 100) * circ;
 
-  const arc = document.getElementById('momentum-arc');
+  const arc = document.getElementById('commitment-arc');
   if (arc) {
     arc.setAttribute('stroke-dasharray', `${dash.toFixed(1)} ${circ.toFixed(1)}`);
     arc.setAttribute('stroke', color);
   }
 
-  const numEl = document.getElementById('momentum-num');
+  const numEl = document.getElementById('commitment-num');
   if (numEl) numEl.textContent = pct;
-
-  const labelEl = document.getElementById('momentum-label-top');
-  if (labelEl) labelEl.textContent = momentumLabel(pct);
 }
 
 // ── RENDER MES ──────────────────────────────────────────────
@@ -1046,6 +1058,7 @@ async function setView(view) {
     ghost = null;
     await loadWeek();
     renderSemana();
+    setTimeout(scrollToCurrentTime, 80);
   } else if (view === 'mes') {
     await renderMes();
   } else if (view === 'patrones') {
@@ -1060,6 +1073,7 @@ async function changeWeek(dir) {
   ghost = null;
   await loadWeek();
   renderSemana();
+  setTimeout(scrollToCurrentTime, 80);
 }
 
 // ── NOTIFICACIONES ──────────────────────────────────────────
@@ -1452,7 +1466,7 @@ function renderTemplates(templates) {
     const endH = Math.floor(t.avgEnd / 60), endM = t.avgEnd % 60;
     const pill = document.createElement('button');
     pill.className = 'template-pill';
-    pill.innerHTML = `<span class="template-plus">+</span>${t.title}`;
+    pill.textContent = t.title;
     pill.addEventListener('click', () =>
       addFromTemplate(t.title, fmtTime(startH, startM), fmtTime(endH, endM))
     );

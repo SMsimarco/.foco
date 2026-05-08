@@ -132,7 +132,7 @@ html, body {
 }
 
 .auth-input:focus { border-color: var(--accent); }
-.auth-input::placeholder { color: var(--text4); }
+.auth-input::placeholder { color: #1C1C1F; }
 
 .auth-btn {
   width: 100%;
@@ -247,42 +247,26 @@ html, body {
 
 .notif-btn.off .notif-dot { background: var(--danger); }
 
-.momentum-wrap {
-  display: flex;
-  align-items: center;
-  gap: 6px;
+.commitment-wrap {
   cursor: default;
 }
 
-.momentum-ring {
+.commitment-ring {
   position: relative;
-  width: 30px;
-  height: 30px;
+  width: 32px;
+  height: 32px;
   flex-shrink: 0;
 }
 
-.momentum-ring svg { transform: rotate(-90deg); }
+.commitment-ring svg { transform: rotate(-90deg); }
 
-.momentum-num {
+.commitment-num {
   position: absolute;
   inset: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 8px;
-  font-weight: 500;
-  color: var(--text);
-}
-
-.momentum-label {
   font-size: 9px;
-  color: var(--text3);
-  line-height: 1.3;
-}
-
-.momentum-label span {
-  display: block;
-  font-size: 10px;
   font-weight: 500;
   color: var(--text);
 }
@@ -562,7 +546,7 @@ html, body {
   -webkit-appearance: none;
 }
 
-.morning-inp::placeholder { color: var(--text4); }
+.morning-inp::placeholder { color: #1C1C1F; }
 
 .morning-cta {
   width: 100%;
@@ -619,9 +603,13 @@ html, body {
   background: var(--border);
 }
 
-.template-plus {
-  font-size: 12px;
-  color: var(--text4);
+.template-pill::before {
+  content: '';
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--border2);
+  flex-shrink: 0;
 }
 
 /* ── INPUT BAR ── */
@@ -673,7 +661,7 @@ html, body {
   -webkit-box-shadow: none;
 }
 
-#nl-input::placeholder { color: var(--text4); }
+#nl-input::placeholder { color: #27272A; }
 
 .enter-hint {
   font-size: 10px;
@@ -891,7 +879,7 @@ html, body {
 .event-block:hover .ev-del { opacity: 1; }
 .event-block.done { opacity: 0.12; }
 .event-block.done .ev-title { text-decoration: line-through; }
-.event-block.conflict { outline: 1px solid rgba(244,63,94,0.6); }
+.event-block.conflict { outline: 1px solid rgba(244,63,94,0.7); outline-offset: -1px; }
 
 .ev-title {
   font-size: 10px;
@@ -952,7 +940,7 @@ html, body {
   -webkit-appearance: none;
 }
 
-.ghost-name-inp::placeholder { color: var(--text4); }
+.ghost-name-inp::placeholder { color: #1C1C1F; }
 
 .ghost-times {
   display: flex;
@@ -1319,7 +1307,7 @@ html, body {
   -webkit-appearance: none;
 }
 
-.ai-inp::placeholder { color: var(--text4); }
+.ai-inp::placeholder { color: #1C1C1F; }
 
 .ai-send {
   background: var(--accent);
@@ -1363,22 +1351,24 @@ html, body {
   background: transparent;
   border: none;
   cursor: pointer;
-  font-size: 10px;
+  font-family: 'Geist', sans-serif;
+  font-size: 11px;
   font-weight: 500;
   color: var(--text3);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 3px;
+  gap: 4px;
   height: 100%;
   border-radius: 9px;
   transition: all 0.15s;
+  padding: 0 8px;
 }
 
 .nav-btn:hover { background: var(--bg3); color: var(--text2); }
-.nav-btn.active { background: var(--border); color: var(--text); }
-.nav-icon { font-size: 16px; line-height: 1; }
+.nav-btn.active { background: #18181B; color: var(--text); }
+.nav-icon { font-size: 18px; line-height: 1; }
 
 /* ── EVENT PANEL ── */
 .panel-overlay {
@@ -1544,7 +1534,7 @@ html, body {
   -webkit-appearance: none;
 }
 
-.panel-inp::placeholder { color: var(--text4); }
+.panel-inp::placeholder { color: #1C1C1F; }
 
 .panel-energy-row {
   display: flex;
