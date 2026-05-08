@@ -27,6 +27,15 @@ let ghost = null;
 let notifOn = true;
 let authMode = 'login';
 
+// Panel state
+let panelEvent = null;
+let panelDateISO = null;
+let panelEnergy = null;
+let panelRecDays = [];
+let focusTimerInterval = null;
+let focusTimerSeconds = 25 * 60;
+let focusTimerRunning = false;
+
 // ── HELPERS ─────────────────────────────────────────────────
 
 function getWeekDates(offset = 0) {
@@ -498,7 +507,7 @@ function renderDayColumns(week) {
         ${h > 24 ? `<div class="ev-time">${ev.start_time}–${ev.end_time}</div>` : ''}
         <button class="ev-del" onclick="event.stopPropagation();deleteEvent('${ev.id}','${toISO(d)}')">×</button>
       `;
-      block.addEventListener('click', () => toggleDone(ev.id, toISO(d)));
+      block.addEventListener('click', () => openEventPanel(ev, toISO(d)));
       col.appendChild(block);
     });
 
@@ -936,6 +945,143 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 });
+
+// ── EVENT PANEL ─────────────────────────────────────────────
+
+function openEventPanel(ev, dateISO) {
+  panelEvent = ev;
+  panelDateISO = dateISO;
+  panelEnergy = null;
+  panelRecDays = ev.recurring_days ? [...ev.recurring_days] : [];
+
+  document.getElementById('panel-title').textContent = ev.title;
+
+  const week = getWeekDates(weekOffset);
+  const d = new Date(dateISO + 'T12:00:00');
+  const dayStr = DAYS_FULL[d.getDay()];
+  document.getElementById('panel-meta').textContent =
+    `${ev.start_time} – ${ev.end_time} · ${dayStr}`;
+
+  const doneBtn = document.getElementById('panel-done-btn');
+  doneBtn.textContent = ev.done ? 'Desmarcar hecho' : 'Marcar como hecho';
+  doneBtn.classList.toggle('done', !!ev.done);
+
+  document.getElementById('panel-goal').value = '';
+  document.getElementById('panel-notes').value = ev.notes || '';
+
+  stopFocusTimer();
+  focusTimerSeconds = 25 * 60;
+  updateTimerDisplay();
+
+  document.querySelectorAll('.panel-energy-btn').forEach(b => b.classList.remove('selected'));
+  renderPanelRecDays();
+
+  document.getElementById('event-panel').classList.add('open');
+  document.getElementById('panel-overlay').classList.add('open');
+}
+
+function closeEventPanel() {
+  document.getElementById('event-panel').classList.remove('open');
+  document.getElementById('panel-overlay').classList.remove('open');
+  stopFocusTimer();
+  panelEvent = null;
+  panelDateISO = null;
+}
+
+async function panelToggleDone() {
+  if (!panelEvent) return;
+  await toggleDone(panelEvent.id, panelDateISO);
+  panelEvent = (eventsCache[panelDateISO] || []).find(e => e.id === panelEvent.id);
+  if (!panelEvent) { closeEventPanel(); return; }
+  const doneBtn = document.getElementById('panel-done-btn');
+  doneBtn.textContent = panelEvent.done ? 'Desmarcar hecho' : 'Marcar como hecho';
+  doneBtn.classList.toggle('done', !!panelEvent.done);
+}
+
+async function panelDeleteEvent() {
+  if (!panelEvent) return;
+  await deleteEvent(panelEvent.id, panelDateISO);
+  closeEventPanel();
+}
+
+function selectPanelEnergy(e) {
+  panelEnergy = e;
+  document.querySelectorAll('.panel-energy-btn').forEach(btn => {
+    btn.classList.toggle('selected', parseInt(btn.dataset.e) === e);
+  });
+}
+
+function toggleRecDay(d) {
+  const idx = panelRecDays.indexOf(d);
+  if (idx === -1) panelRecDays.push(d);
+  else panelRecDays.splice(idx, 1);
+  renderPanelRecDays();
+}
+
+function renderPanelRecDays() {
+  document.querySelectorAll('.rec-day-btn').forEach(btn => {
+    btn.classList.toggle('active', panelRecDays.includes(parseInt(btn.dataset.d)));
+  });
+}
+
+function updateTimerDisplay() {
+  const m = Math.floor(focusTimerSeconds / 60);
+  const s = focusTimerSeconds % 60;
+  const el = document.getElementById('panel-timer');
+  if (el) el.textContent = `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+}
+
+function toggleFocusTimer() {
+  if (focusTimerRunning) stopFocusTimer();
+  else startFocusTimer();
+}
+
+function startFocusTimer() {
+  focusTimerRunning = true;
+  document.getElementById('panel-timer').classList.add('running');
+  document.getElementById('focus-start-btn').classList.add('running');
+  document.getElementById('focus-start-btn').textContent = '■  Detener';
+
+  focusTimerInterval = setInterval(() => {
+    if (focusTimerSeconds <= 0) {
+      stopFocusTimer();
+      saveFocusSession(true);
+      return;
+    }
+    focusTimerSeconds--;
+    updateTimerDisplay();
+  }, 1000);
+}
+
+function stopFocusTimer() {
+  focusTimerRunning = false;
+  clearInterval(focusTimerInterval);
+  focusTimerInterval = null;
+  const display = document.getElementById('panel-timer');
+  const btn = document.getElementById('focus-start-btn');
+  if (display) display.classList.remove('running');
+  if (btn) {
+    btn.classList.remove('running');
+    btn.textContent = '▶  Iniciar foco';
+  }
+}
+
+async function saveFocusSession(completed) {
+  if (!currentUser || !panelEvent) return;
+  const plannedMin = 25;
+  const actualMin = Math.round((plannedMin * 60 - focusTimerSeconds) / 60);
+  await db.from('focus_sessions').insert({
+    user_id: currentUser.id,
+    event_id: panelEvent.id,
+    started_at: new Date(Date.now() - actualMin * 60000).toISOString(),
+    ended_at: new Date().toISOString(),
+    planned_minutes: plannedMin,
+    actual_minutes: actualMin,
+    completed,
+    energy_after: panelEnergy,
+    notes: document.getElementById('panel-notes')?.value || null
+  });
+}
 
 // ── ARRANCAR ────────────────────────────────────────────────
 init();

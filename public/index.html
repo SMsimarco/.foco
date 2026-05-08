@@ -207,6 +207,61 @@
 
 </div>
 
+<!-- PANEL OVERLAY -->
+<div id="panel-overlay" class="panel-overlay" onclick="closeEventPanel()"></div>
+
+<!-- EVENT PANEL -->
+<div id="event-panel" class="event-panel">
+  <div class="panel-drag"></div>
+  <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:4px">
+    <div style="flex:1;min-width:0">
+      <div class="panel-title" id="panel-title">—</div>
+      <div class="panel-meta" id="panel-meta">—</div>
+    </div>
+    <button onclick="closeEventPanel()" style="background:none;border:none;color:var(--text3);font-size:22px;cursor:pointer;padding:0 0 0 12px;line-height:1;flex-shrink:0">×</button>
+  </div>
+
+  <div class="focus-timer-display" id="panel-timer">25:00</div>
+  <button class="focus-start-btn" id="focus-start-btn" onclick="toggleFocusTimer()">▶  Iniciar foco</button>
+
+  <div class="panel-actions">
+    <button class="panel-done-btn" id="panel-done-btn" onclick="panelToggleDone()">Marcar como hecho</button>
+    <button class="panel-delete-btn" onclick="panelDeleteEvent()">Eliminar</button>
+  </div>
+
+  <div class="panel-section">
+    <div class="panel-section-label">¿Qué vas a lograr?</div>
+    <input class="panel-inp" id="panel-goal" type="text" placeholder="Objetivo de esta sesión..."/>
+  </div>
+
+  <div class="panel-section">
+    <div class="panel-section-label">Notas</div>
+    <input class="panel-inp" id="panel-notes" type="text" placeholder="Notas..."/>
+  </div>
+
+  <div class="panel-section">
+    <div class="panel-section-label">⚡ ¿Cómo saliste?</div>
+    <div class="panel-energy-row">
+      <button class="panel-energy-btn" data-e="1" onclick="selectPanelEnergy(1)">😫</button>
+      <button class="panel-energy-btn" data-e="2" onclick="selectPanelEnergy(2)">😐</button>
+      <button class="panel-energy-btn" data-e="3" onclick="selectPanelEnergy(3)">🙂</button>
+      <button class="panel-energy-btn" data-e="4" onclick="selectPanelEnergy(4)">⚡</button>
+      <button class="panel-energy-btn" data-e="5" onclick="selectPanelEnergy(5)">🚀</button>
+    </div>
+  </div>
+
+  <div class="panel-section">
+    <div class="panel-section-label">🔁 Repetir esta semana</div>
+    <div class="recurring-days">
+      <button class="rec-day-btn" data-d="1" onclick="toggleRecDay(1)">Lun</button>
+      <button class="rec-day-btn" data-d="2" onclick="toggleRecDay(2)">Mar</button>
+      <button class="rec-day-btn" data-d="3" onclick="toggleRecDay(3)">Mié</button>
+      <button class="rec-day-btn" data-d="4" onclick="toggleRecDay(4)">Jue</button>
+      <button class="rec-day-btn" data-d="5" onclick="toggleRecDay(5)">Vie</button>
+    </div>
+  </div>
+</div>
+
 <script src="/app.js"></script>
 </body>
 </html>
