@@ -374,6 +374,18 @@ function parseNL(raw) {
   let s = raw.trim();
   let date = null, h1 = 9, m1 = 0, h2 = 10, m2 = 0;
 
+  // Eliminar verbos introductorios
+  s = s.replace(/^(tengo que|voy a|quiero|necesito|hago|tengo|anoto|agendo|pongo)\s+/i, '');
+
+  // "desde ahora" / "de ahora" → hora actual redondeada a 30min
+  if (/desde\s+ahora|de\s+ahora/i.test(s)) {
+    const now = new Date();
+    const nowH = now.getHours();
+    const nowM = now.getMinutes() < 30 ? 0 : 30;
+    s = s.replace(/desde\s+ahora|de\s+ahora/i,
+      `desde las ${nowH}:${String(nowM).padStart(2, '0')}`);
+  }
+
   const MONTHS = {
     enero:0,febrero:1,marzo:2,abril:3,mayo:4,junio:5,
     julio:6,agosto:7,septiembre:8,octubre:9,noviembre:10,diciembre:11
@@ -420,9 +432,15 @@ function parseNL(raw) {
     }
   }
 
-  // Rango horario
+  // Rango horario — orden importa: más específicos primero
   const rangePatterns = [
+    // "desde las X hasta/a las Y" / "de las X a/hasta Y"
     /(?:desde\s+(?:las?\s+)?|de\s+(?:las?\s+)?)(\d{1,2})(?::(\d{2}))?\s*h?s?\s+(?:hasta\s+(?:las?\s+)?|a\s+(?:las?\s+)?)(\d{1,2})(?::(\d{2}))?\s*h?s?/i,
+    // "a las X hasta las Y"
+    /a\s+las?\s+(\d{1,2})(?::(\d{2}))?\s*h?s?\s+hasta\s+(?:las?\s+)?(\d{1,2})(?::(\d{2}))?\s*h?s?/i,
+    // "X hasta Y" / "X:MM hasta Y" (números simples)
+    /(\d{1,2})(?::(\d{2}))?\s*h?s?\s+hasta\s+(?:las?\s+)?(\d{1,2})(?::(\d{2}))?\s*h?s?/i,
+    // "X a Y" (fallback)
     /(\d{1,2})(?::(\d{2}))?\s*h?s?\s+a\s+(?:las?\s+)?(\d{1,2})(?::(\d{2}))?\s*h?s?/i,
   ];
 
@@ -442,6 +460,7 @@ function parseNL(raw) {
   if (!rangeFound) {
     const sp = [
       /a\s+las?\s+(\d{1,2})(?::(\d{2}))?\s*h?s?/i,
+      /hasta\s+las?\s+(\d{1,2})(?::(\d{2}))?\s*h?s?/i,
       /(\d{1,2})(?::(\d{2}))?\s*hs/i
     ];
     for (const p of sp) {
@@ -460,6 +479,7 @@ function parseNL(raw) {
     .replace(/\bdesde\b/gi, ' ').replace(/\bhasta\b/gi, ' ')
     .replace(/\bdesde\s+las?\b/gi, ' ').replace(/\bhasta\s+las?\b/gi, ' ')
     .replace(/\ba\s+las?\b/gi, ' ').replace(/\bde\s+las?\b/gi, ' ')
+    .replace(/\bahora\b/gi, ' ')
     .replace(/\s+/g, ' ').trim();
 
   if (!date) date = new Date();
