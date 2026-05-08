@@ -287,6 +287,115 @@ html, body {
   color: var(--text);
 }
 
+/* ── WEEKLY DIGEST ── */
+.digest-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.8);
+  z-index: 400;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fadeIn .3s ease;
+}
+
+.digest-box {
+  background: #0F0F12;
+  border: 1px solid var(--border2);
+  border-radius: 20px;
+  padding: 28px 24px;
+  max-width: 360px;
+  width: 90%;
+  animation: slideUp .35s cubic-bezier(.4,0,.2,1);
+}
+
+@keyframes slideUp {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.digest-week-label {
+  font-size: 10px;
+  color: var(--text4);
+  font-variant-numeric: tabular-nums;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+}
+
+.digest-headline {
+  font-family: 'Instrument Serif', serif;
+  font-size: 24px;
+  color: var(--text);
+  margin-bottom: 20px;
+  line-height: 1.2;
+}
+
+.digest-stats {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.digest-stat {
+  flex: 1;
+  background: var(--bg2);
+  border-radius: 10px;
+  padding: 12px 8px;
+  text-align: center;
+}
+
+.digest-stat-n {
+  font-size: 22px;
+  font-weight: 500;
+  color: var(--text);
+  display: block;
+}
+
+.digest-stat-l {
+  font-size: 9px;
+  color: var(--text4);
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  margin-top: 3px;
+  display: block;
+}
+
+.digest-insight {
+  font-size: 13px;
+  color: var(--text2);
+  line-height: 1.6;
+  margin-bottom: 12px;
+  font-style: italic;
+}
+
+.digest-tip {
+  font-size: 12px;
+  color: var(--accent);
+  background: rgba(99,102,241,.1);
+  border: 1px solid rgba(99,102,241,.2);
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-bottom: 20px;
+  line-height: 1.5;
+}
+
+.digest-close {
+  width: 100%;
+  background: var(--border2);
+  color: var(--text);
+  border: none;
+  border-radius: 10px;
+  height: 44px;
+  font-size: 14px;
+  font-weight: 500;
+  font-family: 'Geist', sans-serif;
+  cursor: pointer;
+  transition: opacity .15s;
+}
+
+.digest-close:hover { opacity: .8; }
+
 /* ── MORNING BRIEF ── */
 .morning-screen {
   position: fixed;

@@ -251,6 +251,7 @@ async function showApp() {
   setupNotifications();
   loadTemplates();
   checkMorningBrief();
+  checkWeeklyDigest();
 }
 
 // ── CARGA DE DATOS ──────────────────────────────────────────
@@ -1135,6 +1136,109 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 });
+
+// ── WEEKLY DIGEST ───────────────────────────────────────────
+
+async function checkWeeklyDigest() {
+  if (!currentUser) return;
+  const now = new Date();
+  if (now.getDay() !== 0) return;   // solo domingo
+  if (now.getHours() < 20) return;  // solo >= 20hs
+
+  const weekStart = toISO(getWeekDates(weekOffset)[0]);
+  const { data } = await db
+    .from('weekly_digests')
+    .select('id')
+    .eq('user_id', currentUser.id)
+    .eq('week_start', weekStart)
+    .maybeSingle();
+
+  if (!data) {
+    const digest = await generateWeeklyDigest();
+    if (digest) showDigestModal(digest);
+  }
+}
+
+async function generateWeeklyDigest() {
+  const week = getWeekDates(weekOffset);
+  const allEvs = week.flatMap(d => eventsCache[toISO(d)] || []);
+  const done = allEvs.filter(e => e.done).length;
+  const total = allEvs.length;
+  if (!total) return null;
+
+  const { pct: score } = calcCommitmentScore();
+
+  const eventsText = week.flatMap(d =>
+    (eventsCache[toISO(d)] || []).map(ev =>
+      `${DAYS_FULL[d.getDay()]} ${ev.start_time}: ${ev.title} — ${ev.done ? 'completado' : 'no completado'} (movido ${ev.rescheduled_count || 0}x)`
+    )
+  ).join('\n');
+
+  try {
+    const response = await fetch('/api/claude', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 300,
+        system: `Sos el coach personal del usuario. Analizás su semana y dás feedback honesto pero compasivo en español rioplatense.
+Respondé SOLO con JSON válido, sin markdown:
+{"headline":"frase de 5 palabras sobre la semana","insight":"observación específica y útil, máximo 40 palabras","tip":"acción concreta para la próxima semana, máximo 25 palabras","best_day":"nombre del día con más completación"}`,
+        messages: [{
+          role: 'user',
+          content: `Semana: ${total} eventos, ${done} completados (${Math.round(done/total*100)}%)\n\n${eventsText}`
+        }]
+      })
+    });
+
+    const apiData = await response.json();
+    const raw = (apiData.content?.[0]?.text || '').trim();
+
+    let parsed;
+    try { parsed = JSON.parse(raw); }
+    catch {
+      parsed = {
+        headline: `${Math.round(done/total*100)}% completado`,
+        insight: `Completaste ${done} de ${total} eventos esta semana.`,
+        tip: 'La próxima semana, agendá menos pero cumplí más.',
+        best_day: 'Lunes'
+      };
+    }
+
+    const weekStart = toISO(week[0]);
+    await db.from('weekly_digests').upsert({
+      user_id: currentUser.id,
+      week_start: weekStart,
+      commitment_score: score,
+      completion_rate: done / total,
+      best_day: parsed.best_day,
+      total_focus_minutes: 0,
+      ai_insight: parsed.insight,
+      ai_tip: parsed.tip
+    });
+
+    return { ...parsed, done, total, score };
+  } catch {
+    return null;
+  }
+}
+
+function showDigestModal(d) {
+  const week = getWeekDates(weekOffset);
+  document.getElementById('digest-week-label').textContent =
+    `${toISO(week[0])} → ${toISO(week[6])}`;
+  document.getElementById('digest-headline').textContent = d.headline || '—';
+  document.getElementById('digest-stat-done').textContent = d.done;
+  document.getElementById('digest-stat-score').textContent = (d.score || 0) + '%';
+  document.getElementById('digest-stat-total').textContent = d.total;
+  document.getElementById('digest-insight').textContent = d.insight || '';
+  document.getElementById('digest-tip').textContent = d.tip || '';
+  document.getElementById('digest-overlay').style.display = 'flex';
+}
+
+function closeDigest() {
+  document.getElementById('digest-overlay').style.display = 'none';
+}
 
 // ── MORNING BRIEF ───────────────────────────────────────────
 

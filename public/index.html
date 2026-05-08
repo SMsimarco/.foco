@@ -238,6 +238,31 @@
 
 </div>
 
+<!-- WEEKLY DIGEST -->
+<div id="digest-overlay" class="digest-overlay" style="display:none">
+  <div class="digest-box">
+    <div class="digest-week-label" id="digest-week-label">—</div>
+    <div class="digest-headline" id="digest-headline">—</div>
+    <div class="digest-stats">
+      <div class="digest-stat">
+        <span class="digest-stat-n" id="digest-stat-done">—</span>
+        <span class="digest-stat-l">completadas</span>
+      </div>
+      <div class="digest-stat">
+        <span class="digest-stat-n" id="digest-stat-score" style="color:var(--accent)">—</span>
+        <span class="digest-stat-l">commitment</span>
+      </div>
+      <div class="digest-stat">
+        <span class="digest-stat-n" id="digest-stat-total">—</span>
+        <span class="digest-stat-l">total</span>
+      </div>
+    </div>
+    <div class="digest-insight" id="digest-insight"></div>
+    <div class="digest-tip" id="digest-tip"></div>
+    <button class="digest-close" onclick="closeDigest()">Cerrar</button>
+  </div>
+</div>
+
 <!-- PANEL OVERLAY -->
 <div id="panel-overlay" class="panel-overlay" onclick="closeEventPanel()"></div>
 
