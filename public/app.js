@@ -198,24 +198,34 @@ async function handleAuth() {
   }
 
   btn.disabled = true;
+  btn.textContent = '...';
   errorEl.textContent = '';
 
   try {
     if (authMode === 'login') {
-      const { error } = await db.auth.signInWithPassword({ email, password });
+      const { data, error } = await db.auth.signInWithPassword({ email, password });
       if (error) throw error;
+      currentUser = data.user;
+      const { data: profile } = await db.from('profiles').select('*').eq('id', currentUser.id).single();
+      currentProfile = profile;
+      showApp();
     } else {
       const name = document.getElementById('auth-name').value.trim();
-      if (!name) { errorEl.textContent = 'Ingresá tu nombre.'; btn.disabled = false; return; }
+      if (!name) { errorEl.textContent = 'Ingresá tu nombre.'; btn.disabled = false; btn.textContent = 'Crear cuenta'; return; }
       const { data, error } = await db.auth.signUp({ email, password });
       if (error) throw error;
       if (data.user) {
+        currentUser = data.user;
         await db.from('profiles').upsert({ id: data.user.id, display_name: name });
+        const { data: profile } = await db.from('profiles').select('*').eq('id', currentUser.id).single();
+        currentProfile = profile;
+        showApp();
       }
     }
   } catch (err) {
     errorEl.textContent = err.message || 'Error al iniciar sesión.';
     btn.disabled = false;
+    btn.textContent = authMode === 'login' ? 'Entrar' : 'Crear cuenta';
   }
 }
 
@@ -235,21 +245,27 @@ function toggleNotif() {
 // ── INICIALIZACIÓN ──────────────────────────────────────────
 
 async function init() {
-  db.auth.onAuthStateChange(async (event, session) => {
-    if (session?.user) {
-      currentUser = session.user;
-      const { data } = await db.from('profiles').select('*').eq('id', currentUser.id).single();
-      currentProfile = data;
-      showApp();
-    } else {
+  // Verificar sesión existente directamente — no depender solo de onAuthStateChange
+  const { data: { session } } = await db.auth.getSession();
+  if (session?.user) {
+    currentUser = session.user;
+    const { data } = await db.from('profiles').select('*').eq('id', currentUser.id).single();
+    currentProfile = data;
+    showApp();
+  } else {
+    showAuth();
+  }
+
+  // Solo para eventos reactivos posteriores (logout, refresh de token)
+  db.auth.onAuthStateChange((event, session) => {
+    if (event === 'SIGNED_OUT') {
       currentUser = null;
       currentProfile = null;
       showAuth();
+    } else if (event === 'TOKEN_REFRESHED' && session) {
+      currentUser = session.user;
     }
   });
-
-  const { data: { session } } = await db.auth.getSession();
-  if (!session) showAuth();
 }
 
 function showAuth() {
