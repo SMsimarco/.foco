@@ -493,7 +493,7 @@ function parseNL(raw) {
   if (!date) date = new Date();
 
   return {
-    name: s || 'Nuevo evento',
+    name: s ? s.charAt(0).toUpperCase() + s.slice(1) : 'Nuevo evento',
     date,
     h1: Math.min(h1, 23),
     m1,
