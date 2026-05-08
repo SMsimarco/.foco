@@ -278,6 +278,8 @@ async function loadWeek() {
 
   week.forEach(d => { eventsCache[toISO(d)] = []; });
   (data || []).forEach(ev => {
+    ev.start_time = ev.start_time ? ev.start_time.slice(0, 5) : ev.start_time;
+    ev.end_time   = ev.end_time   ? ev.end_time.slice(0, 5)   : ev.end_time;
     if (!eventsCache[ev.date]) eventsCache[ev.date] = [];
     eventsCache[ev.date].push(ev);
   });
@@ -469,7 +471,9 @@ function parseNL(raw) {
     const sp = [
       /a\s+las?\s+(\d{1,2})(?::(\d{2}))?\s*h?s?/i,
       /hasta\s+las?\s+(\d{1,2})(?::(\d{2}))?\s*h?s?/i,
-      /(\d{1,2})(?::(\d{2}))?\s*hs/i
+      /(\d{1,2})(?::(\d{2}))?\s*hs/i,
+      /\b(\d{1,2}):(\d{2})\b/,       // "14:30" bare (ya normalizado del preprocessor)
+      /\b([01]?\d|2[0-3])\b(?!\s*\w)/ // hora sola al final o sin letras pegadas
     ];
     for (const p of sp) {
       const m = s.match(p);
