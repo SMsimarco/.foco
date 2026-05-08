@@ -892,12 +892,15 @@ function renderConflicts() {
 async function generateAISummary() {
   const week = getWeekDates(weekOffset);
   const resumenEl = document.getElementById('sug-resumen-text');
+  resumenEl.innerHTML = `<span style="color:var(--text4)">Analizando tu semana...</span>`;
 
-  resumenEl.textContent = 'Analizando tu semana...';
+  const allEvs = week.flatMap(d => eventsCache[toISO(d)] || []);
+  const done = allEvs.filter(e => e.done).length;
+  const total = allEvs.length;
 
   const eventsText = week.flatMap(d =>
     (eventsCache[toISO(d)] || []).map(ev =>
-      `${DAYS_FULL[d.getDay()]} ${ev.start_time}-${ev.end_time}: ${ev.title}${ev.done ? ' (✓)' : ''}`
+      `${DAYS_FULL[d.getDay()]} ${ev.start_time}-${ev.end_time}: ${ev.title}${ev.done ? ' (✓)' : ''} (movido ${ev.rescheduled_count || 0}x)`
     )
   ).join('\n');
 
@@ -907,17 +910,39 @@ async function generateAISummary() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         model: 'claude-haiku-4-5-20251001',
-        max_tokens: 200,
-        system: `Sos un asistente de productividad. Analizás la agenda semanal del usuario
-                 y dás un resumen conciso en español rioplatense (2-3 oraciones).
-                 Mencioná: día más cargado, patrón que notás, algo concreto a mejorar.
-                 Sé directo, sin saludos. Máximo 60 palabras.`,
-        messages: [{ role: 'user', content: eventsText || 'Sin eventos esta semana.' }]
+        max_tokens: 300,
+        system: `Sos el coach personal del usuario. Analizás su semana y dás feedback honesto pero compasivo en español rioplatense.
+Respondé SOLO con JSON válido, sin markdown ni texto extra:
+{"headline":"frase de 4-5 palabras sobre la semana","insight":"observación específica y útil, máximo 40 palabras","tip":"acción concreta para mejorar, máximo 25 palabras","best_day":"nombre del día con más completación"}`,
+        messages: [{
+          role: 'user',
+          content: `Semana: ${total} eventos, ${done} completados.\n\n${eventsText || 'Sin eventos esta semana.'}`
+        }]
       })
     });
+
     const data = await response.json();
-    resumenEl.textContent = data.content?.[0]?.text || 'No se pudo generar el análisis.';
-  } catch (e) {
+    const raw = (data.content?.[0]?.text || '').trim();
+
+    let parsed;
+    try {
+      parsed = JSON.parse(raw);
+    } catch {
+      parsed = {
+        headline: total ? `${Math.round(done / total * 100)}% completado` : 'Semana sin eventos',
+        insight: raw || `Completaste ${done} de ${total} eventos esta semana.`,
+        tip: 'La próxima semana, agendá menos pero cumplí más.',
+        best_day: null
+      };
+    }
+
+    resumenEl.innerHTML = `
+      ${parsed.headline ? `<div style="font-size:15px;font-weight:500;color:var(--text);margin-bottom:8px;line-height:1.3">${parsed.headline}</div>` : ''}
+      ${parsed.insight ? `<div style="font-size:12px;color:var(--text2);line-height:1.6;margin-bottom:10px">${parsed.insight}</div>` : ''}
+      ${parsed.tip ? `<div style="font-size:11px;color:var(--accent);background:rgba(99,102,241,.08);border:1px solid rgba(99,102,241,.15);border-radius:7px;padding:8px 10px;line-height:1.5;margin-bottom:6px">${parsed.tip}</div>` : ''}
+      ${parsed.best_day ? `<div style="font-size:10px;color:var(--text4);margin-top:4px">Mejor día: <span style="color:var(--text3)">${parsed.best_day}</span></div>` : ''}
+    `;
+  } catch {
     resumenEl.textContent = 'No se pudo conectar con la IA.';
   }
 }
