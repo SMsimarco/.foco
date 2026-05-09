@@ -35,6 +35,8 @@ let monthOffset = 0;
 let currentView = 'semana';
 let eventsCache = {}; // { 'YYYY-MM-DD': [...events] }
 let ghost = null;
+let _lastTapTime = 0;
+let _lastTapDi = -1;
 let notifOn = true;
 let authMode = 'login';
 
@@ -824,19 +826,24 @@ function renderDayColumns(week) {
       showToast('Evento movido', 'success');
     });
 
-    col.addEventListener('click', () => {
-      if (ghost) { ghost = null; renderSemana(); }
-    });
+    col.addEventListener('click', (e) => {
+      if (ghost) { ghost = null; renderSemana(); return; }
 
-    col.addEventListener('dblclick', (e) => {
-      const rect = col.getBoundingClientRect();
-      const gridWrap = document.getElementById('grid-wrap');
-      const relY = e.clientY - rect.top + gridWrap.scrollTop;
-      const { h, m } = yToHM(relY);
-      const em2 = (m + 30) % 60;
-      const eh2 = m + 30 >= 60 ? h + 1 : h;
-      ghost = { di, h, m, eh: Math.min(eh2, 23), em: em2, pre: '' };
-      renderSemana();
+      const now = Date.now();
+      if (now - _lastTapTime < 350 && _lastTapDi === di) {
+        _lastTapTime = 0;
+        const rect = col.getBoundingClientRect();
+        const gridWrap = document.getElementById('grid-wrap');
+        const relY = e.clientY - rect.top + gridWrap.scrollTop;
+        const { h, m } = yToHM(relY);
+        const em2 = (m + 30) % 60;
+        const eh2 = m + 30 >= 60 ? h + 1 : h;
+        ghost = { di, h, m, eh: Math.min(eh2, 23), em: em2, pre: '' };
+        renderSemana();
+      } else {
+        _lastTapTime = now;
+        _lastTapDi = di;
+      }
     });
 
     container.appendChild(col);
@@ -2188,7 +2195,7 @@ const CMD_ACTIONS = [
   { label: 'Vista Patrones',    icon: '◈',  hint: '',  fn: () => setView('patrones') },
   { label: 'Vista Sugerencias', icon: '✦',  hint: '',  fn: () => setView('sugerencias') },
   { label: 'Nuevo evento',      icon: '+',  hint: 'N', fn: () => { closeCmd(); document.getElementById('nl-input').focus(); } },
-  { label: 'Modo foco ambiente',icon: '✿',  hint: '',  fn: () => { closeCmd(); enterAmbientMode(); } },
+  { label: 'Modo foco ambiente',icon: '✿',  hint: '',  fn: () => { closeCmd(); toggleAmbientMode(); } },
   { label: 'Cerrar sesión',     icon: '↪',  hint: '',  fn: () => logout() },
 ];
 
@@ -2233,8 +2240,17 @@ function execCmd(idx) {
 // ── AMBIENT MODE ─────────────────────────────────────────────
 
 function enterAmbientMode() {
-  ambientActive = !ambientActive;
-  document.body.classList.toggle('ambient', ambientActive);
+  ambientActive = true;
+  document.body.classList.add('ambient');
+}
+
+function exitAmbientMode() {
+  ambientActive = false;
+  document.body.classList.remove('ambient');
+}
+
+function toggleAmbientMode() {
+  ambientActive ? exitAmbientMode() : enterAmbientMode();
   showToast(ambientActive ? 'Modo foco activo' : 'Modo foco desactivado', 'info');
 }
 
