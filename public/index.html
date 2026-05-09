@@ -37,6 +37,9 @@
 <!-- APP -->
 <div id="app" style="display:none">
 
+  <!-- PARTICLES CANVAS -->
+  <canvas id="particles-canvas" class="particles-canvas"></canvas>
+
   <!-- MORNING BRIEF -->
   <div id="morning-screen" class="morning-screen" style="display:none">
     <div class="morning-box">
@@ -59,6 +62,7 @@
   <!-- HEADER -->
   <div id="header">
     <span class="logo">foco.</span>
+    <span id="live-clock" class="live-clock"></span>
 
     <div class="week-nav" id="week-nav">
       <button class="week-nav-btn" onclick="changeWeek(-1)">‹</button>
@@ -375,6 +379,17 @@
     </div>
   </div>
 </div>
+
+<!-- COMMAND PALETTE -->
+<div id="cmd-overlay" class="cmd-overlay" onclick="closeCmd()"></div>
+<div id="cmd-palette" class="cmd-palette">
+  <input id="cmd-input" type="text" class="cmd-input" placeholder="¿Qué querés hacer? (Cmd+K)"/>
+  <div id="cmd-results" class="cmd-results"></div>
+  <div class="cmd-footer">↑↓ navegar · Enter seleccionar · Esc cerrar</div>
+</div>
+
+<!-- TOAST CONTAINER -->
+<div id="toast-container"></div>
 
 <script src="/app.js"></script>
 </body>

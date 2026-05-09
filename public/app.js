@@ -50,8 +50,16 @@ let panelDateISO = null;
 let panelEnergy = null;
 let panelRecDays = [];
 let focusTimerInterval = null;
+let focusTimerRAF = null;
+let focusTimerEndTime = null;
 let focusTimerSeconds = 25 * 60;
 let focusTimerRunning = false;
+
+// Drag state
+let dragEvent = null;
+
+// Ambient mode
+let ambientActive = false;
 
 // ── HELPERS ─────────────────────────────────────────────────
 
@@ -175,6 +183,36 @@ function hasConflict(evs, ev) {
   );
 }
 
+function debounce(fn, delay) {
+  let t;
+  return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), delay); };
+}
+
+function showToast(msg, type = 'info') {
+  const container = document.getElementById('toast-container');
+  if (!container) return;
+  const t = document.createElement('div');
+  t.className = `toast toast-${type}`;
+  t.textContent = msg;
+  container.appendChild(t);
+  requestAnimationFrame(() => requestAnimationFrame(() => t.classList.add('show')));
+  setTimeout(() => {
+    t.classList.remove('show');
+    setTimeout(() => t.remove(), 320);
+  }, 2600);
+}
+
+function startLiveClock() {
+  const el = document.getElementById('live-clock');
+  if (!el) return;
+  const tick = () => {
+    const now = new Date();
+    el.textContent = now.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
+  };
+  tick();
+  setInterval(tick, 1000);
+}
+
 // ── AUTH ────────────────────────────────────────────────────
 
 function switchTab(mode) {
@@ -284,6 +322,7 @@ async function showApp() {
   checkOnboarding();
   checkMorningBrief();
   checkWeeklyDigest();
+  startLiveClock();
 }
 
 // ── CARGA DE DATOS ──────────────────────────────────────────
@@ -358,6 +397,7 @@ async function addEvent(dateISO, title, startTime, endTime) {
   ghost = null;
   renderSemana();
   scheduleNotification(data);
+  showToast(`"${data.title}" agregado`, 'info');
 }
 
 async function toggleDone(id, dateISO) {
@@ -365,6 +405,17 @@ async function toggleDone(id, dateISO) {
   if (!ev) return;
 
   const newDone = !ev.done;
+
+  if (newDone) {
+    const block = document.querySelector(`[data-event-id="${id}"]`);
+    if (block) {
+      const rect = block.getBoundingClientRect();
+      block.classList.add('completing');
+      fireParticles(rect.left + rect.width / 2, rect.top + rect.height / 2);
+      await new Promise(r => setTimeout(r, 380));
+    }
+  }
+
   const { error } = await db.from('events').update({ done: newDone }).eq('id', id);
   if (error) { console.error(error); return; }
 
@@ -372,7 +423,15 @@ async function toggleDone(id, dateISO) {
   renderSemana();
   updateMomentum();
   if (currentView === 'sugerencias') updateSugStats();
-  updatePattern(ev); // fire-and-forget
+  updatePattern(ev);
+
+  if (newDone) {
+    const dayEvs = eventsCache[dateISO] || [];
+    if (dayEvs.length > 0 && dayEvs.every(e => e.done)) {
+      setTimeout(fireConfetti, 120);
+      showToast('¡Día completado!', 'success');
+    }
+  }
 }
 
 async function updatePattern(ev) {
@@ -389,6 +448,7 @@ async function updatePattern(ev) {
 }
 
 async function deleteEvent(id, dateISO) {
+  const ev = (eventsCache[dateISO] || []).find(e => e.id === id);
   const { error } = await db.from('events').delete().eq('id', id);
   if (error) { console.error(error); return; }
 
@@ -396,6 +456,7 @@ async function deleteEvent(id, dateISO) {
   ghost = null;
   renderSemana();
   updateMomentum();
+  if (ev) showToast(`"${ev.title}" eliminado`, 'error');
 }
 
 // ── PARSER LENGUAJE NATURAL ─────────────────────────────────
@@ -631,12 +692,28 @@ function renderDayColumns(week) {
       block.style.setProperty('--event-color', color);
       block.style.setProperty('--event-color-30', color + '30');
       block.style.setProperty('--event-color-15', color + '15');
+      block.setAttribute('data-event-id', ev.id);
+      block.setAttribute('draggable', 'true');
       block.innerHTML = `
         <div class="ev-title">${ev.title}</div>
         ${h > 24 ? `<div class="ev-time">${ev.start_time}–${ev.end_time}</div>` : ''}
         <button class="ev-del" onclick="event.stopPropagation();deleteEvent('${ev.id}','${toISO(d)}')">×</button>
       `;
       block.addEventListener('click', () => openEventPanel(ev, toISO(d)));
+
+      // Drag start
+      block.addEventListener('dragstart', e => {
+        dragEvent = { ev: { ...ev }, fromDate: toISO(d) };
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/plain', ev.id);
+        setTimeout(() => { block.style.opacity = '0.35'; }, 0);
+      });
+      block.addEventListener('dragend', () => {
+        block.style.opacity = '';
+        dragEvent = null;
+        document.querySelectorAll('.day-col.drag-over').forEach(c => c.classList.remove('drag-over'));
+      });
+
       col.appendChild(block);
     });
 
@@ -679,6 +756,48 @@ function renderDayColumns(week) {
         }
       }, 25);
     }
+
+    // Drag & drop — recibir eventos de otros días
+    col.addEventListener('dragover', e => {
+      if (!dragEvent) return;
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      col.classList.add('drag-over');
+    });
+    col.addEventListener('dragleave', e => {
+      if (!e.relatedTarget || !col.contains(e.relatedTarget)) {
+        col.classList.remove('drag-over');
+      }
+    });
+    col.addEventListener('drop', async e => {
+      e.preventDefault();
+      col.classList.remove('drag-over');
+      if (!dragEvent) return;
+      const rect = col.getBoundingClientRect();
+      const gridWrap = document.getElementById('grid-wrap');
+      const relY = e.clientY - rect.top + gridWrap.scrollTop;
+      const { h: newH, m: newM } = yToHM(relY);
+      const [sh, sm] = dragEvent.ev.start_time.split(':').map(Number);
+      const [eh, em] = dragEvent.ev.end_time.split(':').map(Number);
+      const durationMin = Math.max((eh * 60 + em) - (sh * 60 + sm), 30);
+      const newStartMin = newH * 60 + newM;
+      const newEndMin = newStartMin + durationMin;
+      const newEndH = Math.min(Math.floor(newEndMin / 60), 23);
+      const newEndM = newEndMin % 60;
+      const newStart = fmtTime(newH, newM);
+      const newEnd = fmtTime(newEndH, newEndM);
+      const newDateISO = toISO(d);
+      if (newStart === dragEvent.ev.start_time && newDateISO === dragEvent.fromDate) { dragEvent = null; return; }
+      const { error } = await db.from('events').update({ date: newDateISO, start_time: newStart, end_time: newEnd }).eq('id', dragEvent.ev.id);
+      if (error) { showToast('Error al mover evento', 'error'); dragEvent = null; return; }
+      eventsCache[dragEvent.fromDate] = (eventsCache[dragEvent.fromDate] || []).filter(ev => ev.id !== dragEvent.ev.id);
+      if (!eventsCache[newDateISO]) eventsCache[newDateISO] = [];
+      const moved = { ...dragEvent.ev, date: newDateISO, start_time: newStart, end_time: newEnd };
+      eventsCache[newDateISO].push(moved);
+      dragEvent = null;
+      renderSemana();
+      showToast('Evento movido', 'success');
+    });
 
     col.addEventListener('click', (e) => {
       if (ghost) { ghost = null; renderSemana(); return; }
@@ -1095,11 +1214,33 @@ async function setView(view) {
 }
 
 async function changeWeek(dir) {
+  const semana = document.getElementById('view-semana');
+  semana.style.transition = 'transform 0.2s cubic-bezier(.4,0,.2,1), opacity 0.2s';
+  semana.style.transform = `translateX(${dir < 0 ? '30px' : '-30px'})`;
+  semana.style.opacity = '0';
+
   weekOffset += dir;
   ghost = null;
+  showSkeleton();
   await loadWeek();
+
+  semana.style.transition = 'none';
+  semana.style.transform = `translateX(${dir < 0 ? '-30px' : '30px'})`;
+  semana.style.opacity = '0';
+
+  await new Promise(r => requestAnimationFrame(r));
   renderSemana();
-  setTimeout(scrollToCurrentTime, 80);
+
+  semana.style.transition = 'transform 0.24s cubic-bezier(.4,0,.2,1), opacity 0.24s';
+  semana.style.transform = 'translateX(0)';
+  semana.style.opacity = '1';
+
+  setTimeout(() => {
+    semana.style.transition = '';
+    semana.style.transform = '';
+    semana.style.opacity = '';
+    scrollToCurrentTime();
+  }, 260);
 }
 
 // ── NOTIFICACIONES ──────────────────────────────────────────
@@ -1213,6 +1354,71 @@ document.addEventListener('DOMContentLoaded', () => {
       if (currentView === 'semana') renderSemana();
     }
   });
+
+  // Atajos de teclado globales
+  document.addEventListener('keydown', e => {
+    const tag = document.activeElement?.tagName;
+    const inInput = tag === 'INPUT' || tag === 'TEXTAREA';
+
+    // Cmd/Ctrl+K — command palette
+    if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+      e.preventDefault();
+      openCmd();
+      return;
+    }
+
+    // Escape — cerrar panel y command palette
+    if (e.key === 'Escape') {
+      closeCmd();
+      if (document.getElementById('event-panel')?.classList.contains('open')) closeEventPanel();
+      return;
+    }
+
+    if (inInput) return;
+
+    switch (e.key) {
+      case 't': case 'T':
+        weekOffset = 0;
+        if (currentView === 'semana') { loadWeek().then(renderSemana); }
+        else setView('semana');
+        break;
+      case 'ArrowLeft':
+        if (currentView === 'semana') changeWeek(-1);
+        break;
+      case 'ArrowRight':
+        if (currentView === 'semana') changeWeek(1);
+        break;
+      case 'n': case 'N':
+        document.getElementById('nl-input')?.focus();
+        break;
+    }
+  });
+
+  // Command palette — input listener
+  const cmdInp = document.getElementById('cmd-input');
+  if (cmdInp) {
+    cmdInp.addEventListener('input', e => renderCmdResults(e.target.value));
+    cmdInp.addEventListener('keydown', e => {
+      const items = document.querySelectorAll('.cmd-item');
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        cmdFocusIdx = Math.min(cmdFocusIdx + 1, items.length - 1);
+        renderCmdResults(cmdInp.value);
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        cmdFocusIdx = Math.max(cmdFocusIdx - 1, 0);
+        renderCmdResults(cmdInp.value);
+      } else if (e.key === 'Enter') {
+        e.preventDefault();
+        const focused = document.querySelector('.cmd-item.focused');
+        if (focused) focused.click();
+      } else if (e.key === 'Escape') {
+        e.preventDefault();
+        closeCmd();
+      }
+      e.stopPropagation();
+    });
+  }
 });
 
 // ── ONBOARDING ──────────────────────────────────────────────
@@ -1568,16 +1774,19 @@ async function panelDeleteEvent() {
   closeEventPanel();
 }
 
-async function selectPanelEnergy(e) {
+const debouncedSaveEnergy = debounce(async (id, e) => {
+  await db.from('events').update({ energy_weight: e }).eq('id', id);
+}, 700);
+
+function selectPanelEnergy(e) {
   panelEnergy = e;
   document.querySelectorAll('.panel-energy-btn').forEach(btn => {
     btn.classList.toggle('selected', parseInt(btn.dataset.energy) === e);
   });
-  // Guardar energy_weight en el evento
   if (panelEvent && panelDateISO) {
-    await db.from('events').update({ energy_weight: e }).eq('id', panelEvent.id);
     const ev = (eventsCache[panelDateISO] || []).find(ev => ev.id === panelEvent.id);
     if (ev) ev.energy_weight = e;
+    debouncedSaveEnergy(panelEvent.id, e);
   }
 }
 
@@ -1620,25 +1829,46 @@ function toggleFocusTimer() {
 
 function startFocusTimer() {
   focusTimerRunning = true;
+  focusTimerEndTime = Date.now() + focusTimerSeconds * 1000;
   document.getElementById('focus-timer').classList.add('running');
   document.getElementById('focus-start-btn').classList.add('running');
   document.getElementById('focus-start-btn').textContent = '■ Detener';
 
-  focusTimerInterval = setInterval(() => {
-    if (focusTimerSeconds <= 0) {
+  let lastSec = focusTimerSeconds;
+  const tick = () => {
+    if (!focusTimerRunning) return;
+    const remainingMs = Math.max(0, focusTimerEndTime - Date.now());
+    const remainingSec = Math.ceil(remainingMs / 1000);
+
+    // Smooth ring update at display refresh rate
+    updateTimerRing(remainingMs / 1000, 25 * 60);
+
+    if (remainingSec !== lastSec) {
+      lastSec = remainingSec;
+      focusTimerSeconds = remainingSec;
+      const m = Math.floor(remainingSec / 60);
+      const s = remainingSec % 60;
+      const el = document.getElementById('focus-timer');
+      if (el) el.textContent = `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+    }
+
+    if (remainingMs <= 0) {
       stopFocusTimer();
       saveFocusSession(true);
+      showToast('¡Sesión de foco completada!', 'success');
       return;
     }
-    focusTimerSeconds--;
-    updateTimerDisplay();
-  }, 1000);
+    focusTimerRAF = requestAnimationFrame(tick);
+  };
+  focusTimerRAF = requestAnimationFrame(tick);
 }
 
 function stopFocusTimer() {
   focusTimerRunning = false;
+  if (focusTimerRAF) { cancelAnimationFrame(focusTimerRAF); focusTimerRAF = null; }
   clearInterval(focusTimerInterval);
   focusTimerInterval = null;
+  focusTimerEndTime = null;
   const display = document.getElementById('focus-timer');
   const btn = document.getElementById('focus-start-btn');
   if (display) display.classList.remove('running');
@@ -1664,6 +1894,175 @@ async function saveFocusSession(completed) {
     energy_after: panelEnergy,
     notes: document.getElementById('panel-notes')?.value || null
   });
+}
+
+// ── SKELETON LOADING ────────────────────────────────────────
+
+function showSkeleton() {
+  const container = document.getElementById('day-columns');
+  if (!container) return;
+  container.innerHTML = '';
+  const slotPatterns = [
+    [{ top: 120, h: 96 }, { top: 288, h: 144 }, { top: 528, h: 72 }],
+    [{ top: 96, h: 72 }, { top: 336, h: 96 }],
+    [{ top: 192, h: 120 }, { top: 432, h: 96 }, { top: 672, h: 72 }],
+    [{ top: 144, h: 144 }],
+    [{ top: 240, h: 96 }, { top: 480, h: 72 }],
+    [{ top: 168, h: 120 }, { top: 384, h: 96 }],
+    [{ top: 96, h: 96 }],
+  ];
+  for (let d = 0; d < 7; d++) {
+    const col = document.createElement('div');
+    col.className = 'day-col';
+    col.style.height = '1152px';
+    (slotPatterns[d] || []).forEach(({ top, h }) => {
+      const block = document.createElement('div');
+      block.className = 'skeleton-block';
+      block.style.cssText = `top:${top}px;height:${h}px`;
+      col.appendChild(block);
+    });
+    container.appendChild(col);
+  }
+}
+
+// ── PARTÍCULAS & CONFETTI ────────────────────────────────────
+
+function fireParticles(x, y) {
+  const canvas = document.getElementById('particles-canvas');
+  if (!canvas) return;
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  canvas.style.display = 'block';
+  const ctx = canvas.getContext('2d');
+  const colors = ['#6366F1','#8B5CF6','#06B6D4','#10B981','#F59E0B','#A78BFA'];
+  const particles = Array.from({ length: 18 }, () => ({
+    x, y,
+    vx: (Math.random() - 0.5) * 9,
+    vy: (Math.random() - 0.5) * 9 - 3,
+    size: Math.random() * 5 + 2,
+    color: colors[Math.floor(Math.random() * colors.length)],
+    life: 1,
+    decay: Math.random() * 0.025 + 0.018
+  }));
+  const animate = () => {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    let alive = false;
+    particles.forEach(p => {
+      if (p.life <= 0) return;
+      alive = true;
+      p.x += p.vx; p.y += p.vy; p.vy += 0.22; p.life -= p.decay;
+      ctx.globalAlpha = Math.max(0, p.life);
+      ctx.fillStyle = p.color;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+      ctx.fill();
+    });
+    ctx.globalAlpha = 1;
+    if (alive) requestAnimationFrame(animate);
+    else canvas.style.display = 'none';
+  };
+  requestAnimationFrame(animate);
+}
+
+function fireConfetti() {
+  const canvas = document.getElementById('particles-canvas');
+  if (!canvas) return;
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  canvas.style.display = 'block';
+  const ctx = canvas.getContext('2d');
+  const colors = ['#6366F1','#8B5CF6','#06B6D4','#10B981','#F59E0B','#F43F5E','#A78BFA','#67E8F9'];
+  const pieces = Array.from({ length: 70 }, () => ({
+    x: Math.random() * canvas.width,
+    y: -10 - Math.random() * 80,
+    vx: (Math.random() - 0.5) * 5,
+    vy: Math.random() * 4 + 2,
+    size: Math.random() * 9 + 4,
+    color: colors[Math.floor(Math.random() * colors.length)],
+    rotation: Math.random() * Math.PI * 2,
+    rotSpeed: (Math.random() - 0.5) * 0.18,
+    dead: false
+  }));
+  const animate = () => {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    let alive = false;
+    pieces.forEach(p => {
+      if (p.dead) return;
+      p.x += p.vx; p.y += p.vy; p.rotation += p.rotSpeed;
+      if (p.y > canvas.height + 20) { p.dead = true; return; }
+      alive = true;
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.rotation);
+      ctx.fillStyle = p.color;
+      ctx.fillRect(-p.size / 2, -p.size / 4, p.size, p.size / 2);
+      ctx.restore();
+    });
+    if (alive) requestAnimationFrame(animate);
+    else canvas.style.display = 'none';
+  };
+  requestAnimationFrame(animate);
+}
+
+// ── COMMAND PALETTE ──────────────────────────────────────────
+
+const CMD_ACTIONS = [
+  { label: 'Ir a hoy',          icon: '📅', hint: 'T', fn: () => { weekOffset = 0; setView('semana'); } },
+  { label: 'Semana anterior',   icon: '‹',  hint: '←', fn: () => changeWeek(-1) },
+  { label: 'Semana siguiente',  icon: '›',  hint: '→', fn: () => changeWeek(1) },
+  { label: 'Vista Semana',      icon: '▦',  hint: '',  fn: () => setView('semana') },
+  { label: 'Vista Mes',         icon: '◉',  hint: '',  fn: () => setView('mes') },
+  { label: 'Vista Patrones',    icon: '◈',  hint: '',  fn: () => setView('patrones') },
+  { label: 'Vista Sugerencias', icon: '✦',  hint: '',  fn: () => setView('sugerencias') },
+  { label: 'Nuevo evento',      icon: '+',  hint: 'N', fn: () => { closeCmd(); document.getElementById('nl-input').focus(); } },
+  { label: 'Modo foco ambiente',icon: '✿',  hint: '',  fn: () => { closeCmd(); enterAmbientMode(); } },
+  { label: 'Cerrar sesión',     icon: '↪',  hint: '',  fn: () => logout() },
+];
+
+let cmdFocusIdx = 0;
+
+function openCmd() {
+  const overlay = document.getElementById('cmd-overlay');
+  const palette = document.getElementById('cmd-palette');
+  if (!overlay || !palette) return;
+  overlay.classList.add('open');
+  palette.classList.add('open');
+  const inp = document.getElementById('cmd-input');
+  if (inp) { inp.value = ''; inp.focus(); }
+  cmdFocusIdx = 0;
+  renderCmdResults('');
+}
+
+function closeCmd() {
+  document.getElementById('cmd-overlay')?.classList.remove('open');
+  document.getElementById('cmd-palette')?.classList.remove('open');
+}
+
+function renderCmdResults(query) {
+  const results = document.getElementById('cmd-results');
+  if (!results) return;
+  const q = query.toLowerCase();
+  const filtered = CMD_ACTIONS.filter(a => !q || a.label.toLowerCase().includes(q));
+  results.innerHTML = filtered.map((a, i) => `
+    <div class="cmd-item${i === cmdFocusIdx ? ' focused' : ''}" data-idx="${CMD_ACTIONS.indexOf(a)}" onclick="execCmd(${CMD_ACTIONS.indexOf(a)})">
+      <span class="cmd-item-icon">${a.icon}</span>
+      <span class="cmd-item-label">${a.label}</span>
+      ${a.hint ? `<span class="cmd-item-hint">${a.hint}</span>` : ''}
+    </div>
+  `).join('');
+}
+
+function execCmd(idx) {
+  closeCmd();
+  CMD_ACTIONS[idx]?.fn();
+}
+
+// ── AMBIENT MODE ─────────────────────────────────────────────
+
+function enterAmbientMode() {
+  ambientActive = !ambientActive;
+  document.body.classList.toggle('ambient', ambientActive);
+  showToast(ambientActive ? 'Modo foco activo' : 'Modo foco desactivado', 'info');
 }
 
 // ── ARRANCAR ────────────────────────────────────────────────
