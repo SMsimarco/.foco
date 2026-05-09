@@ -347,98 +347,43 @@
 
 <!-- EVENT PANEL -->
 <div id="event-panel" class="event-panel">
-  <div class="panel-drag-wrap">
-    <div class="panel-drag"></div>
-  </div>
+  <div class="panel-drag-wrap"><div class="panel-drag"></div></div>
 
-  <!-- ESTADO 1: Pre-foco -->
-  <div id="panel-pre-state" class="panel-state">
-    <div class="panel-header">
-      <div class="panel-title" id="panel-title">—</div>
-      <div class="panel-meta" id="panel-meta">—</div>
-    </div>
-    <div class="panel-body">
-      <div class="session-modes" id="session-modes">
-        <button class="session-mode active" data-mode="profundo" data-mins="25">
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-            <circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.5"/>
-            <circle cx="8" cy="8" r="2.5" fill="currentColor"/>
-          </svg>
-          <span class="session-mode-time">25'</span>
-          <span class="session-mode-label">Profundo</span>
-        </button>
-        <button class="session-mode" data-mode="extendido" data-mins="50">
-          <svg width="20" height="16" viewBox="0 0 20 16" fill="none">
-            <circle cx="6" cy="8" r="5" stroke="currentColor" stroke-width="1.5"/>
-            <circle cx="14" cy="8" r="5" stroke="currentColor" stroke-width="1.5"/>
-          </svg>
-          <span class="session-mode-time">50'</span>
-          <span class="session-mode-label">Extendido</span>
-        </button>
-        <button class="session-mode" data-mode="flujo" data-mins="0">
-          <svg width="22" height="12" viewBox="0 0 22 12" fill="none">
-            <path d="M11 6C11 6 8.5 1 5 1C2.24 1 1 3.24 1 6C1 8.76 2.24 11 5 11C8.5 11 11 6 11 6Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-            <path d="M11 6C11 6 13.5 11 17 11C19.76 11 21 8.76 21 6C21 3.24 19.76 1 17 1C13.5 1 11 6 11 6Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-          </svg>
-          <span class="session-mode-time">∞</span>
-          <span class="session-mode-label">Flujo</span>
-        </button>
+  <div class="panel-content">
+    <!-- Fila superior: info + estado -->
+    <div class="panel-top">
+      <div class="panel-event-info">
+        <div class="panel-title" id="panel-title">—</div>
+        <div class="panel-meta" id="panel-meta">—</div>
       </div>
-      <input class="intent-input" id="intent-input" type="text"
-             placeholder="¿Qué vas a lograr en esta sesión?"/>
-      <button class="focus-start-btn" id="focus-start-btn" onclick="startSession()">Iniciar sesión</button>
-      <div class="panel-secondary-actions">
-        <button class="panel-action-btn done-btn" id="panel-done-btn" onclick="panelToggleDone()">Marcar como hecho</button>
-        <button class="panel-action-btn delete-btn" onclick="panelDeleteEvent()">Eliminar</button>
-      </div>
+      <button class="panel-status-chip" id="panel-status-chip" onclick="panelToggleDone()">
+        <span id="panel-status-text">Pendiente</span>
+      </button>
     </div>
-  </div>
 
-  <!-- ESTADO 2: Foco activo -->
-  <div id="panel-active-state" class="panel-state" style="display:none">
-    <div class="panel-header" style="border-bottom:none;padding-bottom:0">
-      <div class="panel-title" id="active-panel-title" style="font-size:15px;color:rgba(255,255,255,0.45)">—</div>
-    </div>
-    <div class="active-timer-wrap">
-      <svg class="active-timer-svg" viewBox="0 0 220 220">
-        <circle cx="110" cy="110" r="95" fill="none"
-                stroke="rgba(255,255,255,0.05)" stroke-width="3"/>
-        <circle id="active-ring" cx="110" cy="110" r="95" fill="none"
-                stroke="#6366F1" stroke-width="3" stroke-linecap="round"
-                stroke-dasharray="597" stroke-dashoffset="0"
-                transform="rotate(-90 110 110)"/>
+    <!-- Timer inline (visible solo cuando corre) -->
+    <div class="panel-timer-row" id="panel-timer-row" style="display:none">
+      <svg class="panel-ring-svg" viewBox="0 0 44 44">
+        <circle cx="22" cy="22" r="18" fill="none" stroke="rgba(255,255,255,0.07)" stroke-width="2"/>
+        <circle id="panel-ring" cx="22" cy="22" r="18" fill="none"
+                stroke="#6366F1" stroke-width="2" stroke-linecap="round"
+                stroke-dasharray="113" stroke-dashoffset="0"
+                transform="rotate(-90 22 22)"/>
       </svg>
-      <div class="active-timer-display" id="active-timer" onclick="toggleTimeVisibility()">25:00</div>
-      <div class="active-timer-hint" id="active-timer-hint">Toca para ocultar el tiempo</div>
+      <span class="panel-timer-count" id="panel-timer-count">25:00</span>
+      <button class="panel-timer-pause" id="panel-timer-pause" onclick="togglePause()">Pausar</button>
+      <button class="panel-timer-stop" onclick="stopPanelTimer()">Terminar</button>
     </div>
-    <div class="active-actions">
-      <button class="pause-btn" id="pause-btn" onclick="togglePause()">Pausar</button>
-      <button class="finish-btn" onclick="finishSession()">Terminar sesión</button>
-    </div>
-  </div>
 
-  <!-- ESTADO 3: Post-sesión -->
-  <div id="panel-post-state" class="panel-state" style="display:none">
-    <div style="padding:24px 24px 16px;text-align:center">
-      <svg class="completion-check" viewBox="0 0 64 64" fill="none">
-        <circle class="check-circle" cx="32" cy="32" r="30"
-                stroke="#10B981" stroke-width="2"/>
-        <polyline class="check-mark" points="20,32 28,40 44,24"
-                  stroke="#10B981" stroke-width="2.5"
-                  stroke-linecap="round" stroke-linejoin="round"/>
-      </svg>
-      <div style="font-family:'Instrument Serif',serif;font-size:22px;color:#fff;margin-bottom:6px">Sesión completada</div>
-      <div id="session-summary" style="font-size:12px;color:rgba(255,255,255,0.3)">25 minutos · Profundo</div>
-    </div>
-    <div style="padding:0 24px 32px">
-      <div style="font-size:12px;color:rgba(255,255,255,0.3);margin-bottom:12px;text-align:center">¿Valió la pena?</div>
-      <div class="worth-btns">
-        <button class="worth-btn yes" onclick="rateSession(true)">Sí</button>
-        <button class="worth-btn no" onclick="rateSession(false)">No del todo</button>
-      </div>
-      <input class="next-input" id="next-input" type="text"
-             placeholder="¿Qué sigue después de esto?"/>
-      <button class="focus-start-btn post-done-btn" onclick="closeSessionPanel()">Listo</button>
+    <!-- Acciones -->
+    <div class="panel-actions-row">
+      <button class="panel-focus-btn" id="focus-start-btn" onclick="startSession()">
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" style="margin-right:6px">
+          <path d="M3 2l7 4-7 4V2z" fill="currentColor"/>
+        </svg>
+        Iniciar foco
+      </button>
+      <button class="panel-del-btn" onclick="panelDeleteEvent()">Eliminar</button>
     </div>
   </div>
 </div>

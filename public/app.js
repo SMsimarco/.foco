@@ -333,18 +333,6 @@ async function showApp() {
   checkMorningBrief();
   checkWeeklyDigest();
   startLiveClock();
-  initSessionModeSelector();
-}
-
-function initSessionModeSelector() {
-  document.querySelectorAll('.session-mode').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('.session-mode').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      currentSession.mode = btn.dataset.mode;
-      currentSession.minutes = parseInt(btn.dataset.mins) || 0;
-    });
-  });
 }
 
 // ── CARGA DE DATOS ──────────────────────────────────────────
@@ -1763,11 +1751,14 @@ function openEventPanel(ev, dateISO) {
   panelDateISO = dateISO;
   panelEnergy = null;
   currentSession.eventId = ev.id;
+  currentSession.startedAt = null;
+  currentSession.paused = false;
+  currentSession.pausedRemaining = null;
 
-  resetToPreState();
+  stopFocusTimer();
+  hidePanelTimer();
 
   document.getElementById('panel-title').textContent = ev.title;
-  document.getElementById('active-panel-title').textContent = ev.title;
 
   const d = new Date(dateISO + 'T12:00:00');
   const dayStr = DAYS_FULL[d.getDay()];
@@ -1777,42 +1768,18 @@ function openEventPanel(ev, dateISO) {
   const color = eventColor(ev.title);
   document.getElementById('event-panel').style.setProperty('--event-color', color);
 
-  const doneBtn = document.getElementById('panel-done-btn');
-  doneBtn.textContent = ev.done ? 'Desmarcar hecho' : 'Marcar como hecho';
-  doneBtn.classList.toggle('done', !!ev.done);
+  updateStatusChip(!!ev.done);
 
   document.getElementById('event-panel').classList.add('open');
   document.getElementById('panel-overlay').classList.add('open');
 }
 
-function resetToPreState() {
-  stopFocusTimer();
-  exitAmbientMode();
-
-  const pre = document.getElementById('panel-pre-state');
-  const active = document.getElementById('panel-active-state');
-  const post = document.getElementById('panel-post-state');
-
-  pre.style.display = 'flex';
-  pre.style.opacity = '1';
-  pre.style.transform = 'none';
-  active.style.display = 'none';
-  post.style.display = 'none';
-
-  document.getElementById('intent-input').value = '';
-  const nextInput = document.getElementById('next-input');
-  if (nextInput) nextInput.value = '';
-
-  // Reset modo activo a profundo
-  document.querySelectorAll('.session-mode').forEach(b => b.classList.remove('active'));
-  const profundoBtn = document.querySelector('.session-mode[data-mode="profundo"]');
-  if (profundoBtn) profundoBtn.classList.add('active');
-  currentSession.mode = 'profundo';
-  currentSession.minutes = 25;
-  currentSession.timeHidden = false;
-  currentSession.paused = false;
-  currentSession.pausedRemaining = null;
-  currentSession.worthIt = null;
+function updateStatusChip(done) {
+  const chip = document.getElementById('panel-status-chip');
+  const txt  = document.getElementById('panel-status-text');
+  if (!chip || !txt) return;
+  txt.textContent = done ? 'Completada' : 'Pendiente';
+  chip.classList.toggle('done', done);
 }
 
 function closeEventPanel() {
@@ -1829,9 +1796,7 @@ async function panelToggleDone() {
   await toggleDone(panelEvent.id, panelDateISO);
   panelEvent = (eventsCache[panelDateISO] || []).find(e => e.id === panelEvent.id);
   if (!panelEvent) { closeEventPanel(); return; }
-  const doneBtn = document.getElementById('panel-done-btn');
-  doneBtn.textContent = panelEvent.done ? 'Desmarcar hecho' : 'Marcar como hecho';
-  doneBtn.classList.toggle('done', !!panelEvent.done);
+  updateStatusChip(!!panelEvent.done);
 }
 
 async function panelDeleteEvent() {
@@ -1840,113 +1805,76 @@ async function panelDeleteEvent() {
   closeEventPanel();
 }
 
-// ── SESSION PANEL — LÓGICA DE TRES ESTADOS ─────────────────
+// ── FOCUS TIMER — panel compacto ────────────────────────────
 
-function sessionModeColor(mode) {
-  return { profundo: '#6366F1', extendido: '#06B6D4', flujo: '#10B981' }[mode] || '#6366F1';
-}
-
-function updateActiveRing(secondsLeft, totalSeconds) {
-  const ring = document.getElementById('active-ring');
-  if (!ring) return;
-  const circumference = 597;
-  if (totalSeconds === 0) { ring.style.strokeDashoffset = '0'; return; }
-  const elapsed = 1 - Math.max(0, secondsLeft / totalSeconds);
-  ring.style.strokeDashoffset = circumference * elapsed;
-}
+const PANEL_TIMER_TOTAL = 25 * 60;
+const PANEL_RING_CIRC = 113;
 
 function startSession() {
-  const mode = currentSession.mode;
-  const minutes = currentSession.minutes;
   currentSession.startedAt = Date.now();
   currentSession.paused = false;
   currentSession.pausedRemaining = null;
+  focusTimerEndTime = Date.now() + PANEL_TIMER_TOTAL * 1000;
 
-  transitionToActiveState(mode, minutes);
+  showPanelTimer();
+  enterAmbientMode();
+  runPanelTimer();
 }
 
-function transitionToActiveState(mode, minutes) {
-  const pre = document.getElementById('panel-pre-state');
-  const active = document.getElementById('panel-active-state');
+function showPanelTimer() {
+  const row = document.getElementById('panel-timer-row');
+  const btn = document.getElementById('focus-start-btn');
+  if (row) row.style.display = 'flex';
+  if (btn) btn.style.display = 'none';
+  updatePanelTimerDisplay(PANEL_TIMER_TOTAL);
+}
 
-  pre.style.transition = 'opacity 0.25s ease, transform 0.25s ease';
-  pre.style.opacity = '0';
-  pre.style.transform = 'translateY(-8px)';
+function hidePanelTimer() {
+  const row = document.getElementById('panel-timer-row');
+  const btn = document.getElementById('focus-start-btn');
+  if (row) row.style.display = 'none';
+  if (btn) btn.style.display = 'flex';
+}
 
-  setTimeout(() => {
-    pre.style.display = 'none';
-    active.style.display = 'flex';
-    active.style.flexDirection = 'column';
-    active.style.opacity = '0';
-    active.style.transform = 'translateY(8px)';
-    active.style.transition = '';
+function updatePanelTimerDisplay(secondsLeft) {
+  const el = document.getElementById('panel-timer-count');
+  if (!el) return;
+  const m = String(Math.floor(secondsLeft / 60)).padStart(2, '0');
+  const s = String(secondsLeft % 60).padStart(2, '0');
+  el.textContent = `${m}:${s}`;
 
-    // Configurar ring color y timer
-    const ring = document.getElementById('active-ring');
-    if (ring) ring.style.stroke = sessionModeColor(mode);
+  const ring = document.getElementById('panel-ring');
+  if (ring) {
+    const elapsed = 1 - Math.max(0, secondsLeft / PANEL_TIMER_TOTAL);
+    ring.style.strokeDashoffset = PANEL_RING_CIRC * elapsed;
+  }
+}
 
-    const totalSec = minutes * 60;
-    if (mode === 'flujo') {
-      document.getElementById('active-timer').textContent = '00:00';
-    } else {
-      const m = String(Math.floor(totalSec / 60)).padStart(2, '0');
-      document.getElementById('active-timer').textContent = `${m}:00`;
-      focusTimerEndTime = Date.now() + totalSec * 1000;
+function runPanelTimer() {
+  focusTimerRunning = true;
+  let lastSec = -1;
+
+  const tick = () => {
+    if (!focusTimerRunning) return;
+    const remainingMs = Math.max(0, focusTimerEndTime - Date.now());
+    const remainingSec = Math.ceil(remainingMs / 1000);
+
+    if (remainingSec !== lastSec) {
+      lastSec = remainingSec;
+      updatePanelTimerDisplay(remainingSec);
     }
 
-    updateActiveRing(totalSec, totalSec);
-    startActiveTimer(mode, totalSec);
-    enterAmbientMode();
-
-    requestAnimationFrame(() => {
-      active.style.transition = 'opacity 0.3s ease, transform 0.3s cubic-bezier(.34,1.56,.64,1)';
-      active.style.opacity = '1';
-      active.style.transform = 'translateY(0)';
-    });
-  }, 240);
-}
-
-function startActiveTimer(mode, totalSec) {
-  focusTimerRunning = true;
-
-  if (mode === 'flujo') {
-    const startedAt = currentSession.startedAt;
-    const tick = () => {
-      if (!focusTimerRunning) return;
-      const elapsedSec = Math.floor((Date.now() - startedAt) / 1000);
-      const m = String(Math.floor(elapsedSec / 60)).padStart(2, '0');
-      const s = String(elapsedSec % 60).padStart(2, '0');
-      const el = document.getElementById('active-timer');
-      if (el) el.textContent = `${m}:${s}`;
-      focusTimerRAF = requestAnimationFrame(tick);
-    };
+    if (remainingMs <= 0) {
+      stopFocusTimer();
+      hidePanelTimer();
+      exitAmbientMode();
+      saveFocusSession(true);
+      showToast('Sesión de 25 min completada', 'success');
+      return;
+    }
     focusTimerRAF = requestAnimationFrame(tick);
-  } else {
-    let lastSec = -1;
-    const tick = () => {
-      if (!focusTimerRunning) return;
-      const remainingMs = Math.max(0, focusTimerEndTime - Date.now());
-      const remainingSec = Math.ceil(remainingMs / 1000);
-
-      updateActiveRing(remainingMs / 1000, totalSec);
-
-      if (remainingSec !== lastSec) {
-        lastSec = remainingSec;
-        const m = String(Math.floor(remainingSec / 60)).padStart(2, '0');
-        const s = String(remainingSec % 60).padStart(2, '0');
-        const el = document.getElementById('active-timer');
-        if (el) el.textContent = `${m}:${s}`;
-      }
-
-      if (remainingMs <= 0) {
-        stopFocusTimer();
-        autoFinishSession(totalSec);
-        return;
-      }
-      focusTimerRAF = requestAnimationFrame(tick);
-    };
-    focusTimerRAF = requestAnimationFrame(tick);
-  }
+  };
+  focusTimerRAF = requestAnimationFrame(tick);
 }
 
 function stopFocusTimer() {
@@ -1955,112 +1883,33 @@ function stopFocusTimer() {
   focusTimerEndTime = null;
 }
 
-function toggleTimeVisibility() {
-  currentSession.timeHidden = !currentSession.timeHidden;
-  const display = document.getElementById('active-timer');
-  const hint = document.getElementById('active-timer-hint');
-  if (display) display.classList.toggle('hidden-time', currentSession.timeHidden);
-  if (hint) hint.textContent = currentSession.timeHidden
-    ? 'Toca para ver el tiempo'
-    : 'Toca para ocultar el tiempo';
+function stopPanelTimer() {
+  stopFocusTimer();
+  hidePanelTimer();
+  exitAmbientMode();
+  saveFocusSession(false);
 }
 
 function togglePause() {
-  const btn = document.getElementById('pause-btn');
+  const btn = document.getElementById('panel-timer-pause');
   if (!currentSession.paused) {
     currentSession.paused = true;
     currentSession.pausedRemaining = focusTimerEndTime ? focusTimerEndTime - Date.now() : null;
     stopFocusTimer();
+    focusTimerRunning = false;
     if (btn) btn.textContent = 'Reanudar';
   } else {
     currentSession.paused = false;
     if (currentSession.pausedRemaining !== null) {
       focusTimerEndTime = Date.now() + currentSession.pausedRemaining;
     }
-    const totalSec = currentSession.minutes * 60;
-    startActiveTimer(currentSession.mode, totalSec);
+    runPanelTimer();
     if (btn) btn.textContent = 'Pausar';
   }
 }
 
-function finishSession() {
-  stopFocusTimer();
-  const elapsed = currentSession.startedAt
-    ? Math.max(1, Math.round((Date.now() - currentSession.startedAt) / 60000))
-    : currentSession.minutes;
-  const modeNames = { profundo: 'Profundo', extendido: 'Extendido', flujo: 'Flujo' };
-  transitionToPostState(elapsed, modeNames[currentSession.mode] || 'Sesión');
-  saveFocusSession(false);
-}
-
-function autoFinishSession(totalSec) {
-  const minutes = Math.round(totalSec / 60);
-  const modeNames = { profundo: 'Profundo', extendido: 'Extendido', flujo: 'Flujo' };
-  transitionToPostState(minutes, modeNames[currentSession.mode] || 'Sesión');
-  saveFocusSession(true);
-}
-
-function transitionToPostState(minutesDone, modeName) {
-  const active = document.getElementById('panel-active-state');
-  const post = document.getElementById('panel-post-state');
-
-  exitAmbientMode();
-
-  active.style.transition = 'opacity 0.2s ease';
-  active.style.opacity = '0';
-
-  setTimeout(() => {
-    active.style.display = 'none';
-    post.style.display = 'flex';
-    post.style.flexDirection = 'column';
-    post.style.opacity = '0';
-
-    document.getElementById('session-summary').textContent =
-      `${minutesDone} minutos · ${modeName}`;
-
-    // Reset worth buttons
-    document.querySelectorAll('.worth-btn').forEach(b => b.classList.remove('selected'));
-    currentSession.worthIt = null;
-
-    // Trigger checkmark animation
-    const svg = post.querySelector('.completion-check');
-    if (svg) {
-      svg.classList.remove('animate');
-      void svg.offsetWidth;
-      setTimeout(() => svg.classList.add('animate'), 50);
-    }
-
-    requestAnimationFrame(() => {
-      post.style.transition = 'opacity 0.35s ease';
-      post.style.opacity = '1';
-    });
-  }, 200);
-}
-
-function rateSession(positive) {
-  document.querySelectorAll('.worth-btn').forEach(b => b.classList.remove('selected'));
-  document.querySelector(`.worth-btn.${positive ? 'yes' : 'no'}`)?.classList.add('selected');
-  currentSession.worthIt = positive;
-  if (panelEvent) {
-    db.from('focus_sessions')
-      .update({ worth_it: positive })
-      .eq('event_id', panelEvent.id)
-      .order('started_at', { ascending: false })
-      .limit(1);
-  }
-}
-
-async function closeSessionPanel() {
-  const nextAction = document.getElementById('next-input')?.value?.trim();
-  if (nextAction && panelEvent) {
-    await db.from('events').update({ notes: nextAction }).eq('id', panelEvent.id);
-  }
-  closeEventPanel();
-}
-
 async function saveFocusSession(completed) {
   if (!currentUser || !panelEvent) return;
-  const plannedMin = currentSession.minutes || 25;
   const elapsedMs = currentSession.startedAt ? Date.now() - currentSession.startedAt : 0;
   const actualMin = Math.max(1, Math.round(elapsedMs / 60000));
   await db.from('focus_sessions').insert({
@@ -2068,7 +1917,7 @@ async function saveFocusSession(completed) {
     event_id: panelEvent.id,
     started_at: new Date(currentSession.startedAt || Date.now()).toISOString(),
     ended_at: new Date().toISOString(),
-    planned_minutes: plannedMin,
+    planned_minutes: 25,
     actual_minutes: actualMin,
     completed,
     energy_after: panelEnergy,
