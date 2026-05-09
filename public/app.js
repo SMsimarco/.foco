@@ -49,11 +49,20 @@ let panelEvent = null;
 let panelDateISO = null;
 let panelEnergy = null;
 let panelRecDays = [];
-let focusTimerInterval = null;
 let focusTimerRAF = null;
 let focusTimerEndTime = null;
-let focusTimerSeconds = 25 * 60;
 let focusTimerRunning = false;
+
+let currentSession = {
+  mode: 'profundo',
+  minutes: 25,
+  eventId: null,
+  startedAt: null,
+  paused: false,
+  pausedRemaining: null,
+  timeHidden: false,
+  worthIt: null
+};
 
 // Drag state
 let dragEvent = null;
@@ -322,6 +331,18 @@ async function showApp() {
   checkMorningBrief();
   checkWeeklyDigest();
   startLiveClock();
+  initSessionModeSelector();
+}
+
+function initSessionModeSelector() {
+  document.querySelectorAll('.session-mode').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.session-mode').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      currentSession.mode = btn.dataset.mode;
+      currentSession.minutes = parseInt(btn.dataset.mins) || 0;
+    });
+  });
 }
 
 // ── CARGA DE DATOS ──────────────────────────────────────────
@@ -1723,11 +1744,13 @@ function openEventPanel(ev, dateISO) {
   panelEvent = ev;
   panelDateISO = dateISO;
   panelEnergy = null;
-  panelRecDays = ev.recurring_days ? [...ev.recurring_days] : [];
+  currentSession.eventId = ev.id;
+
+  resetToPreState();
 
   document.getElementById('panel-title').textContent = ev.title;
+  document.getElementById('active-panel-title').textContent = ev.title;
 
-  const week = getWeekDates(weekOffset);
   const d = new Date(dateISO + 'T12:00:00');
   const dayStr = DAYS_FULL[d.getDay()];
   document.getElementById('panel-meta').textContent =
@@ -1737,27 +1760,48 @@ function openEventPanel(ev, dateISO) {
   document.getElementById('event-panel').style.setProperty('--event-color', color);
 
   const doneBtn = document.getElementById('panel-done-btn');
-  doneBtn.textContent = ev.done ? '✓ Desmarcar hecho' : '✓ Marcar como hecho';
+  doneBtn.textContent = ev.done ? 'Desmarcar hecho' : 'Marcar como hecho';
   doneBtn.classList.toggle('done', !!ev.done);
-
-  document.getElementById('panel-goal').value = '';
-  document.getElementById('panel-notes').value = ev.notes || '';
-
-  stopFocusTimer();
-  focusTimerSeconds = 25 * 60;
-  updateTimerDisplay();
-
-  document.querySelectorAll('.panel-energy-btn').forEach(b => b.classList.remove('selected'));
-  renderPanelRecDays();
 
   document.getElementById('event-panel').classList.add('open');
   document.getElementById('panel-overlay').classList.add('open');
+}
+
+function resetToPreState() {
+  stopFocusTimer();
+  exitAmbientMode();
+
+  const pre = document.getElementById('panel-pre-state');
+  const active = document.getElementById('panel-active-state');
+  const post = document.getElementById('panel-post-state');
+
+  pre.style.display = 'flex';
+  pre.style.opacity = '1';
+  pre.style.transform = 'none';
+  active.style.display = 'none';
+  post.style.display = 'none';
+
+  document.getElementById('intent-input').value = '';
+  const nextInput = document.getElementById('next-input');
+  if (nextInput) nextInput.value = '';
+
+  // Reset modo activo a profundo
+  document.querySelectorAll('.session-mode').forEach(b => b.classList.remove('active'));
+  const profundoBtn = document.querySelector('.session-mode[data-mode="profundo"]');
+  if (profundoBtn) profundoBtn.classList.add('active');
+  currentSession.mode = 'profundo';
+  currentSession.minutes = 25;
+  currentSession.timeHidden = false;
+  currentSession.paused = false;
+  currentSession.pausedRemaining = null;
+  currentSession.worthIt = null;
 }
 
 function closeEventPanel() {
   document.getElementById('event-panel').classList.remove('open');
   document.getElementById('panel-overlay').classList.remove('open');
   stopFocusTimer();
+  exitAmbientMode();
   panelEvent = null;
   panelDateISO = null;
 }
@@ -1768,7 +1812,7 @@ async function panelToggleDone() {
   panelEvent = (eventsCache[panelDateISO] || []).find(e => e.id === panelEvent.id);
   if (!panelEvent) { closeEventPanel(); return; }
   const doneBtn = document.getElementById('panel-done-btn');
-  doneBtn.textContent = panelEvent.done ? '✓ Desmarcar hecho' : '✓ Marcar como hecho';
+  doneBtn.textContent = panelEvent.done ? 'Desmarcar hecho' : 'Marcar como hecho';
   doneBtn.classList.toggle('done', !!panelEvent.done);
 }
 
@@ -1778,125 +1822,239 @@ async function panelDeleteEvent() {
   closeEventPanel();
 }
 
-const debouncedSaveEnergy = debounce(async (id, e) => {
-  await db.from('events').update({ energy_weight: e }).eq('id', id);
-}, 700);
+// ── SESSION PANEL — LÓGICA DE TRES ESTADOS ─────────────────
 
-function selectPanelEnergy(e) {
-  panelEnergy = e;
-  document.querySelectorAll('.panel-energy-btn').forEach(btn => {
-    btn.classList.toggle('selected', parseInt(btn.dataset.energy) === e);
-  });
-  if (panelEvent && panelDateISO) {
-    const ev = (eventsCache[panelDateISO] || []).find(ev => ev.id === panelEvent.id);
-    if (ev) ev.energy_weight = e;
-    debouncedSaveEnergy(panelEvent.id, e);
-  }
+function sessionModeColor(mode) {
+  return { profundo: '#6366F1', extendido: '#06B6D4', flujo: '#10B981' }[mode] || '#6366F1';
 }
 
-function toggleRecDay(d) {
-  const idx = panelRecDays.indexOf(d);
-  if (idx === -1) panelRecDays.push(d);
-  else panelRecDays.splice(idx, 1);
-  renderPanelRecDays();
-}
-
-function renderPanelRecDays() {
-  document.querySelectorAll('.rec-day-btn').forEach(btn => {
-    btn.classList.toggle('active', panelRecDays.includes(parseInt(btn.dataset.day)));
-  });
-}
-
-function updateTimerDisplay() {
-  const m = Math.floor(focusTimerSeconds / 60);
-  const s = focusTimerSeconds % 60;
-  const el = document.getElementById('focus-timer');
-  if (el) el.textContent = `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
-  updateTimerRing(focusTimerSeconds, 25 * 60);
-}
-
-function updateTimerRing(secondsLeft, totalSeconds) {
-  const ring = document.querySelector('.timer-ring-progress');
+function updateActiveRing(secondsLeft, totalSeconds) {
+  const ring = document.getElementById('active-ring');
   if (!ring) return;
-  const circumference = 408;
-  const progress = 1 - (secondsLeft / totalSeconds);
-  ring.style.strokeDashoffset = circumference * (1 - progress);
-  if (progress < 0.5) ring.style.stroke = '#6366F1';
-  else if (progress < 0.8) ring.style.stroke = '#F59E0B';
-  else ring.style.stroke = '#F43F5E';
+  const circumference = 597;
+  if (totalSeconds === 0) { ring.style.strokeDashoffset = '0'; return; }
+  const elapsed = 1 - Math.max(0, secondsLeft / totalSeconds);
+  ring.style.strokeDashoffset = circumference * elapsed;
 }
 
-function toggleFocusTimer() {
-  if (focusTimerRunning) stopFocusTimer();
-  else startFocusTimer();
+function startSession() {
+  const mode = currentSession.mode;
+  const minutes = currentSession.minutes;
+  currentSession.startedAt = Date.now();
+  currentSession.paused = false;
+  currentSession.pausedRemaining = null;
+
+  transitionToActiveState(mode, minutes);
 }
 
-function startFocusTimer() {
+function transitionToActiveState(mode, minutes) {
+  const pre = document.getElementById('panel-pre-state');
+  const active = document.getElementById('panel-active-state');
+
+  pre.style.transition = 'opacity 0.25s ease, transform 0.25s ease';
+  pre.style.opacity = '0';
+  pre.style.transform = 'translateY(-8px)';
+
+  setTimeout(() => {
+    pre.style.display = 'none';
+    active.style.display = 'flex';
+    active.style.flexDirection = 'column';
+    active.style.opacity = '0';
+    active.style.transform = 'translateY(8px)';
+    active.style.transition = '';
+
+    // Configurar ring color y timer
+    const ring = document.getElementById('active-ring');
+    if (ring) ring.style.stroke = sessionModeColor(mode);
+
+    const totalSec = minutes * 60;
+    if (mode === 'flujo') {
+      document.getElementById('active-timer').textContent = '00:00';
+    } else {
+      const m = String(Math.floor(totalSec / 60)).padStart(2, '0');
+      document.getElementById('active-timer').textContent = `${m}:00`;
+      focusTimerEndTime = Date.now() + totalSec * 1000;
+    }
+
+    updateActiveRing(totalSec, totalSec);
+    startActiveTimer(mode, totalSec);
+    enterAmbientMode();
+
+    requestAnimationFrame(() => {
+      active.style.transition = 'opacity 0.3s ease, transform 0.3s cubic-bezier(.34,1.56,.64,1)';
+      active.style.opacity = '1';
+      active.style.transform = 'translateY(0)';
+    });
+  }, 240);
+}
+
+function startActiveTimer(mode, totalSec) {
   focusTimerRunning = true;
-  focusTimerEndTime = Date.now() + focusTimerSeconds * 1000;
-  document.getElementById('focus-timer').classList.add('running');
-  document.getElementById('focus-start-btn').classList.add('running');
-  document.getElementById('focus-start-btn').textContent = '■ Detener';
 
-  let lastSec = focusTimerSeconds;
-  const tick = () => {
-    if (!focusTimerRunning) return;
-    const remainingMs = Math.max(0, focusTimerEndTime - Date.now());
-    const remainingSec = Math.ceil(remainingMs / 1000);
-
-    // Smooth ring update at display refresh rate
-    updateTimerRing(remainingMs / 1000, 25 * 60);
-
-    if (remainingSec !== lastSec) {
-      lastSec = remainingSec;
-      focusTimerSeconds = remainingSec;
-      const m = Math.floor(remainingSec / 60);
-      const s = remainingSec % 60;
-      const el = document.getElementById('focus-timer');
-      if (el) el.textContent = `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
-    }
-
-    if (remainingMs <= 0) {
-      stopFocusTimer();
-      saveFocusSession(true);
-      showToast('¡Sesión de foco completada!', 'success');
-      return;
-    }
+  if (mode === 'flujo') {
+    const startedAt = currentSession.startedAt;
+    const tick = () => {
+      if (!focusTimerRunning) return;
+      const elapsedSec = Math.floor((Date.now() - startedAt) / 1000);
+      const m = String(Math.floor(elapsedSec / 60)).padStart(2, '0');
+      const s = String(elapsedSec % 60).padStart(2, '0');
+      const el = document.getElementById('active-timer');
+      if (el) el.textContent = `${m}:${s}`;
+      focusTimerRAF = requestAnimationFrame(tick);
+    };
     focusTimerRAF = requestAnimationFrame(tick);
-  };
-  focusTimerRAF = requestAnimationFrame(tick);
+  } else {
+    let lastSec = -1;
+    const tick = () => {
+      if (!focusTimerRunning) return;
+      const remainingMs = Math.max(0, focusTimerEndTime - Date.now());
+      const remainingSec = Math.ceil(remainingMs / 1000);
+
+      updateActiveRing(remainingMs / 1000, totalSec);
+
+      if (remainingSec !== lastSec) {
+        lastSec = remainingSec;
+        const m = String(Math.floor(remainingSec / 60)).padStart(2, '0');
+        const s = String(remainingSec % 60).padStart(2, '0');
+        const el = document.getElementById('active-timer');
+        if (el) el.textContent = `${m}:${s}`;
+      }
+
+      if (remainingMs <= 0) {
+        stopFocusTimer();
+        autoFinishSession(totalSec);
+        return;
+      }
+      focusTimerRAF = requestAnimationFrame(tick);
+    };
+    focusTimerRAF = requestAnimationFrame(tick);
+  }
 }
 
 function stopFocusTimer() {
   focusTimerRunning = false;
   if (focusTimerRAF) { cancelAnimationFrame(focusTimerRAF); focusTimerRAF = null; }
-  clearInterval(focusTimerInterval);
-  focusTimerInterval = null;
   focusTimerEndTime = null;
-  const display = document.getElementById('focus-timer');
-  const btn = document.getElementById('focus-start-btn');
-  if (display) display.classList.remove('running');
-  if (btn) {
-    btn.classList.remove('running');
-    btn.textContent = '▶ Iniciar foco';
+}
+
+function toggleTimeVisibility() {
+  currentSession.timeHidden = !currentSession.timeHidden;
+  const display = document.getElementById('active-timer');
+  const hint = document.getElementById('active-timer-hint');
+  if (display) display.classList.toggle('hidden-time', currentSession.timeHidden);
+  if (hint) hint.textContent = currentSession.timeHidden
+    ? 'Toca para ver el tiempo'
+    : 'Toca para ocultar el tiempo';
+}
+
+function togglePause() {
+  const btn = document.getElementById('pause-btn');
+  if (!currentSession.paused) {
+    currentSession.paused = true;
+    currentSession.pausedRemaining = focusTimerEndTime ? focusTimerEndTime - Date.now() : null;
+    stopFocusTimer();
+    if (btn) btn.textContent = 'Reanudar';
+  } else {
+    currentSession.paused = false;
+    if (currentSession.pausedRemaining !== null) {
+      focusTimerEndTime = Date.now() + currentSession.pausedRemaining;
+    }
+    const totalSec = currentSession.minutes * 60;
+    startActiveTimer(currentSession.mode, totalSec);
+    if (btn) btn.textContent = 'Pausar';
   }
-  updateTimerRing(25 * 60, 25 * 60);
+}
+
+function finishSession() {
+  stopFocusTimer();
+  const elapsed = currentSession.startedAt
+    ? Math.max(1, Math.round((Date.now() - currentSession.startedAt) / 60000))
+    : currentSession.minutes;
+  const modeNames = { profundo: 'Profundo', extendido: 'Extendido', flujo: 'Flujo' };
+  transitionToPostState(elapsed, modeNames[currentSession.mode] || 'Sesión');
+  saveFocusSession(false);
+}
+
+function autoFinishSession(totalSec) {
+  const minutes = Math.round(totalSec / 60);
+  const modeNames = { profundo: 'Profundo', extendido: 'Extendido', flujo: 'Flujo' };
+  transitionToPostState(minutes, modeNames[currentSession.mode] || 'Sesión');
+  saveFocusSession(true);
+}
+
+function transitionToPostState(minutesDone, modeName) {
+  const active = document.getElementById('panel-active-state');
+  const post = document.getElementById('panel-post-state');
+
+  exitAmbientMode();
+
+  active.style.transition = 'opacity 0.2s ease';
+  active.style.opacity = '0';
+
+  setTimeout(() => {
+    active.style.display = 'none';
+    post.style.display = 'flex';
+    post.style.flexDirection = 'column';
+    post.style.opacity = '0';
+
+    document.getElementById('session-summary').textContent =
+      `${minutesDone} minutos · ${modeName}`;
+
+    // Reset worth buttons
+    document.querySelectorAll('.worth-btn').forEach(b => b.classList.remove('selected'));
+    currentSession.worthIt = null;
+
+    // Trigger checkmark animation
+    const svg = post.querySelector('.completion-check');
+    if (svg) {
+      svg.classList.remove('animate');
+      void svg.offsetWidth;
+      setTimeout(() => svg.classList.add('animate'), 50);
+    }
+
+    requestAnimationFrame(() => {
+      post.style.transition = 'opacity 0.35s ease';
+      post.style.opacity = '1';
+    });
+  }, 200);
+}
+
+function rateSession(positive) {
+  document.querySelectorAll('.worth-btn').forEach(b => b.classList.remove('selected'));
+  document.querySelector(`.worth-btn.${positive ? 'yes' : 'no'}`)?.classList.add('selected');
+  currentSession.worthIt = positive;
+  if (panelEvent) {
+    db.from('focus_sessions')
+      .update({ worth_it: positive })
+      .eq('event_id', panelEvent.id)
+      .order('started_at', { ascending: false })
+      .limit(1);
+  }
+}
+
+async function closeSessionPanel() {
+  const nextAction = document.getElementById('next-input')?.value?.trim();
+  if (nextAction && panelEvent) {
+    await db.from('events').update({ notes: nextAction }).eq('id', panelEvent.id);
+  }
+  closeEventPanel();
 }
 
 async function saveFocusSession(completed) {
   if (!currentUser || !panelEvent) return;
-  const plannedMin = 25;
-  const actualMin = Math.round((plannedMin * 60 - focusTimerSeconds) / 60);
+  const plannedMin = currentSession.minutes || 25;
+  const elapsedMs = currentSession.startedAt ? Date.now() - currentSession.startedAt : 0;
+  const actualMin = Math.max(1, Math.round(elapsedMs / 60000));
   await db.from('focus_sessions').insert({
     user_id: currentUser.id,
     event_id: panelEvent.id,
-    started_at: new Date(Date.now() - actualMin * 60000).toISOString(),
+    started_at: new Date(currentSession.startedAt || Date.now()).toISOString(),
     ended_at: new Date().toISOString(),
     planned_minutes: plannedMin,
     actual_minutes: actualMin,
     completed,
     energy_after: panelEnergy,
-    notes: document.getElementById('panel-notes')?.value || null
+    notes: null
   });
 }
 
