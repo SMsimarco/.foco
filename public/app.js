@@ -395,7 +395,13 @@ async function addEvent(dateISO, title, startTime, endTime) {
   eventsCache[dateISO].push(data);
 
   ghost = null;
-  renderSemana();
+  const weekForAdd = getWeekDates(weekOffset);
+  const dayIndex = weekForAdd.findIndex(d => toISO(d) === dateISO);
+  if (dayIndex >= 0) {
+    addEventToDOM(data, dateISO, dayIndex);
+  } else {
+    saveScroll(); renderSemana(); restoreScroll();
+  }
   scheduleNotification(data);
   showToast(`"${data.title}" agregado`, 'info');
 }
@@ -420,7 +426,7 @@ async function toggleDone(id, dateISO) {
   if (error) { console.error(error); return; }
 
   ev.done = newDone;
-  renderSemana();
+  updateEventDoneInDOM(id, newDone);
   updateMomentum();
   if (currentView === 'sugerencias') updateSugStats();
   updatePattern(ev);
@@ -454,8 +460,7 @@ async function deleteEvent(id, dateISO) {
 
   eventsCache[dateISO] = (eventsCache[dateISO] || []).filter(e => e.id !== id);
   ghost = null;
-  renderSemana();
-  updateMomentum();
+  removeEventFromDOM(id);
   if (ev) showToast(`"${ev.title}" eliminado`, 'error');
 }
 
@@ -2063,6 +2068,79 @@ function enterAmbientMode() {
   ambientActive = !ambientActive;
   document.body.classList.toggle('ambient', ambientActive);
   showToast(ambientActive ? 'Modo foco activo' : 'Modo foco desactivado', 'info');
+}
+
+// ── RENDERIZADO SELECTIVO ────────────────────────────────────
+
+let _savedScroll = 0;
+function saveScroll() {
+  const gw = document.getElementById('grid-wrap');
+  _savedScroll = gw ? gw.scrollTop : 0;
+}
+function restoreScroll() {
+  const gw = document.getElementById('grid-wrap');
+  if (gw) gw.scrollTop = _savedScroll;
+}
+
+function updateEventDoneInDOM(id, done) {
+  const block = document.querySelector(`[data-event-id="${id}"]`);
+  if (!block) { saveScroll(); renderSemana(); restoreScroll(); return; }
+  block.classList.remove('completing');
+  block.classList.toggle('done', done);
+}
+
+function removeEventFromDOM(id) {
+  const block = document.querySelector(`[data-event-id="${id}"]`);
+  if (!block) { saveScroll(); renderSemana(); restoreScroll(); return; }
+  block.style.transition = 'all 0.22s cubic-bezier(.4,0,.2,1)';
+  block.style.opacity = '0';
+  block.style.transform = 'scale(0.92) translateX(6px)';
+  block.style.filter = 'blur(2px)';
+  setTimeout(() => { block.remove(); updateMomentum(); }, 230);
+}
+
+function addEventToDOM(ev, dateISO, dayIndex) {
+  const cols = document.querySelectorAll('.day-col');
+  const col = cols[dayIndex];
+  if (!col) { saveScroll(); renderSemana(); restoreScroll(); return; }
+
+  document.querySelector('.ghost-block')?.remove();
+
+  const [sh, sm] = ev.start_time.split(':').map(Number);
+  const [eh, em] = ev.end_time.split(':').map(Number);
+  const y = toY(sh, sm);
+  const h = Math.max(toY(eh, em) - y, 18);
+  const color = eventColor(ev.title);
+  const conflict = hasConflict(eventsCache[dateISO] || [], ev);
+
+  const block = document.createElement('div');
+  block.className = 'event-block' + (conflict ? ' conflict' : '');
+  block.style.cssText = `top:${y}px;height:${h}px`;
+  block.style.setProperty('--event-color', color);
+  block.style.setProperty('--event-color-30', color + '30');
+  block.style.setProperty('--event-color-15', color + '15');
+  block.setAttribute('data-event-id', ev.id);
+  block.setAttribute('draggable', 'true');
+  block.innerHTML = `
+    <div class="ev-title">${ev.title}</div>
+    ${h > 24 ? `<div class="ev-time">${ev.start_time}–${ev.end_time}</div>` : ''}
+    <button class="ev-del" onclick="event.stopPropagation();deleteEvent('${ev.id}','${dateISO}')">×</button>
+  `;
+  block.addEventListener('click', () => openEventPanel(ev, dateISO));
+  block.addEventListener('dragstart', e => {
+    dragEvent = { ev: { ...ev }, fromDate: dateISO };
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', ev.id);
+    setTimeout(() => { block.style.opacity = '0.35'; }, 0);
+  });
+  block.addEventListener('dragend', () => {
+    block.style.opacity = '';
+    dragEvent = null;
+    document.querySelectorAll('.day-col.drag-over').forEach(c => c.classList.remove('drag-over'));
+  });
+
+  col.appendChild(block);
+  updateMomentum();
 }
 
 // ── ARRANCAR ────────────────────────────────────────────────
