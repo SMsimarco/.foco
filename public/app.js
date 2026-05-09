@@ -21,11 +21,11 @@ const COLORS = [
   '#06B6D4', // cyan
   '#10B981', // esmeralda
   '#F43F5E', // rosa
-  '#F59E0B', // amber
   '#3B82F6', // azul
-  '#EC4899', // rosa fuerte
-  '#14B8A6', // teal
   '#A78BFA', // lavanda
+  '#34D399', // verde menta
+  '#22D3EE', // celeste
+  '#818CF8', // índigo claro
 ];
 
 let currentUser = null;
@@ -207,7 +207,7 @@ function startLiveClock() {
   if (!el) return;
   const tick = () => {
     const now = new Date();
-    el.textContent = now.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
+    el.textContent = now.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', hour12: false });
   };
   tick();
   setInterval(tick, 1000);
@@ -276,7 +276,6 @@ function toggleNotif() {
   const btn = document.getElementById('notif-btn');
   const lbl = document.getElementById('notif-label');
   btn.classList.toggle('off', !notifOn);
-  lbl.textContent = notifOn ? 'notif' : 'off';
   if (notifOn) setupNotifications();
 }
 

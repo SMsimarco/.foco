@@ -232,32 +232,32 @@ html, body {
 }
 
 .notif-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 8px;
   display: flex;
   align-items: center;
-  gap: 5px;
-  background: none;
-  border: 1px solid var(--border);
-  border-radius: 20px;
-  padding: 4px 10px;
-  cursor: pointer;
-  font-size: 10px;
-  color: var(--text3);
-  transition: all 0.15s;
+  justify-content: center;
+  border-radius: 8px;
+  transition: background 0.12s;
 }
 
-.notif-btn:hover { border-color: var(--border2); color: var(--text2); }
-.notif-btn.off { color: rgba(244,63,94,0.6); border-color: rgba(244,63,94,0.2); }
+.notif-btn:hover { background: rgba(255,255,255,0.06); }
 
 .notif-dot {
-  width: 5px;
-  height: 5px;
+  width: 7px;
+  height: 7px;
   border-radius: 50%;
-  background: var(--success);
-  flex-shrink: 0;
-  transition: background 0.15s;
+  background: #10B981;
+  transition: background 0.2s, box-shadow 0.2s;
+  box-shadow: 0 0 6px rgba(16,185,129,0.5);
 }
 
-.notif-btn.off .notif-dot { background: var(--danger); }
+.notif-btn.off .notif-dot {
+  background: rgba(255,255,255,0.15);
+  box-shadow: none;
+}
 
 .commitment-wrap {
   cursor: default;
@@ -531,18 +531,21 @@ html, body {
 }
 
 .energy-btn {
-  width: 52px;
-  height: 52px;
+  flex: 1;
   border-radius: 12px;
   border: 1px solid var(--border2);
   background: transparent;
-  font-size: 24px;
   cursor: pointer;
   transition: all .15s;
+  padding: 12px 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
 }
 
 .energy-btn:hover { border-color: var(--accent); background: var(--bg3); }
-.energy-btn.selected { border-color: var(--accent); background: rgba(99,102,241,.2); }
+.energy-btn.selected { border-color: var(--accent); background: rgba(99,102,241,.12); }
 
 .morning-inp {
   width: 100%;
@@ -595,33 +598,24 @@ html, body {
 .template-pill {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 99px;
-  padding: 4px 12px;
-  font-size: 11px;
-  color: var(--text3);
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 20px;
+  padding: 5px 14px;
+  font-size: 12px;
+  color: rgba(255,255,255,0.5);
   cursor: pointer;
   white-space: nowrap;
   font-family: 'Geist', sans-serif;
-  transition: all .12s;
+  font-weight: 400;
+  transition: all 0.15s;
   flex-shrink: 0;
 }
 
 .template-pill:hover {
-  color: var(--text);
-  border-color: var(--border2);
-  background: var(--border);
-}
-
-.template-pill::before {
-  content: '';
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  background: var(--border2);
-  flex-shrink: 0;
+  color: rgba(255,255,255,0.85);
+  background: rgba(255,255,255,0.08);
+  border-color: rgba(255,255,255,0.15);
 }
 
 /* ── INPUT BAR ── */
@@ -1469,8 +1463,11 @@ html, body {
 }
 
 .nav-icon {
-  font-size: 18px;
-  line-height: 1;
+  width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   transition: transform 0.18s cubic-bezier(.34,1.56,.64,1);
 }
 
@@ -1719,15 +1716,41 @@ html, body {
   background: rgba(255,255,255,0.04);
   border: 1px solid rgba(255,255,255,0.06);
   border-radius: 10px;
-  padding: 10px 4px;
-  font-size: 22px;
+  padding: 10px 4px 8px;
   cursor: pointer;
   transition: all 0.15s cubic-bezier(.4,0,.2,1);
-  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
 }
 
-.panel-energy-btn:hover { background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.12); transform: scale(1.05); }
-.panel-energy-btn.selected { background: rgba(99,102,241,0.15); border-color: rgba(99,102,241,0.4); transform: scale(1.08); box-shadow: 0 0 12px rgba(99,102,241,0.2); }
+.panel-energy-btn:hover { background: rgba(255,255,255,0.07); border-color: rgba(255,255,255,0.12); }
+.panel-energy-btn.selected { background: rgba(255,255,255,0.06); border-color: var(--c, rgba(255,255,255,0.2)); }
+
+.energy-indicator {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--c);
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+
+.panel-energy-btn.selected .energy-indicator {
+  transform: scale(1.35);
+  box-shadow: 0 0 8px var(--c);
+}
+
+.energy-label {
+  font-size: 9px;
+  color: rgba(255,255,255,0.3);
+  font-family: 'Geist', sans-serif;
+  font-weight: 500;
+  white-space: nowrap;
+  letter-spacing: 0.02em;
+}
+
+.panel-energy-btn.selected .energy-label { color: rgba(255,255,255,0.7); }
 
 .recurring-days {
   display: flex;
