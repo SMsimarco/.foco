@@ -1142,9 +1142,13 @@ Respondé SOLO con JSON válido, sin markdown ni texto extra:
     try {
       parsed = JSON.parse(raw);
     } catch {
+      const m = raw.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
+      try { parsed = JSON.parse(m?.[1] || ''); } catch { parsed = null; }
+    }
+    if (!parsed || typeof parsed !== 'object') {
       parsed = {
         headline: total ? `${Math.round(done / total * 100)}% completado` : 'Semana sin eventos',
-        insight: raw || `Completaste ${done} de ${total} eventos esta semana.`,
+        insight: `Completaste ${done} de ${total} eventos esta semana.`,
         tip: 'La próxima semana, agendá menos pero cumplí más.',
         best_day: null
       };
@@ -1574,8 +1578,12 @@ Respondé SOLO con JSON válido, sin markdown:
     const raw = (apiData.content?.[0]?.text || '').trim();
 
     let parsed;
-    try { parsed = JSON.parse(raw); }
-    catch {
+    try { parsed = JSON.parse(raw); } catch { parsed = null; }
+    if (!parsed || typeof parsed !== 'object') {
+      const m = raw.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
+      try { parsed = JSON.parse(m?.[1] || ''); } catch { parsed = null; }
+    }
+    if (!parsed || typeof parsed !== 'object') {
       parsed = {
         headline: `${Math.round(done/total*100)}% completado`,
         insight: `Completaste ${done} de ${total} eventos esta semana.`,
