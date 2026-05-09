@@ -1767,19 +1767,43 @@ function openEventPanel(ev, dateISO) {
 
   const color = eventColor(ev.title);
   document.getElementById('event-panel').style.setProperty('--event-color', color);
+  const bar = document.getElementById('panel-color-bar');
+  if (bar) bar.style.background = color;
 
-  updateStatusChip(!!ev.done);
+  const detailsEl = document.getElementById('panel-details');
+  if (detailsEl) {
+    detailsEl.value = ev.notes || '';
+    autoresizeDetails(detailsEl);
+  }
+
+  updateDoneButton(!!ev.done);
 
   document.getElementById('event-panel').classList.add('open');
   document.getElementById('panel-overlay').classList.add('open');
 }
 
-function updateStatusChip(done) {
-  const chip = document.getElementById('panel-status-chip');
-  const txt  = document.getElementById('panel-status-text');
-  if (!chip || !txt) return;
-  txt.textContent = done ? 'Completada' : 'Pendiente';
-  chip.classList.toggle('done', done);
+function updateDoneButton(done) {
+  const btn   = document.getElementById('panel-done-main');
+  const label = document.getElementById('panel-done-label');
+  if (!btn || !label) return;
+  label.textContent = done ? 'Completada' : 'Marcar como completada';
+  btn.classList.toggle('done', done);
+}
+
+function autoresizeDetails(el) {
+  el.style.height = 'auto';
+  el.style.height = el.scrollHeight + 'px';
+}
+
+const _debouncedSaveDetails = debounce(async (id, notes) => {
+  await db.from('events').update({ notes }).eq('id', id);
+}, 800);
+
+function savePanelDetails() {
+  if (!panelEvent) return;
+  const val = document.getElementById('panel-details')?.value ?? '';
+  if (panelEvent) panelEvent.notes = val;
+  _debouncedSaveDetails(panelEvent.id, val);
 }
 
 function closeEventPanel() {
@@ -1796,7 +1820,7 @@ async function panelToggleDone() {
   await toggleDone(panelEvent.id, panelDateISO);
   panelEvent = (eventsCache[panelDateISO] || []).find(e => e.id === panelEvent.id);
   if (!panelEvent) { closeEventPanel(); return; }
-  updateStatusChip(!!panelEvent.done);
+  updateDoneButton(!!panelEvent.done);
 }
 
 async function panelDeleteEvent() {
@@ -1808,7 +1832,7 @@ async function panelDeleteEvent() {
 // ── FOCUS TIMER — panel compacto ────────────────────────────
 
 const PANEL_TIMER_TOTAL = 25 * 60;
-const PANEL_RING_CIRC = 113;
+const PANEL_RING_CIRC = 88;
 
 function startSession() {
   currentSession.startedAt = Date.now();

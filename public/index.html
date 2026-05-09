@@ -348,38 +348,50 @@
 <!-- EVENT PANEL -->
 <div id="event-panel" class="event-panel">
   <div class="panel-drag-wrap"><div class="panel-drag"></div></div>
+  <div class="panel-color-bar" id="panel-color-bar"></div>
 
   <div class="panel-content">
-    <!-- Fila superior: info + estado -->
-    <div class="panel-top">
-      <div class="panel-event-info">
-        <div class="panel-title" id="panel-title">—</div>
-        <div class="panel-meta" id="panel-meta">—</div>
-      </div>
-      <button class="panel-status-chip" id="panel-status-chip" onclick="panelToggleDone()">
-        <span id="panel-status-text">Pendiente</span>
-      </button>
+    <!-- Info del evento -->
+    <div class="panel-info">
+      <div class="panel-title" id="panel-title">—</div>
+      <div class="panel-meta" id="panel-meta">—</div>
     </div>
 
-    <!-- Timer inline (visible solo cuando corre) -->
+    <!-- Detalles -->
+    <textarea class="panel-details" id="panel-details"
+              placeholder="Agregar detalles..."
+              rows="2"
+              oninput="autoresizeDetails(this)"
+              onblur="savePanelDetails()"></textarea>
+
+    <!-- Acción principal: estado -->
+    <button class="panel-done-main" id="panel-done-main" onclick="panelToggleDone()">
+      <svg id="panel-done-icon" width="14" height="14" viewBox="0 0 14 14" fill="none">
+        <polyline points="2,7 5.5,10.5 12,3" stroke="currentColor" stroke-width="1.8"
+                  stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <span id="panel-done-label">Marcar como completada</span>
+    </button>
+
+    <!-- Timer (oculto hasta iniciar) -->
     <div class="panel-timer-row" id="panel-timer-row" style="display:none">
-      <svg class="panel-ring-svg" viewBox="0 0 44 44">
-        <circle cx="22" cy="22" r="18" fill="none" stroke="rgba(255,255,255,0.07)" stroke-width="2"/>
-        <circle id="panel-ring" cx="22" cy="22" r="18" fill="none"
+      <svg class="panel-ring-svg" viewBox="0 0 36 36">
+        <circle cx="18" cy="18" r="14" fill="none" stroke="rgba(255,255,255,0.07)" stroke-width="2"/>
+        <circle id="panel-ring" cx="18" cy="18" r="14" fill="none"
                 stroke="#6366F1" stroke-width="2" stroke-linecap="round"
-                stroke-dasharray="113" stroke-dashoffset="0"
-                transform="rotate(-90 22 22)"/>
+                stroke-dasharray="88" stroke-dashoffset="0"
+                transform="rotate(-90 18 18)"/>
       </svg>
       <span class="panel-timer-count" id="panel-timer-count">25:00</span>
       <button class="panel-timer-pause" id="panel-timer-pause" onclick="togglePause()">Pausar</button>
       <button class="panel-timer-stop" onclick="stopPanelTimer()">Terminar</button>
     </div>
 
-    <!-- Acciones -->
-    <div class="panel-actions-row">
+    <!-- Acciones secundarias -->
+    <div class="panel-actions-row" id="panel-actions-row">
       <button class="panel-focus-btn" id="focus-start-btn" onclick="startSession()">
-        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" style="margin-right:6px">
-          <path d="M3 2l7 4-7 4V2z" fill="currentColor"/>
+        <svg width="10" height="12" viewBox="0 0 10 12" fill="none" style="margin-right:6px;flex-shrink:0">
+          <path d="M1 1l8 5-8 5V1z" fill="currentColor"/>
         </svg>
         Iniciar foco
       </button>

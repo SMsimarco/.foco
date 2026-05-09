@@ -1497,13 +1497,13 @@ html, body {
   bottom: 0;
   left: 0;
   right: 0;
-  background: #0F0F13;
-  border-top: 1px solid rgba(255,255,255,0.07);
-  border-radius: 20px 20px 0 0;
+  background: #0C0C10;
+  border-top: 1px solid rgba(255,255,255,0.06);
+  border-radius: 22px 22px 0 0;
   transform: translateY(100%);
-  transition: transform 0.32s cubic-bezier(.32,0,.15,1);
+  transition: transform 0.34s cubic-bezier(.32,0,.15,1);
   z-index: 200;
-  box-shadow: 0 -12px 48px rgba(0,0,0,0.5);
+  box-shadow: 0 -16px 56px rgba(0,0,0,0.55);
 }
 
 .event-panel.open { transform: translateY(0); }
@@ -1511,39 +1511,37 @@ html, body {
 .panel-drag-wrap {
   display: flex;
   justify-content: center;
-  padding: 12px 0 0;
+  padding: 12px 0 4px;
 }
 
 .panel-drag {
-  width: 36px;
+  width: 32px;
   height: 3px;
-  background: rgba(255,255,255,0.1);
+  background: rgba(255,255,255,0.08);
   border-radius: 2px;
 }
 
+.panel-color-bar {
+  height: 2px;
+  background: var(--event-color, #6366F1);
+  opacity: 0.7;
+}
+
 .panel-content {
-  padding: 16px 20px 36px;
-}
-
-.panel-top {
+  padding: 20px 22px 38px;
   display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 12px;
-  margin-bottom: 20px;
+  flex-direction: column;
+  gap: 16px;
 }
 
-.panel-event-info { flex: 1; min-width: 0; }
+.panel-info { display: flex; flex-direction: column; gap: 5px; }
 
 .panel-title {
-  font-size: 17px;
-  font-weight: 500;
+  font-family: 'Instrument Serif', serif;
+  font-size: 22px;
   color: #fff;
-  margin-bottom: 4px;
-  letter-spacing: -0.2px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  letter-spacing: -0.3px;
+  line-height: 1.2;
 }
 
 .panel-meta {
@@ -1552,71 +1550,101 @@ html, body {
   display: flex;
   align-items: center;
   gap: 6px;
+  font-family: 'Geist', sans-serif;
 }
 
 .panel-meta::before {
   content: '';
-  width: 5px;
-  height: 5px;
+  width: 4px;
+  height: 4px;
   border-radius: 50%;
   background: var(--event-color, #6366F1);
   flex-shrink: 0;
 }
 
-.panel-status-chip {
-  flex-shrink: 0;
-  height: 26px;
-  padding: 0 11px;
-  border-radius: 20px;
-  border: 1px solid rgba(255,255,255,0.1);
+.panel-details {
+  width: 100%;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  color: rgba(255,255,255,0.7);
+  font-size: 13px;
+  font-family: 'Geist', sans-serif;
+  font-weight: 300;
+  line-height: 1.6;
+  padding: 2px 0 8px;
+  outline: none;
+  resize: none;
+  caret-color: var(--event-color, #6366F1);
+  -webkit-appearance: none;
+  box-sizing: border-box;
+  overflow: hidden;
+  min-height: 28px;
+  transition: border-color 0.2s;
+}
+
+.panel-details:focus { border-bottom-color: rgba(255,255,255,0.14); }
+.panel-details::placeholder { color: rgba(255,255,255,0.13); }
+
+.panel-done-main {
+  width: 100%;
+  height: 52px;
+  border-radius: 13px;
+  border: 1px solid rgba(255,255,255,0.08);
   background: rgba(255,255,255,0.05);
-  color: rgba(255,255,255,0.4);
-  font-size: 11px;
+  color: rgba(255,255,255,0.75);
+  font-size: 14px;
   font-weight: 500;
   font-family: 'Geist', sans-serif;
   cursor: pointer;
-  transition: all 0.18s ease;
-  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.2s ease;
   letter-spacing: 0.01em;
 }
 
-.panel-status-chip:hover {
-  background: rgba(255,255,255,0.08);
-  color: rgba(255,255,255,0.7);
+.panel-done-main:hover {
+  background: rgba(255,255,255,0.09);
+  color: #fff;
 }
 
-.panel-status-chip.done {
+.panel-done-main.done {
   background: rgba(16,185,129,0.1);
-  border-color: rgba(16,185,129,0.25);
+  border-color: rgba(16,185,129,0.22);
   color: #34D399;
+}
+
+.panel-done-main.done:hover {
+  background: rgba(16,185,129,0.16);
 }
 
 .panel-timer-row {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   background: rgba(255,255,255,0.03);
   border: 1px solid rgba(255,255,255,0.06);
   border-radius: 12px;
   padding: 10px 14px;
-  margin-bottom: 12px;
 }
 
-.panel-ring-svg { width: 40px; height: 40px; flex-shrink: 0; }
+.panel-ring-svg { width: 36px; height: 36px; flex-shrink: 0; }
 
 .panel-timer-count {
   font-family: 'Instrument Serif', serif;
-  font-size: 26px;
+  font-size: 24px;
   color: #fff;
-  letter-spacing: -1px;
+  letter-spacing: -0.5px;
   flex: 1;
   line-height: 1;
 }
 
 .panel-timer-pause, .panel-timer-stop {
-  height: 30px;
-  padding: 0 12px;
-  border-radius: 8px;
+  height: 28px;
+  padding: 0 11px;
+  border-radius: 7px;
   font-size: 12px;
   font-family: 'Geist', sans-serif;
   font-weight: 500;
@@ -1625,18 +1653,18 @@ html, body {
 }
 
 .panel-timer-pause {
-  border: 1px solid rgba(255,255,255,0.1);
-  background: rgba(255,255,255,0.05);
-  color: rgba(255,255,255,0.5);
+  border: 1px solid rgba(255,255,255,0.09);
+  background: rgba(255,255,255,0.04);
+  color: rgba(255,255,255,0.45);
 }
-.panel-timer-pause:hover { background: rgba(255,255,255,0.1); color: #fff; }
+.panel-timer-pause:hover { background: rgba(255,255,255,0.09); color: #fff; }
 
 .panel-timer-stop {
-  border: 1px solid rgba(99,102,241,0.25);
-  background: rgba(99,102,241,0.1);
+  border: 1px solid rgba(99,102,241,0.22);
+  background: rgba(99,102,241,0.08);
   color: #818CF8;
 }
-.panel-timer-stop:hover { background: rgba(99,102,241,0.2); color: #A5B4FC; }
+.panel-timer-stop:hover { background: rgba(99,102,241,0.18); color: #A5B4FC; }
 
 .panel-actions-row {
   display: flex;
@@ -1657,20 +1685,20 @@ html, body {
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.18s ease;
+  transition: background 0.18s ease, transform 0.12s ease;
   letter-spacing: 0.01em;
 }
 
-.panel-focus-btn:hover { background: #5558e8; }
+.panel-focus-btn:hover { background: #5254cc; }
 .panel-focus-btn:active { transform: scale(0.98); }
 
 .panel-del-btn {
   height: 44px;
   padding: 0 18px;
   border-radius: 11px;
-  border: 1px solid rgba(255,255,255,0.07);
+  border: 1px solid rgba(255,255,255,0.06);
   background: transparent;
-  color: rgba(255,255,255,0.3);
+  color: rgba(255,255,255,0.25);
   font-size: 13px;
   font-family: 'Geist', sans-serif;
   cursor: pointer;
@@ -1678,9 +1706,9 @@ html, body {
 }
 
 .panel-del-btn:hover {
-  border-color: rgba(244,63,94,0.3);
+  border-color: rgba(244,63,94,0.28);
   color: #F87171;
-  background: rgba(244,63,94,0.07);
+  background: rgba(244,63,94,0.06);
 }
 
 /* ── ANIMACIONES ── */
