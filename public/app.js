@@ -724,7 +724,7 @@ function renderDayColumns(week) {
         ${h > 24 ? `<div class="ev-time">${ev.start_time}–${ev.end_time}</div>` : ''}
         <button class="ev-del" onclick="event.stopPropagation();deleteEvent('${ev.id}','${toISO(d)}')">×</button>
       `;
-      block.addEventListener('click', () => openEventPanel(ev, toISO(d)));
+      block.addEventListener('click', (e) => { e.stopPropagation(); openEventPanel(ev, toISO(d)); });
 
       // Drag start
       block.addEventListener('dragstart', e => {
@@ -824,8 +824,11 @@ function renderDayColumns(week) {
       showToast('Evento movido', 'success');
     });
 
-    col.addEventListener('click', (e) => {
-      if (ghost) { ghost = null; renderSemana(); return; }
+    col.addEventListener('click', () => {
+      if (ghost) { ghost = null; renderSemana(); }
+    });
+
+    col.addEventListener('dblclick', (e) => {
       const rect = col.getBoundingClientRect();
       const gridWrap = document.getElementById('grid-wrap');
       const relY = e.clientY - rect.top + gridWrap.scrollTop;
