@@ -135,10 +135,21 @@
 
     <!-- PATRONES -->
     <div id="view-patrones" style="display:none">
-      <div class="heatmap-wrap">
-        <div class="heatmap-title">Tus mejores momentos</div>
-        <div class="heatmap-grid" id="heatmap-grid"></div>
-        <div class="hm-insight" id="hm-insight" style="display:none"></div>
+      <div class="dashboard-wrap">
+        <div class="dash-stats">
+          <div class="dash-stat"><div class="dash-stat-val" id="stat-done">—</div><div class="dash-stat-label">completadas</div></div>
+          <div class="dash-stat"><div class="dash-stat-val" id="stat-rate">—</div><div class="dash-stat-label">tasa histórica</div></div>
+          <div class="dash-stat"><div class="dash-stat-val" id="stat-hour">—</div><div class="dash-stat-label">mejor hora</div></div>
+        </div>
+        <div class="dash-section">
+          <div class="dash-section-title">Por día de semana</div>
+          <div class="day-bar-chart" id="day-bar-chart"></div>
+        </div>
+        <div class="dash-section">
+          <div class="dash-section-title">Mapa de hábitos</div>
+          <div class="heatmap-grid" id="heatmap-grid"></div>
+          <div class="hm-insight" id="hm-insight"></div>
+        </div>
       </div>
     </div>
 

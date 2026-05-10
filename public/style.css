@@ -1061,6 +1061,112 @@ html, body {
   flex-direction: column;
 }
 
+/* ── DASHBOARD PATRONES ── */
+.dashboard-wrap {
+  padding: 20px 16px 48px;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+.dash-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.dash-stat {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 12px;
+  padding: 14px 10px;
+  text-align: center;
+}
+
+.dash-stat-val {
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--text1);
+  letter-spacing: -0.5px;
+  line-height: 1;
+  margin-bottom: 5px;
+}
+
+.dash-stat-label {
+  font-size: 10px;
+  color: var(--text4);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.dash-section {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.dash-section-title {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text4);
+  text-transform: uppercase;
+  letter-spacing: 0.7px;
+}
+
+.day-bar-chart {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.day-bar-wrap {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  height: 76px;
+}
+
+.day-bar-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  height: 100%;
+  gap: 3px;
+}
+
+.day-bar-pct {
+  font-size: 9px;
+  color: var(--text4);
+  height: 12px;
+  line-height: 12px;
+}
+
+.day-bar-inner {
+  width: 100%;
+  background: #6366F1;
+  border-radius: 3px 3px 0 0;
+  min-height: 3px;
+  transition: height 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.day-bar-inner.bar-empty {
+  background: rgba(255,255,255,0.05);
+}
+
+.day-bar-labels {
+  display: flex;
+  gap: 8px;
+}
+
+.day-bar-label {
+  flex: 1;
+  text-align: center;
+  font-size: 10px;
+  color: var(--text4);
+}
+
 .heatmap-wrap {
   padding: 16px;
 }
