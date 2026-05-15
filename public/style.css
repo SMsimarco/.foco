@@ -3234,26 +3234,36 @@ body.ambient #app::before {
   display: flex;
   justify-content: space-between;
   font-family: 'Geist', sans-serif;
-  margin-top: 2px;
+  margin-top: 4px;
 }
-.tuana-lbl-wrap {
-  display: flex;
-  flex-direction: column;
+.tuana-chart-wrap {
+  position: relative;
+}
+.tuana-chart-tip {
+  position: absolute;
+  bottom: calc(100% + 4px);
+  display: none;
   align-items: center;
-  gap: 2px;
+  gap: 6px;
+  background: #18181B;
+  border: 1px solid var(--border2);
+  border-radius: 6px;
+  padding: 5px 9px;
+  pointer-events: none;
+  white-space: nowrap;
+  z-index: 20;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.4);
 }
-.tuana-lbl-day {
-  font-size: 8px;
-  color: var(--text4);
+.tip-lbl {
+  font-size: 10px;
+  color: var(--text3);
+  font-family: 'Geist', sans-serif;
 }
-.tuana-lbl-count {
-  font-size: 9px;
-  color: var(--text4);
-  font-weight: 400;
-}
-.tuana-lbl-count.has-data {
-  color: var(--text2);
-  font-weight: 500;
+.tip-val {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text);
+  font-family: 'Geist', sans-serif;
 }
 .tuana-energy-dots {
   display: flex;

@@ -64,7 +64,9 @@ let pmArea = null;
 
 // Tu año state
 let tuanaChartPeriod = 'mes';
-let tuanaEventsCache = [];
+let tuanaEventsCache  = [];
+let tuanaChartVals    = [];
+let tuanaChartLabels  = [];
 
 // Onboarding state
 let obSelectedHour = 9;
@@ -3227,6 +3229,26 @@ async function renderAreasBreakdown() {
 
 // ── EQUIPO ────────────────────────────────────────────────────
 
+function showChartTip(idx, leftPct) {
+  const tip = document.getElementById('tu-chart-tip');
+  if (!tip) return;
+  const val = tuanaChartVals[idx] ?? 0;
+  const lbl = tuanaChartLabels[idx] ?? '';
+  tip.innerHTML = `<span class="tip-lbl">${lbl}</span><span class="tip-val">${val} ${val === 1 ? 'tarea' : 'tareas'}</span>`;
+  const clamped = Math.min(Math.max(leftPct, 10), 85);
+  tip.style.left = `${clamped}%`;
+  tip.style.display = 'flex';
+  clearTimeout(tip._t);
+  tip._t = setTimeout(() => { tip.style.display = 'none'; }, 2000);
+}
+
+function hideChartTip() {
+  const tip = document.getElementById('tu-chart-tip');
+  if (!tip) return;
+  clearTimeout(tip._t);
+  tip.style.display = 'none';
+}
+
 function setTuanaChartPeriod(p) {
   tuanaChartPeriod = p;
   document.querySelectorAll('.tuana-period-btn').forEach(b =>
@@ -3270,7 +3292,9 @@ function renderTuanaChart() {
     }
   }
 
-  // Stat number
+  tuanaChartVals   = vals;
+  tuanaChartLabels = labels;
+
   const total = vals.reduce((s, v) => s + v, 0);
   const subMap = { semana: 'esta semana', mes: 'último mes', año: 'este año' };
   if (bigEl) bigEl.textContent = total;
@@ -3315,6 +3339,11 @@ function renderTuanaChart() {
   const line = curvePath(pts);
   const area = `${line} L${pts[pts.length-1].x.toFixed(1)},${floorY} L${pts[0].x.toFixed(1)},${floorY} Z`;
 
+  const dots = pts.map((pt, i) => vals[i] > 0
+    ? `<circle cx="${pt.x.toFixed(1)}" cy="${pt.y.toFixed(1)}" r="2.5" fill="#818CF8"/>`
+    : ''
+  ).join('');
+
   chartEl.innerHTML = `
     <defs>
       <linearGradient id="ag" x1="0" y1="0" x2="0" y2="1">
@@ -3329,17 +3358,34 @@ function renderTuanaChart() {
     <path d="${area}" fill="url(#ag)"/>
     <path d="${line}" fill="none" stroke="#3730A3" stroke-width="5" stroke-opacity="0.22" stroke-linejoin="round" stroke-linecap="round"/>
     <path d="${line}" fill="none" stroke="#A5B4FC" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round" filter="url(#lg)"/>
+    ${dots}
   `;
+
+  // Evento único para hover + touch
+  chartEl.onmousemove = chartEl.onclick = (e) => {
+    const r = chartEl.getBoundingClientRect();
+    const relX = e.clientX - r.left;
+    const pct  = relX / r.width;
+    const svgX  = pct * 300;
+    const idx   = Math.max(0, Math.min(n - 1, Math.round((svgX - pL) / cW * (n - 1))));
+    showChartTip(idx, pct * 100);
+  };
+  chartEl.ontouchstart = (e) => {
+    e.preventDefault();
+    const r    = chartEl.getBoundingClientRect();
+    const relX = e.touches[0].clientX - r.left;
+    const pct  = relX / r.width;
+    const svgX  = pct * 300;
+    const idx   = Math.max(0, Math.min(n - 1, Math.round((svgX - pL) / cW * (n - 1))));
+    showChartTip(idx, pct * 100);
+  };
+  chartEl.onmouseleave = hideChartTip;
 
   if (labelsEl) {
     const step = tuanaChartPeriod === 'año' ? 3 : 1;
     labelsEl.innerHTML = labels.map((l, i) => {
       const visible = i % step === 0 || i === labels.length - 1;
-      const count = vals[i];
-      return `<span class="tuana-lbl-wrap" style="visibility:${visible ? 'visible' : 'hidden'}">
-        <span class="tuana-lbl-day">${l}</span>
-        <span class="tuana-lbl-count${count > 0 ? ' has-data' : ''}">${count > 0 ? count : '·'}</span>
-      </span>`;
+      return `<span style="visibility:${visible ? 'visible' : 'hidden'};font-size:9px;color:var(--text4);font-family:'Geist',sans-serif">${l}</span>`;
     }).join('');
   }
 }
@@ -3403,7 +3449,10 @@ async function renderEquipo() {
             <button class="tuana-period-btn${tuanaChartPeriod==='año'?' active':''}" data-p="año" onclick="setTuanaChartPeriod('año')">Año</button>
           </div>
         </div>
-        <svg class="tuana-chart" id="tu-chart" viewBox="0 0 300 72" preserveAspectRatio="none"></svg>
+        <div class="tuana-chart-wrap">
+          <div class="tuana-chart-tip" id="tu-chart-tip"></div>
+          <svg class="tuana-chart" id="tu-chart" viewBox="0 0 300 72" preserveAspectRatio="none"></svg>
+        </div>
         <div class="tuana-chart-labels" id="tu-chart-labels"></div>
       </div>
 
