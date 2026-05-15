@@ -3310,47 +3310,51 @@ function renderTuanaChart() {
   const area = `${line} L${pts[pts.length-1].x.toFixed(1)},${(pT+cH).toFixed(1)} L${pts[0].x.toFixed(1)},${(pT+cH).toFixed(1)} Z`;
   const showAll = tuanaChartPeriod !== 'año';
 
-  const dotsHTML = pts.map((pt, i) => {
-    const isMax = i === maxIdx && vals[maxIdx] > 0;
-    const showVal = vals[i] > 0 && (showAll || isMax);
-    const labelY = (pt.y - 9).toFixed(1);
-    const cx = pt.x.toFixed(1), cy = pt.y.toFixed(1);
-    return `
-      ${showVal ? `<text x="${cx}" y="${labelY}" text-anchor="middle"
-        fill="${isMax ? '#C7D2FE' : 'rgba(255,255,255,0.32)'}"
-        font-size="${isMax ? 9.5 : 8.5}" font-family="Geist,sans-serif"
-        font-weight="${isMax ? 600 : 400}">${vals[i]}</text>` : ''}
-      ${isMax ? `<circle cx="${cx}" cy="${cy}" r="14" fill="#6366F1" fill-opacity="0.06"/>` : ''}
-      ${isMax ? `<circle cx="${cx}" cy="${cy}" r="8"  fill="#6366F1" fill-opacity="0.14"/>` : ''}
-      <circle cx="${cx}" cy="${cy}"
-        r="${isMax ? 4 : 3}"
-        fill="${isMax ? '#C7D2FE' : '#0E0E11'}"
-        stroke="${isMax ? '#A5B4FC' : '#818CF8'}"
-        stroke-width="1.5"/>
-    `;
-  }).join('');
-
   const grid = [0.25, 0.5, 0.75].map(r => {
     const y = (pT + cH - r * cH).toFixed(1);
-    return `<line x1="${pL}" y1="${y}" x2="${W - pR}" y2="${y}" stroke="rgba(255,255,255,0.035)" stroke-width="1" stroke-dasharray="3,5"/>`;
+    return `<line x1="${pL}" y1="${y}" x2="${W-pR}" y2="${y}" stroke="rgba(255,255,255,0.03)" stroke-width="1" stroke-dasharray="3,6"/>`;
+  }).join('');
+
+  const ticks = pts.map(pt =>
+    `<line x1="${pt.x.toFixed(1)}" y1="${(floorY-3).toFixed(1)}" x2="${pt.x.toFixed(1)}" y2="${floorY.toFixed(1)}" stroke="rgba(255,255,255,0.18)" stroke-width="1"/>`
+  ).join('');
+
+  // Peak indicator: vertical dashed line from max point to baseline
+  const peakLine = vals[maxIdx] > 0 ? `
+    <line x1="${pts[maxIdx].x.toFixed(1)}" y1="${pts[maxIdx].y.toFixed(1)}"
+          x2="${pts[maxIdx].x.toFixed(1)}" y2="${floorY.toFixed(1)}"
+          stroke="#818CF8" stroke-width="1" stroke-opacity="0.35" stroke-dasharray="2,3"/>` : '';
+
+  // Floating value labels (no circles)
+  const valueLabels = pts.map((pt, i) => {
+    if (vals[i] === 0) return '';
+    const isMax = i === maxIdx;
+    const show  = showAll || isMax;
+    if (!show) return '';
+    return `<text x="${pt.x.toFixed(1)}" y="${(pt.y - 7).toFixed(1)}" text-anchor="middle"
+      fill="${isMax ? '#C7D2FE' : 'rgba(255,255,255,0.28)'}"
+      font-size="${isMax ? 10 : 8}" font-family="Geist,sans-serif"
+      font-weight="${isMax ? 600 : 400}">${vals[i]}</text>`;
   }).join('');
 
   chartEl.innerHTML = `
     <defs>
       <linearGradient id="ag" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0%"  stop-color="#6366F1" stop-opacity="0.32"/>
+        <stop offset="0%"   stop-color="#6366F1" stop-opacity="0.28"/>
         <stop offset="100%" stop-color="#6366F1" stop-opacity="0"/>
       </linearGradient>
-      <filter id="lg" x="-20%" y="-60%" width="140%" height="220%">
+      <filter id="lg" x="-20%" y="-80%" width="140%" height="260%">
         <feGaussianBlur stdDeviation="2.5" result="b"/>
         <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
       </filter>
     </defs>
     ${grid}
     <path d="${area}" fill="url(#ag)"/>
-    <path d="${line}" fill="none" stroke="#4338CA" stroke-width="5" stroke-opacity="0.3" stroke-linejoin="round" stroke-linecap="round"/>
+    <path d="${line}" fill="none" stroke="#3730A3" stroke-width="6" stroke-opacity="0.25" stroke-linejoin="round" stroke-linecap="round"/>
     <path d="${line}" fill="none" stroke="#A5B4FC" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round" filter="url(#lg)"/>
-    ${dotsHTML}
+    ${peakLine}
+    ${ticks}
+    ${valueLabels}
   `;
 
   if (labelsEl) {
