@@ -62,6 +62,10 @@ let projModalId = null;
 let pmEstado = 'idea';
 let pmArea = null;
 
+// Tu año state
+let tuanaChartPeriod = 'mes';
+let tuanaEventsCache = [];
+
 // Onboarding state
 let obSelectedHour = 9;
 
@@ -3223,6 +3227,72 @@ async function renderAreasBreakdown() {
 
 // ── EQUIPO ────────────────────────────────────────────────────
 
+function setTuanaChartPeriod(p) {
+  tuanaChartPeriod = p;
+  document.querySelectorAll('.tuana-period-btn').forEach(b =>
+    b.classList.toggle('active', b.dataset.p === p)
+  );
+  renderTuanaChart();
+}
+
+function renderTuanaChart() {
+  const chartEl  = document.getElementById('tu-chart');
+  const labelsEl = document.getElementById('tu-chart-labels');
+  if (!chartEl) return;
+
+  const done = tuanaEventsCache.filter(e => e.done);
+  const W = 300, H = 70, pad = 8;
+  let bars = [], labels = [];
+
+  if (tuanaChartPeriod === 'semana') {
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(); d.setHours(0,0,0,0); d.setDate(d.getDate() - i);
+      bars.push(done.filter(e => e.date === toISO(d)).length);
+      labels.push(DAYS[d.getDay()]);
+    }
+  } else if (tuanaChartPeriod === 'mes') {
+    for (let i = 3; i >= 0; i--) {
+      const end   = new Date(); end.setHours(0,0,0,0); end.setDate(end.getDate() - i * 7);
+      const start = new Date(end); start.setDate(end.getDate() - 6);
+      const s = toISO(start), e = toISO(end);
+      bars.push(done.filter(ev => ev.date >= s && ev.date <= e).length);
+      labels.push(`${start.getDate()}/${start.getMonth()+1}`);
+    }
+  } else {
+    const monthNames = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+    const now = new Date();
+    for (let i = 11; i >= 0; i--) {
+      const d    = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const yyyy = d.getFullYear();
+      const mm   = String(d.getMonth() + 1).padStart(2, '0');
+      bars.push(done.filter(ev => ev.date.startsWith(`${yyyy}-${mm}`)).length);
+      labels.push(monthNames[d.getMonth()]);
+    }
+  }
+
+  const maxVal = Math.max(...bars, 1);
+  const n      = bars.length;
+  const barW   = (W - pad * 2) / n;
+  const gap    = barW * 0.25;
+
+  const svgBars = bars.map((v, i) => {
+    const x  = pad + i * barW + gap / 2;
+    const bw = barW - gap;
+    const bh = Math.max((v / maxVal) * (H - pad * 2), v > 0 ? 3 : 0);
+    const y  = H - pad - bh;
+    return `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${bw.toFixed(1)}" height="${bh.toFixed(1)}" rx="2.5" fill="${v > 0 ? '#6366F1' : 'rgba(99,102,241,0.12)'}"/>`;
+  }).join('');
+
+  chartEl.innerHTML = svgBars || `<text x="150" y="38" text-anchor="middle" fill="#52525B" font-size="10" font-family="Geist,sans-serif">Sin datos todavía</text>`;
+
+  if (labelsEl) {
+    const step = tuanaChartPeriod === 'año' ? 3 : 1;
+    labelsEl.innerHTML = labels.map((l, i) =>
+      `<span style="visibility:${i % step === 0 || i === labels.length-1 ? 'visible' : 'hidden'}">${l}</span>`
+    ).join('');
+  }
+}
+
 async function renderEquipo() {
   const uid  = currentUser.id;
   const wrap = document.getElementById('view-equipo');
@@ -3268,8 +3338,15 @@ async function renderEquipo() {
       </div>
 
       <div class="tuana-card">
-        <div class="tuana-section-label">Commitment — últimas 12 semanas</div>
-        <svg class="tuana-chart" id="tu-chart" viewBox="0 0 300 60" preserveAspectRatio="none"></svg>
+        <div class="tuana-card-top">
+          <div class="tuana-section-label">Tareas completadas</div>
+          <div class="tuana-period-toggle">
+            <button class="tuana-period-btn${tuanaChartPeriod==='semana'?' active':''}" data-p="semana" onclick="setTuanaChartPeriod('semana')">Semana</button>
+            <button class="tuana-period-btn${tuanaChartPeriod==='mes'?' active':''}" data-p="mes" onclick="setTuanaChartPeriod('mes')">Mes</button>
+            <button class="tuana-period-btn${tuanaChartPeriod==='año'?' active':''}" data-p="año" onclick="setTuanaChartPeriod('año')">Año</button>
+          </div>
+        </div>
+        <svg class="tuana-chart" id="tu-chart" viewBox="0 0 300 70" preserveAspectRatio="none"></svg>
         <div class="tuana-chart-labels" id="tu-chart-labels"></div>
       </div>
 
@@ -3290,19 +3367,18 @@ async function renderEquipo() {
   const since60d = toISO(new Date(Date.now() - 60  * 86400000));
   const since1y  = toISO(new Date(Date.now() - 365 * 86400000));
 
-  const [evRes, checkinRes, streakRes, digestRes, wordsRes] = await Promise.all([
-    db.from('events').select('date, done').eq('user_id', uid).gte('date', since6m),
+  const [evRes, checkinRes, streakRes, wordsRes] = await Promise.all([
+    db.from('events').select('date, done').eq('user_id', uid).gte('date', since1y),
     db.from('daily_checkins').select('date, energy').eq('user_id', uid).gte('date', since30d).order('date', { ascending: true }),
     db.from('daily_checkins').select('date').eq('user_id', uid).gte('date', since60d).order('date', { ascending: false }),
-    db.from('weekly_digests').select('week_start, commitment_score').eq('user_id', uid).order('week_start', { ascending: false }).limit(12),
     db.from('weekly_words').select('week_start, word').eq('user_id', uid).gte('week_start', since1y).order('week_start', { ascending: false })
   ]);
 
-  const events   = evRes.data      || [];
-  const checkins = checkinRes.data || [];
-  const streakData = streakRes.data || [];
-  const digests  = (digestRes.data || []).reverse();
-  const words    = wordsRes.data   || [];
+  const events     = evRes.data      || [];
+  const checkins   = checkinRes.data || [];
+  const streakData = streakRes.data  || [];
+  const words      = wordsRes.data   || [];
+  tuanaEventsCache = events;
 
   // ── Heatmap ──────────────────────────────────────────────────
   const doneByDate = {};
@@ -3339,7 +3415,7 @@ async function renderEquipo() {
 
   // ── Highlights ───────────────────────────────────────────────
   const elDone = document.getElementById('tu-total-done');
-  if (elDone) elDone.textContent = events.filter(e => e.done).length;
+  if (elDone) elDone.textContent = events.filter(e => e.done && e.date >= since6m).length;
 
   const elBest = document.getElementById('tu-best-week');
   if (elBest && digests.length) {
@@ -3357,42 +3433,8 @@ async function renderEquipo() {
     elRacha.textContent = streak > 0 ? streak + (streak === 1 ? ' día' : ' días') : '—';
   }
 
-  // ── Commitment chart ─────────────────────────────────────────
-  const chartEl = document.getElementById('tu-chart');
-  if (chartEl) {
-    if (digests.length > 1) {
-      const W = 300, H = 60, pad = 8;
-      const vals  = digests.map(d => d.commitment_score || 0);
-      const xStep = (W - pad * 2) / (vals.length - 1);
-      const toY   = v => H - pad - (v / 100) * (H - pad * 2);
-      const points = vals.map((v, i) => `${pad + i * xStep},${toY(v)}`).join(' ');
-      const area   = `${pad},${H - pad} ${points} ${pad + (vals.length-1)*xStep},${H - pad}`;
-      chartEl.innerHTML = `
-        <defs>
-          <linearGradient id="cg" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stop-color="#6366F1" stop-opacity="0.28"/>
-            <stop offset="100%" stop-color="#6366F1" stop-opacity="0"/>
-          </linearGradient>
-        </defs>
-        <polygon points="${area}" fill="url(#cg)"/>
-        <polyline points="${points}" fill="none" stroke="#6366F1" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
-        ${vals.map((v, i) => `<circle cx="${pad + i * xStep}" cy="${toY(v)}" r="2.5" fill="#6366F1"/>`).join('')}
-      `;
-
-      const labelsEl = document.getElementById('tu-chart-labels');
-      if (labelsEl) {
-        labelsEl.innerHTML = digests.map((d, i) => {
-          if (i === 0 || i === digests.length - 1 || i === Math.floor(digests.length / 2)) {
-            const dt = new Date(d.week_start + 'T12:00:00');
-            return `<span>${dt.getDate()}/${dt.getMonth()+1}</span>`;
-          }
-          return '<span></span>';
-        }).join('');
-      }
-    } else {
-      chartEl.innerHTML = `<text x="150" y="35" text-anchor="middle" fill="#52525B" font-size="10" font-family="Geist,sans-serif">Completá algunas semanas para ver el gráfico</text>`;
-    }
-  }
+  // ── Chart ────────────────────────────────────────────────────
+  renderTuanaChart();
 
   // ── Energía ──────────────────────────────────────────────────
   const energyEl = document.getElementById('tu-energy');
