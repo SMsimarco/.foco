@@ -2888,43 +2888,59 @@ body.ambient #app::before {
   font-family: 'Geist', sans-serif;
 }
 
-.slab-item {
+/* Grid de cards dentro de cada sección */
+#recordatorios-list, #notas-list, #proyectos-simple-list {
   display: flex;
-  align-items: center;
+  flex-wrap: wrap;
   gap: 10px;
-  padding: 11px 16px;
-  border-bottom: 1px solid var(--border);
-  transition: background 0.1s;
+  padding: 12px 14px 14px;
 }
-.slab-item:last-child { border-bottom: none; }
-.slab-item:hover { background: rgba(255,255,255,0.02); }
+
+.slab-item {
+  background: var(--bg3);
+  border: 1px solid var(--border2);
+  border-radius: 11px;
+  padding: 12px 13px;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  position: relative;
+  width: calc(50% - 5px);
+  transition: border-color 0.15s, transform 0.1s;
+}
+.slab-item:hover { border-color: var(--accent); transform: translateY(-1px); }
 
 .slab-item-name {
-  flex: 1;
   font-size: 13px;
+  font-weight: 500;
   color: var(--text);
   font-family: 'Geist', sans-serif;
+  line-height: 1.35;
 }
 
 .nota-text {
   color: var(--text2);
   font-size: 12px;
+  font-weight: 400;
   line-height: 1.5;
   white-space: pre-wrap;
 }
 
 .slab-del {
+  position: absolute;
+  top: 8px;
+  right: 8px;
   background: none;
   border: none;
   color: var(--text4);
-  font-size: 16px;
+  font-size: 14px;
   cursor: pointer;
-  padding: 0 2px;
   line-height: 1;
   transition: color 0.12s;
-  flex-shrink: 0;
   font-family: 'Geist', sans-serif;
+  opacity: 0;
 }
+.slab-item:hover .slab-del { opacity: 1; }
 .slab-del:hover { color: var(--danger); }
 
 /* Recordatorios */
@@ -2932,7 +2948,6 @@ body.ambient #app::before {
   display: flex;
   align-items: center;
   gap: 6px;
-  flex-shrink: 0;
 }
 
 .recorda-date {
@@ -2954,13 +2969,13 @@ body.ambient #app::before {
 .recorda-badge.soon  { background: rgba(251,146,60,0.15);  color: #FB923C; }
 .recorda-badge.overdue { background: rgba(248,113,113,0.15); color: var(--danger); }
 
-/* Proyectos simple */
-.proj-item { cursor: pointer; flex-direction: column; align-items: stretch; gap: 6px; }
+/* Proyectos */
+.proj-item { cursor: pointer; }
 
 .proj-item-top {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 7px;
 }
 
 .proj-dot {
@@ -2979,18 +2994,16 @@ body.ambient #app::before {
   text-transform: uppercase;
   letter-spacing: 0.04em;
   flex-shrink: 0;
+  margin-left: auto;
 }
 
 .proj-item-foot {
   display: flex;
   justify-content: space-between;
-  padding-left: 15px;
+  align-items: center;
 }
 
-.proj-area {
-  font-size: 11px;
-  font-family: 'Geist', sans-serif;
-}
+.proj-area { font-size: 11px; }
 
 .proj-pct {
   font-size: 11px;
@@ -3002,13 +3015,11 @@ body.ambient #app::before {
   height: 2px;
   background: var(--border2);
   border-radius: 1px;
-  margin: 0 0 2px 15px;
   overflow: hidden;
 }
 .proj-progress-fill {
   height: 100%;
   border-radius: 1px;
-  background: var(--accent);
 }
 
 /* Inline forms */

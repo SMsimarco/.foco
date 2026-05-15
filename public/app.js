@@ -1100,9 +1100,9 @@ async function renderProyectos() {
             </div>`;
           }
           return `<div class="slab-item">
+            <button class="slab-del" onclick="event.stopPropagation();deleteProyecto('${r.id}')">×</button>
             <span class="slab-item-name">${escH(r.nombre)}</span>
             ${rightHtml}
-            <button class="slab-del" onclick="deleteProyecto('${r.id}')">×</button>
           </div>`;
         }).join('');
   }
@@ -1114,8 +1114,8 @@ async function renderProyectos() {
       ? '<div class="slab-empty">Sin notas</div>'
       : notas.map(n => `
           <div class="slab-item nota-item">
+            <button class="slab-del" onclick="event.stopPropagation();deleteProyecto('${n.id}')">×</button>
             <span class="slab-item-name nota-text">${escH(n.nombre)}</span>
-            <button class="slab-del" onclick="deleteProyecto('${n.id}')">×</button>
           </div>`).join('');
   }
 
