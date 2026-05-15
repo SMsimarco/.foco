@@ -3333,9 +3333,14 @@ function renderTuanaChart() {
         <stop offset="0%" stop-color="#6366F1" stop-opacity="0.22"/>
         <stop offset="85%" stop-color="#6366F1" stop-opacity="0"/>
       </linearGradient>
+      <clipPath id="chartClip">
+        <rect x="${pL}" y="${pT}" width="${cW}" height="${cH}"/>
+      </clipPath>
     </defs>
-    <path d="${area}" fill="url(#ag)"/>
-    <path d="${line}" fill="none" stroke="#6366F1" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/>
+    <g clip-path="url(#chartClip)">
+      <path d="${area}" fill="url(#ag)"/>
+      <path d="${line}" fill="none" stroke="#6366F1" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/>
+    </g>
     ${dotsHTML}
   `;
 
