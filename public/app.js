@@ -3268,8 +3268,8 @@ function renderTuanaChart() {
     }
   }
 
-  const W = 300, H = 100;
-  const pT = 22, pB = 4, pL = 16, pR = 16;
+  const W = 300, H = 104;
+  const pT = 26, pB = 4, pL = 16, pR = 16;
   const cW = W - pL - pR, cH = H - pT - pB;
   const maxVal = Math.max(...vals, 1);
   const n = vals.length;
@@ -3313,30 +3313,43 @@ function renderTuanaChart() {
   const dotsHTML = pts.map((pt, i) => {
     const isMax = i === maxIdx && vals[maxIdx] > 0;
     const showVal = vals[i] > 0 && (showAll || isMax);
-    const labelY = (pt.y - 7).toFixed(1);
+    const labelY = (pt.y - 9).toFixed(1);
+    const cx = pt.x.toFixed(1), cy = pt.y.toFixed(1);
     return `
-      ${showVal ? `<text x="${pt.x.toFixed(1)}" y="${labelY}" text-anchor="middle"
-        fill="${isMax ? '#A5B4FC' : 'rgba(255,255,255,0.38)'}"
+      ${showVal ? `<text x="${cx}" y="${labelY}" text-anchor="middle"
+        fill="${isMax ? '#C7D2FE' : 'rgba(255,255,255,0.32)'}"
         font-size="${isMax ? 9.5 : 8.5}" font-family="Geist,sans-serif"
         font-weight="${isMax ? 600 : 400}">${vals[i]}</text>` : ''}
-      <circle cx="${pt.x.toFixed(1)}" cy="${pt.y.toFixed(1)}"
-        r="${isMax ? 5 : 3.5}"
-        fill="${isMax ? '#6366F1' : '#09090B'}"
-        stroke="${isMax ? '#A5B4FC' : '#6366F1'}"
-        stroke-width="${isMax ? 0 : 1.5}"/>
-      ${isMax ? `<circle cx="${pt.x.toFixed(1)}" cy="${pt.y.toFixed(1)}" r="9" fill="#6366F1" fill-opacity="0.12"/>` : ''}
+      ${isMax ? `<circle cx="${cx}" cy="${cy}" r="14" fill="#6366F1" fill-opacity="0.06"/>` : ''}
+      ${isMax ? `<circle cx="${cx}" cy="${cy}" r="8"  fill="#6366F1" fill-opacity="0.14"/>` : ''}
+      <circle cx="${cx}" cy="${cy}"
+        r="${isMax ? 4 : 3}"
+        fill="${isMax ? '#C7D2FE' : '#0E0E11'}"
+        stroke="${isMax ? '#A5B4FC' : '#818CF8'}"
+        stroke-width="1.5"/>
     `;
+  }).join('');
+
+  const grid = [0.25, 0.5, 0.75].map(r => {
+    const y = (pT + cH - r * cH).toFixed(1);
+    return `<line x1="${pL}" y1="${y}" x2="${W - pR}" y2="${y}" stroke="rgba(255,255,255,0.035)" stroke-width="1" stroke-dasharray="3,5"/>`;
   }).join('');
 
   chartEl.innerHTML = `
     <defs>
       <linearGradient id="ag" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0%" stop-color="#6366F1" stop-opacity="0.22"/>
-        <stop offset="85%" stop-color="#6366F1" stop-opacity="0"/>
+        <stop offset="0%"  stop-color="#6366F1" stop-opacity="0.32"/>
+        <stop offset="100%" stop-color="#6366F1" stop-opacity="0"/>
       </linearGradient>
+      <filter id="lg" x="-20%" y="-60%" width="140%" height="220%">
+        <feGaussianBlur stdDeviation="2.5" result="b"/>
+        <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+      </filter>
     </defs>
+    ${grid}
     <path d="${area}" fill="url(#ag)"/>
-    <path d="${line}" fill="none" stroke="#6366F1" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/>
+    <path d="${line}" fill="none" stroke="#4338CA" stroke-width="5" stroke-opacity="0.3" stroke-linejoin="round" stroke-linecap="round"/>
+    <path d="${line}" fill="none" stroke="#A5B4FC" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round" filter="url(#lg)"/>
     ${dotsHTML}
   `;
 
@@ -3401,7 +3414,7 @@ async function renderEquipo() {
             <button class="tuana-period-btn${tuanaChartPeriod==='año'?' active':''}" data-p="año" onclick="setTuanaChartPeriod('año')">Año</button>
           </div>
         </div>
-        <svg class="tuana-chart" id="tu-chart" viewBox="0 0 300 100" preserveAspectRatio="none"></svg>
+        <svg class="tuana-chart" id="tu-chart" viewBox="0 0 300 104" preserveAspectRatio="none"></svg>
         <div class="tuana-chart-labels" id="tu-chart-labels"></div>
       </div>
 
