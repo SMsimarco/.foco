@@ -375,7 +375,7 @@ async function showApp() {
   renderSemana();
   setTimeout(scrollToCurrentTime, 80);
   setupNotifications();
-  loadTemplates();
+
   checkOnboarding();
   checkMorningBrief();
   checkEveningCheckin();

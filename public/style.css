@@ -580,44 +580,6 @@ html, body {
 .morning-cta:hover { opacity: .85; }
 .morning-cta:disabled { opacity: .4; cursor: not-allowed; }
 
-/* ── TEMPLATES BAR ── */
-.templates-bar {
-  display: flex;
-  gap: 6px;
-  padding: 8px 16px;
-  overflow-x: auto;
-  border-bottom: 1px solid var(--border);
-  flex-shrink: 0;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-  background: var(--bg);
-}
-
-.templates-bar::-webkit-scrollbar { display: none; }
-
-.template-pill {
-  display: inline-flex;
-  align-items: center;
-  background: rgba(255,255,255,0.05);
-  border: 1px solid rgba(255,255,255,0.08);
-  border-radius: 20px;
-  padding: 5px 14px;
-  font-size: 12px;
-  color: rgba(255,255,255,0.5);
-  cursor: pointer;
-  white-space: nowrap;
-  font-family: 'Geist', sans-serif;
-  font-weight: 400;
-  transition: all 0.15s;
-  flex-shrink: 0;
-}
-
-.template-pill:hover {
-  color: rgba(255,255,255,0.85);
-  background: rgba(255,255,255,0.08);
-  border-color: rgba(255,255,255,0.15);
-}
-
 /* ── INPUT BAR ── */
 #input-bar {
   padding: 10px 16px 12px;
