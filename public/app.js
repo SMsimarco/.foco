@@ -424,7 +424,8 @@ async function loadWeek() {
     ev.start_time = ev.start_time ? ev.start_time.slice(0, 5) : ev.start_time;
     ev.end_time   = ev.end_time   ? ev.end_time.slice(0, 5)   : ev.end_time;
     week.forEach(d => {
-      if (d.getDay() === ev.dia_semana) {
+      // dia_semana null = todos los días; número = ese día de semana
+      if (ev.dia_semana === null || d.getDay() === ev.dia_semana) {
         const iso = toISO(d);
         if (!eventsCache[iso]) eventsCache[iso] = [];
         if (!eventsCache[iso].find(e => e.id === ev.id)) {
@@ -460,7 +461,46 @@ async function loadMonth() {
 
 // ── CRUD EVENTOS ────────────────────────────────────────────
 
-async function addEvent(dateISO, title, startTime, endTime) {
+let _pendingEvent = null;
+
+function promptAndAddEvent(dateISO, title, startTime, endTime) {
+  if (!title.trim()) return;
+  _pendingEvent = { dateISO, title, startTime, endTime };
+  document.getElementById('recur-modal-title').textContent = `"${title}"`;
+  document.getElementById('recur-modal').classList.add('open');
+  document.getElementById('recur-overlay').classList.add('open');
+}
+
+async function confirmRecurrence(type) {
+  if (!_pendingEvent) return;
+  const { dateISO, title, startTime, endTime } = _pendingEvent;
+  _pendingEvent = null;
+  closeRecurModal();
+
+  let recurrente = false;
+  let diaSemana = null;
+  if (type === 'weekly') {
+    recurrente = true;
+    diaSemana = new Date(dateISO + 'T12:00:00').getDay();
+  } else if (type === 'daily') {
+    recurrente = true;
+    diaSemana = null;
+  }
+
+  await addEvent(dateISO, title, startTime, endTime, recurrente, diaSemana);
+}
+
+function closeRecurModal() {
+  document.getElementById('recur-modal').classList.remove('open');
+  document.getElementById('recur-overlay').classList.remove('open');
+}
+
+function cancelRecurModal() {
+  _pendingEvent = null;
+  closeRecurModal();
+}
+
+async function addEvent(dateISO, title, startTime, endTime, recurrente = false, diaSemana = null) {
   if (!currentUser || !title.trim()) return;
 
   const { data, error } = await db.from('events').insert({
@@ -469,7 +509,9 @@ async function addEvent(dateISO, title, startTime, endTime) {
     date: dateISO,
     start_time: startTime,
     end_time: endTime,
-    done: false
+    done: false,
+    recurrente,
+    dia_semana: diaSemana
   }).select().single();
 
   if (error) { console.error(error); return; }
@@ -928,7 +970,7 @@ function commitGhost(dateISO) {
   const start = parseT(startInp?.value);
   const end = parseT(endInp?.value);
 
-  addEvent(dateISO, name, fmtTime(start.h, start.m), fmtTime(end.h, end.m));
+  promptAndAddEvent(dateISO, name, fmtTime(start.h, start.m), fmtTime(end.h, end.m));
 }
 
 function updateMomentum() {
@@ -1699,7 +1741,7 @@ document.addEventListener('DOMContentLoaded', () => {
         weekOffset = Math.round((tgt - mon) / (7 * 86400000));
       }
 
-      await addEvent(dateISO, name, fmtTime(h1, m1), fmtTime(h2, m2));
+      promptAndAddEvent(dateISO, name, fmtTime(h1, m1), fmtTime(h2, m2));
 
       nlInput.value = '';
       chipsBar.classList.remove('show');

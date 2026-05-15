@@ -2496,6 +2496,101 @@ body.ambient #app::before {
 
 .area-pill:hover { border-color: var(--text3); color: var(--text2); }
 
+/* ── MODAL REPETICIÓN ── */
+.recur-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.55);
+  z-index: 200;
+}
+.recur-overlay.open { display: block; }
+
+.recur-modal {
+  display: none;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: var(--surface);
+  border-top: 1px solid var(--border2);
+  border-radius: 20px 20px 0 0;
+  padding: 20px 16px 32px;
+  z-index: 201;
+  transform: translateY(100%);
+  transition: transform 0.25s cubic-bezier(.4,0,.2,1);
+}
+.recur-modal.open {
+  display: block;
+  transform: translateY(0);
+}
+.recur-modal-header {
+  margin-bottom: 16px;
+}
+.recur-modal-event {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text1);
+  font-family: 'Geist', sans-serif;
+  margin-bottom: 4px;
+}
+.recur-modal-question {
+  font-size: 12px;
+  color: var(--text4);
+  font-family: 'Geist', sans-serif;
+}
+.recur-modal-options {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.recur-opt {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: transparent;
+  border: 1px solid var(--border2);
+  border-radius: 12px;
+  padding: 12px 14px;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.15s;
+  width: 100%;
+}
+.recur-opt:hover {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 6%, transparent);
+}
+.recur-opt-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  color: var(--accent);
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-family: 'Geist', sans-serif;
+}
+.recur-opt-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.recur-opt-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text1);
+  font-family: 'Geist', sans-serif;
+}
+.recur-opt-desc {
+  font-size: 11px;
+  color: var(--text4);
+  font-family: 'Geist', sans-serif;
+}
+
 /* ── REPETICIÓN (event panel) ── */
 .panel-recur-wrap {
   display: flex;

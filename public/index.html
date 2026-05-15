@@ -683,6 +683,38 @@
   </div>
 </div>
 
+<!-- MODAL REPETICIÓN -->
+<div id="recur-overlay" class="recur-overlay" onclick="cancelRecurModal()"></div>
+<div id="recur-modal" class="recur-modal">
+  <div class="recur-modal-header">
+    <div class="recur-modal-event" id="recur-modal-title">—</div>
+    <div class="recur-modal-question">¿Repetir este evento?</div>
+  </div>
+  <div class="recur-modal-options">
+    <button class="recur-opt" onclick="confirmRecurrence('once')">
+      <span class="recur-opt-icon">1</span>
+      <div class="recur-opt-text">
+        <span class="recur-opt-label">Solo hoy</span>
+        <span class="recur-opt-desc">Se agrega una vez</span>
+      </div>
+    </button>
+    <button class="recur-opt" onclick="confirmRecurrence('weekly')">
+      <span class="recur-opt-icon">↻</span>
+      <div class="recur-opt-text">
+        <span class="recur-opt-label">Cada semana</span>
+        <span class="recur-opt-desc">Se repite el mismo día</span>
+      </div>
+    </button>
+    <button class="recur-opt" onclick="confirmRecurrence('daily')">
+      <span class="recur-opt-icon">∞</span>
+      <div class="recur-opt-text">
+        <span class="recur-opt-label">Todos los días</span>
+        <span class="recur-opt-desc">Aparece cada día</span>
+      </div>
+    </button>
+  </div>
+</div>
+
 <!-- COMMAND PALETTE -->
 <div id="cmd-overlay" class="cmd-overlay" onclick="closeCmd()"></div>
 <div id="cmd-palette" class="cmd-palette">
