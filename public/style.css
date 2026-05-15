@@ -3233,10 +3233,27 @@ body.ambient #app::before {
 .tuana-chart-labels {
   display: flex;
   justify-content: space-between;
+  font-family: 'Geist', sans-serif;
+  margin-top: 2px;
+}
+.tuana-lbl-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+.tuana-lbl-day {
+  font-size: 8px;
+  color: var(--text4);
+}
+.tuana-lbl-count {
   font-size: 9px;
   color: var(--text4);
-  font-family: 'Geist', sans-serif;
-  margin-top: -4px;
+  font-weight: 400;
+}
+.tuana-lbl-count.has-data {
+  color: var(--text2);
+  font-weight: 500;
 }
 .tuana-energy-dots {
   display: flex;

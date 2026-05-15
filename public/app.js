@@ -3333,9 +3333,14 @@ function renderTuanaChart() {
 
   if (labelsEl) {
     const step = tuanaChartPeriod === 'año' ? 3 : 1;
-    labelsEl.innerHTML = labels.map((l, i) =>
-      `<span style="visibility:${i % step === 0 || i === labels.length-1 ? 'visible' : 'hidden'}">${l}</span>`
-    ).join('');
+    labelsEl.innerHTML = labels.map((l, i) => {
+      const visible = i % step === 0 || i === labels.length - 1;
+      const count = vals[i];
+      return `<span class="tuana-lbl-wrap" style="visibility:${visible ? 'visible' : 'hidden'}">
+        <span class="tuana-lbl-day">${l}</span>
+        <span class="tuana-lbl-count${count > 0 ? ' has-data' : ''}">${count > 0 ? count : '·'}</span>
+      </span>`;
+    }).join('');
   }
 }
 
