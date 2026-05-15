@@ -1077,9 +1077,9 @@ html, body {
 /* ── VISTA PATRONES ── */
 #view-patrones {
   flex: 1;
-  overflow: hidden;
   display: flex;
   flex-direction: column;
+  min-height: 0;
 }
 
 /* ── DASHBOARD PATRONES ── */
@@ -2829,7 +2829,230 @@ body.ambient #app::before {
   padding: 6px 0 2px;
 }
 
-/* ── PIPELINE ─────────────────────────────────────────────── */
+/* ── SLAB VIEW (Patrones) ──────────────────────────────────── */
+
+.slab-view {
+  flex: 1;
+  overflow-y: auto;
+  padding: 14px 16px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.slab-section {
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.slab-hd {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 13px 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.slab-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text2);
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+}
+
+.slab-add-btn {
+  background: none;
+  border: 1px solid var(--border2);
+  color: var(--text3);
+  border-radius: 6px;
+  width: 24px;
+  height: 24px;
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.12s;
+  font-family: 'Geist', sans-serif;
+}
+.slab-add-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+.slab-empty {
+  font-size: 12px;
+  color: var(--text4);
+  padding: 14px 16px;
+  font-family: 'Geist', sans-serif;
+}
+
+.slab-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 16px;
+  border-bottom: 1px solid var(--border);
+  transition: background 0.1s;
+}
+.slab-item:last-child { border-bottom: none; }
+.slab-item:hover { background: rgba(255,255,255,0.02); }
+
+.slab-item-name {
+  flex: 1;
+  font-size: 13px;
+  color: var(--text);
+  font-family: 'Geist', sans-serif;
+}
+
+.nota-text {
+  color: var(--text2);
+  font-size: 12px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
+
+.slab-del {
+  background: none;
+  border: none;
+  color: var(--text4);
+  font-size: 16px;
+  cursor: pointer;
+  padding: 0 2px;
+  line-height: 1;
+  transition: color 0.12s;
+  flex-shrink: 0;
+  font-family: 'Geist', sans-serif;
+}
+.slab-del:hover { color: var(--danger); }
+
+/* Recordatorios */
+.recorda-right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.recorda-date {
+  font-size: 11px;
+  color: var(--text3);
+  font-variant-numeric: tabular-nums;
+}
+
+.recorda-badge {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 20px;
+  font-variant-numeric: tabular-nums;
+  background: var(--border2);
+  color: var(--text3);
+}
+.recorda-badge.week  { background: rgba(129,140,248,0.12); color: var(--accent); }
+.recorda-badge.soon  { background: rgba(251,146,60,0.15);  color: #FB923C; }
+.recorda-badge.overdue { background: rgba(248,113,113,0.15); color: var(--danger); }
+
+/* Proyectos simple */
+.proj-item { cursor: pointer; flex-direction: column; align-items: stretch; gap: 6px; }
+
+.proj-item-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.proj-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.proj-chip {
+  font-size: 10px;
+  font-weight: 500;
+  padding: 2px 7px;
+  border-radius: 20px;
+  border: 1px solid;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  flex-shrink: 0;
+}
+
+.proj-item-foot {
+  display: flex;
+  justify-content: space-between;
+  padding-left: 15px;
+}
+
+.proj-area {
+  font-size: 11px;
+  font-family: 'Geist', sans-serif;
+}
+
+.proj-pct {
+  font-size: 11px;
+  color: var(--text3);
+  font-variant-numeric: tabular-nums;
+}
+
+.proj-progress {
+  height: 2px;
+  background: var(--border2);
+  border-radius: 1px;
+  margin: 0 0 2px 15px;
+  overflow: hidden;
+}
+.proj-progress-fill {
+  height: 100%;
+  border-radius: 1px;
+  background: var(--accent);
+}
+
+/* Inline forms */
+.recorda-form, .nota-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  background: rgba(129,140,248,0.03);
+}
+
+.slab-input, .slab-textarea {
+  background: var(--border);
+  border: 1px solid var(--border2);
+  border-radius: 8px;
+  color: var(--text);
+  font-size: 13px;
+  font-family: 'Geist', sans-serif;
+  padding: 8px 10px;
+  outline: none;
+  transition: border-color 0.15s;
+  width: 100%;
+}
+.slab-input:focus, .slab-textarea:focus { border-color: var(--accent); }
+.slab-textarea { min-height: 64px; resize: none; line-height: 1.5; }
+.slab-input-date { color: var(--text2); }
+
+.slab-save-btn {
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: 'Geist', sans-serif;
+  align-self: flex-start;
+  transition: opacity 0.15s;
+}
+.slab-save-btn:hover { opacity: 0.85; }
+
+/* ── PIPE-TOP (mantener por si se usa) ── */
 
 .pipe-top {
   display: flex;

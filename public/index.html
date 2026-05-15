@@ -192,27 +192,47 @@
 
     <!-- PIPELINE -->
     <div id="view-patrones" style="display:none">
-      <div class="pipe-top">
-        <div class="pipe-stats">
-          <div class="pipe-stat">
-            <div class="pipe-stat-val" id="pipe-total">0</div>
-            <div class="pipe-stat-lbl">en curso</div>
+      <div class="slab-view">
+
+        <!-- Próximas fechas -->
+        <div class="slab-section">
+          <div class="slab-hd">
+            <span class="slab-title">Próximas fechas</span>
+            <button class="slab-add-btn" onclick="toggleRecordaForm()">+</button>
           </div>
-          <div class="pipe-stat">
-            <div class="pipe-stat-val" id="pipe-activos">0</div>
-            <div class="pipe-stat-lbl">completados este mes</div>
+          <div class="recorda-form" id="recorda-form" style="display:none">
+            <input class="slab-input" id="recorda-nombre" placeholder="Ej: Parcial física"
+              onkeydown="if(event.key==='Enter')saveRecordatorio()" />
+            <input class="slab-input slab-input-date" id="recorda-fecha" type="date" />
+            <button class="slab-save-btn" onclick="saveRecordatorio()">Guardar</button>
           </div>
-          <div class="pipe-stat">
-            <div class="pipe-stat-val" id="pipe-cierre">—</div>
-            <div class="pipe-stat-lbl">progreso promedio</div>
-          </div>
+          <div id="recordatorios-list"></div>
         </div>
-        <button class="pipe-new-btn" onclick="openProjModal(null)">
-          <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M6.5 1v11M1 6.5h11" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-          Proyecto
-        </button>
+
+        <!-- Notas rápidas -->
+        <div class="slab-section">
+          <div class="slab-hd">
+            <span class="slab-title">Notas</span>
+            <button class="slab-add-btn" onclick="toggleNotaForm()">+</button>
+          </div>
+          <div class="nota-form" id="nota-form" style="display:none">
+            <textarea class="slab-textarea" id="nota-texto"
+              placeholder="Escribí lo que no querés olvidar..."></textarea>
+            <button class="slab-save-btn" onclick="saveNota()">Guardar</button>
+          </div>
+          <div id="notas-list"></div>
+        </div>
+
+        <!-- Proyectos -->
+        <div class="slab-section">
+          <div class="slab-hd">
+            <span class="slab-title">Proyectos</span>
+            <button class="slab-add-btn" onclick="openProjModal(null)">+</button>
+          </div>
+          <div id="proyectos-simple-list"></div>
+        </div>
+
       </div>
-      <div class="kanban-board" id="kanban-board"></div>
     </div>
 
     <!-- MES -->

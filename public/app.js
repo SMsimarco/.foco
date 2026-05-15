@@ -1065,68 +1065,128 @@ function changeMes(dir) {
 // ── PROYECTOS ────────────────────────────────────────────────
 
 async function renderProyectos() {
-  const uid = currentUser.id;
-  const { data } = await db.from('proyectos').select('*').eq('user_id', uid).order('created_at', { ascending: false });
-  const proyectos = data || [];
+  if (!currentUser) return;
+  const { data } = await db.from('proyectos')
+    .select('*').eq('user_id', currentUser.id)
+    .order('created_at', { ascending: true });
+  const all = data || [];
 
-  const ahora = new Date();
-  const inicioMes = new Date(ahora.getFullYear(), ahora.getMonth(), 1).toISOString();
-
-  const enCurso        = proyectos.filter(p => p.estado === 'en_curso');
-  const hechosEstesMes = proyectos.filter(p => p.estado === 'hecho' && p.updated_at >= inicioMes);
-  const avgProgreso    = enCurso.length > 0
-    ? Math.round(enCurso.reduce((s, p) => s + (p.progreso || 0), 0) / enCurso.length)
-    : null;
-
-  document.getElementById('pipe-total').textContent   = enCurso.length;
-  document.getElementById('pipe-activos').textContent = hechosEstesMes.length;
-  document.getElementById('pipe-cierre').textContent  = avgProgreso !== null ? avgProgreso + '%' : '—';
-
-  const board = document.getElementById('kanban-board');
-  board.innerHTML = '';
-
-  PROJ_COLS.forEach(col => {
-    const colProys = proyectos.filter(p => p.estado === col.id);
-
-    const el = document.createElement('div');
-    el.className = 'kanban-col';
-    el.dataset.estado = col.id;
-
-    el.addEventListener('dragover',  e => { e.preventDefault(); el.classList.add('drag-over'); });
-    el.addEventListener('dragleave', e => { if (!el.contains(e.relatedTarget)) el.classList.remove('drag-over'); });
-    el.addEventListener('drop', e => {
-      e.preventDefault();
-      el.classList.remove('drag-over');
-      if (draggedProjId) moverProyecto(draggedProjId, col.id);
+  const recordatorios = all.filter(p => p.estado === 'recordatorio')
+    .sort((a, b) => {
+      if (!a.fecha_limite) return 1;
+      if (!b.fecha_limite) return -1;
+      return new Date(a.fecha_limite) - new Date(b.fecha_limite);
     });
+  const notas    = all.filter(p => p.estado === 'nota').reverse();
+  const projs    = all.filter(p => !['recordatorio','nota'].includes(p.estado));
 
-    el.innerHTML = `
-      <div class="kanban-col-hd">
-        <span class="kcol-dot" style="background:${col.color}"></span>
-        <span class="kcol-title">${col.label}</span>
-        <span class="kcol-count">${colProys.length}</span>
-        <button class="kcol-add" onclick="openProjModal(null,'${col.id}')">+</button>
-      </div>
-      <div class="kanban-cards">
-        ${colProys.length === 0
-          ? '<div class="kcard-empty">Arrastrá un proyecto aquí</div>'
-          : colProys.map(p => proyectoCardHTML(p, col.color)).join('')}
-      </div>
-    `;
+  // Recordatorios
+  const recList = document.getElementById('recordatorios-list');
+  if (recList) {
+    recList.innerHTML = recordatorios.length === 0
+      ? '<div class="slab-empty">Sin fechas próximas</div>'
+      : recordatorios.map(r => {
+          const hoy = new Date(); hoy.setHours(0,0,0,0);
+          let rightHtml = '';
+          if (r.fecha_limite) {
+            const fl = new Date(r.fecha_limite + 'T00:00:00');
+            const diff = Math.ceil((fl - hoy) / 86400000);
+            const cls = diff < 0 ? 'overdue' : diff <= 2 ? 'soon' : diff <= 7 ? 'week' : '';
+            const label = diff < 0 ? 'Vencido' : diff === 0 ? 'Hoy' : `${diff}d`;
+            const dateStr = fl.getDate() + '/' + (fl.getMonth()+1);
+            rightHtml = `<div class="recorda-right">
+              <span class="recorda-date">${dateStr}</span>
+              <span class="recorda-badge ${cls}">${label}</span>
+            </div>`;
+          }
+          return `<div class="slab-item">
+            <span class="slab-item-name">${escH(r.nombre)}</span>
+            ${rightHtml}
+            <button class="slab-del" onclick="deleteProyecto('${r.id}')">×</button>
+          </div>`;
+        }).join('');
+  }
 
-    board.appendChild(el);
+  // Notas
+  const notasList = document.getElementById('notas-list');
+  if (notasList) {
+    notasList.innerHTML = notas.length === 0
+      ? '<div class="slab-empty">Sin notas</div>'
+      : notas.map(n => `
+          <div class="slab-item nota-item">
+            <span class="slab-item-name nota-text">${escH(n.nombre)}</span>
+            <button class="slab-del" onclick="deleteProyecto('${n.id}')">×</button>
+          </div>`).join('');
+  }
+
+  // Proyectos
+  const projList = document.getElementById('proyectos-simple-list');
+  if (projList) {
+    projList.innerHTML = projs.length === 0
+      ? '<div class="slab-empty">Sin proyectos aún</div>'
+      : projs.map(p => {
+          const col = PROJ_COLS.find(c => c.id === p.estado) || PROJ_COLS[0];
+          const area = p.area && AREAS[p.area] ? AREAS[p.area] : null;
+          const prog = p.progreso || 0;
+          return `<div class="slab-item proj-item" onclick="openProjModal('${p.id}')">
+            <div class="proj-item-top">
+              <span class="proj-dot" style="background:${col.color}"></span>
+              <span class="slab-item-name">${escH(p.nombre)}</span>
+              <span class="proj-chip" style="color:${col.color};border-color:${col.color}20">${col.label}</span>
+            </div>
+            ${area || prog > 0 ? `<div class="proj-item-foot">
+              ${area ? `<span class="proj-area" style="color:${area.color}">${area.label}</span>` : '<span></span>'}
+              ${prog > 0 ? `<span class="proj-pct">${prog}%</span>` : ''}
+            </div>` : ''}
+            ${prog > 0 ? `<div class="proj-progress"><div class="proj-progress-fill" style="width:${prog}%;background:${col.color}40;--fill:${col.color}"></div></div>` : ''}
+          </div>`;
+        }).join('');
+  }
+}
+
+async function deleteProyecto(id) {
+  await db.from('proyectos').delete().eq('id', id).eq('user_id', currentUser.id);
+  renderProyectos();
+}
+
+function toggleRecordaForm() {
+  const f = document.getElementById('recorda-form');
+  const open = f.style.display === 'none';
+  f.style.display = open ? 'flex' : 'none';
+  if (open) setTimeout(() => document.getElementById('recorda-nombre').focus(), 50);
+}
+
+function toggleNotaForm() {
+  const f = document.getElementById('nota-form');
+  const open = f.style.display === 'none';
+  f.style.display = open ? 'flex' : 'none';
+  if (open) setTimeout(() => document.getElementById('nota-texto').focus(), 50);
+}
+
+async function saveRecordatorio() {
+  const nombre = document.getElementById('recorda-nombre').value.trim();
+  if (!nombre) return;
+  const fecha = document.getElementById('recorda-fecha').value || null;
+  await db.from('proyectos').insert({
+    user_id: currentUser.id, nombre, fecha_limite: fecha,
+    estado: 'recordatorio', updated_at: new Date().toISOString()
   });
+  document.getElementById('recorda-nombre').value = '';
+  document.getElementById('recorda-fecha').value  = '';
+  document.getElementById('recorda-form').style.display = 'none';
+  renderProyectos();
+}
 
-  board.querySelectorAll('.lead-card').forEach(card => {
-    card.addEventListener('dragstart', () => {
-      draggedProjId = card.dataset.id;
-      setTimeout(() => card.classList.add('dragging'), 0);
-    });
-    card.addEventListener('dragend', () => {
-      draggedProjId = null;
-      card.classList.remove('dragging');
-    });
+async function saveNota() {
+  const texto = document.getElementById('nota-texto').value.trim();
+  if (!texto) return;
+  await db.from('proyectos').insert({
+    user_id: currentUser.id, nombre: texto,
+    estado: 'nota', updated_at: new Date().toISOString()
   });
+  document.getElementById('nota-texto').value = '';
+  document.getElementById('nota-form').style.display = 'none';
+  renderProyectos();
 }
 
 function proyectoCardHTML(p, color) {
