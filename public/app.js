@@ -15,7 +15,7 @@ const AREAS = {
   trabajo:     { label: 'Trabajo',     color: '#3B82F6' },
   salud:       { label: 'Salud',       color: '#10B981' },
   relaciones:  { label: 'Relaciones',  color: '#F43F5E' },
-  aprendizaje: { label: 'Aprendizaje', color: '#F59E0B' },
+  aprendizaje: { label: 'Aprendizaje', color: '#FBBF24' },
   descanso:    { label: 'Descanso',    color: '#06B6D4' }
 };
 
@@ -25,7 +25,7 @@ const DAYS = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
 const DAYS_FULL = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
 const MONTHS_FULL = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 const COLORS = [
-  '#F59E0B', // ámbar
+  '#818CF8', // ámbar
   '#8B5CF6', // violeta
   '#06B6D4', // cyan
   '#10B981', // esmeralda
@@ -34,7 +34,7 @@ const COLORS = [
   '#A78BFA', // lavanda
   '#34D399', // verde menta
   '#22D3EE', // celeste
-  '#FCD34D', // dorado claro
+  '#A5B4FC', // dorado claro
 ];
 
 const PROJ_COLS = [
@@ -214,8 +214,8 @@ function calcCommitmentScore() {
 
 function commitmentColor(pct) {
   if (pct > 80) return '#10B981';
-  if (pct > 60) return '#F59E0B';
-  if (pct > 40) return '#F59E0B';
+  if (pct > 60) return '#818CF8';
+  if (pct > 40) return '#818CF8';
   return '#F43F5E';
 }
 
@@ -1023,7 +1023,7 @@ async function renderMes() {
     const evs = eventsCache[dateISO] || [];
     const today = isToday(date);
     const load = Math.min(evs.length / 5, 1);
-    const fillColor = load > 0.7 ? '#F43F5E' : load > 0.4 ? '#F59E0B' : '#F59E0B';
+    const fillColor = load > 0.7 ? '#F43F5E' : load > 0.4 ? '#818CF8' : '#818CF8';
 
     const el = document.createElement('div');
     el.className = 'mes-day' + (today ? ' today' : '');
@@ -1540,7 +1540,7 @@ Respondé SOLO con JSON válido, sin markdown ni texto extra:
     resumenEl.innerHTML = `
       ${parsed.headline ? `<div style="font-size:15px;font-weight:500;color:var(--text);margin-bottom:8px;line-height:1.3">${parsed.headline}</div>` : ''}
       ${parsed.insight ? `<div style="font-size:12px;color:var(--text2);line-height:1.6;margin-bottom:10px">${parsed.insight}</div>` : ''}
-      ${parsed.tip ? `<div style="font-size:11px;color:var(--accent);background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.15);border-radius:7px;padding:8px 10px;line-height:1.5;margin-bottom:6px">${parsed.tip}</div>` : ''}
+      ${parsed.tip ? `<div style="font-size:11px;color:var(--accent);background:rgba(129,140,248,.08);border:1px solid rgba(129,140,248,.15);border-radius:7px;padding:8px 10px;line-height:1.5;margin-bottom:6px">${parsed.tip}</div>` : ''}
       ${parsed.best_day ? `<div style="font-size:10px;color:var(--text4);margin-top:4px">Mejor día: <span style="color:var(--text3)">${parsed.best_day}</span></div>` : ''}
     `;
   } catch {
@@ -2439,7 +2439,7 @@ function fireParticles(x, y) {
   canvas.height = window.innerHeight;
   canvas.style.display = 'block';
   const ctx = canvas.getContext('2d');
-  const colors = ['#F59E0B','#FCD34D','#06B6D4','#10B981','#FB923C','#A78BFA'];
+  const colors = ['#818CF8','#A5B4FC','#06B6D4','#34D399','#FB923C','#A78BFA'];
   const particles = Array.from({ length: 18 }, () => ({
     x, y,
     vx: (Math.random() - 0.5) * 9,
@@ -2476,7 +2476,7 @@ function fireConfetti() {
   canvas.height = window.innerHeight;
   canvas.style.display = 'block';
   const ctx = canvas.getContext('2d');
-  const colors = ['#F59E0B','#8B5CF6','#06B6D4','#10B981','#F59E0B','#F43F5E','#A78BFA','#67E8F9'];
+  const colors = ['#818CF8','#8B5CF6','#06B6D4','#10B981','#818CF8','#F43F5E','#A78BFA','#67E8F9'];
   const pieces = Array.from({ length: 70 }, () => ({
     x: Math.random() * canvas.width,
     y: -10 - Math.random() * 80,
@@ -3272,7 +3272,7 @@ async function renderMoodTimeline() {
     return;
   }
 
-  const energyColors = ['','#F43F5E','#F59E0B','#71717A','#F59E0B','#10B981'];
+  const energyColors = ['','#F43F5E','#818CF8','#71717A','#818CF8','#10B981'];
   el.innerHTML = `
     <div class="mood-dots">
       ${data.map(d => {
@@ -3485,8 +3485,8 @@ function renderTuanaChart() {
   chartEl.innerHTML = `
     <defs>
       <linearGradient id="ag" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0%"   stop-color="#F59E0B" stop-opacity="0.3"/>
-        <stop offset="100%" stop-color="#F59E0B" stop-opacity="0"/>
+        <stop offset="0%"   stop-color="#818CF8" stop-opacity="0.3"/>
+        <stop offset="100%" stop-color="#818CF8" stop-opacity="0"/>
       </linearGradient>
       <filter id="lg" x="-5%" y="-80%" width="110%" height="260%">
         <feGaussianBlur stdDeviation="2" result="b"/>
@@ -3494,8 +3494,8 @@ function renderTuanaChart() {
       </filter>
     </defs>
     <path d="${area}" fill="url(#ag)"/>
-    <path d="${line}" fill="none" stroke="#92400E" stroke-width="5" stroke-opacity="0.22" stroke-linejoin="round" stroke-linecap="round"/>
-    <path d="${line}" fill="none" stroke="#FDE68A" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round" filter="url(#lg)"/>
+    <path d="${line}" fill="none" stroke="#4338CA" stroke-width="5" stroke-opacity="0.22" stroke-linejoin="round" stroke-linecap="round"/>
+    <path d="${line}" fill="none" stroke="#C7D2FE" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round" filter="url(#lg)"/>
     ${dots}
   `;
 
@@ -3548,10 +3548,10 @@ async function renderEquipo() {
           <span>Menos</span>
           <div class="tuana-legend-dots">
             <div class="tuana-legend-dot" style="background:#1C1C1F"></div>
-            <div class="tuana-legend-dot" style="background:#3D2A00"></div>
-            <div class="tuana-legend-dot" style="background:#7A5200"></div>
-            <div class="tuana-legend-dot" style="background:#F59E0B"></div>
-            <div class="tuana-legend-dot" style="background:#FDE68A"></div>
+            <div class="tuana-legend-dot" style="background:#1C2045"></div>
+            <div class="tuana-legend-dot" style="background:#3B4280"></div>
+            <div class="tuana-legend-dot" style="background:#818CF8"></div>
+            <div class="tuana-legend-dot" style="background:#C7D2FE"></div>
           </div>
           <span>Más</span>
         </div>
@@ -3638,7 +3638,7 @@ async function renderEquipo() {
 
     const totalDays = Math.ceil((today - start) / 86400000) + 1;
     const weeks     = Math.ceil(totalDays / 7);
-    const heatColors = ['#1C1C1F','#3D2A00','#7A5200','#F59E0B','#FDE68A'];
+    const heatColors = ['#12141F','#1C2045','#3B4280','#818CF8','#C7D2FE'];
     heatmapEl.style.gridTemplateRows = 'repeat(7, 10px)';
 
     let html = '';
@@ -3686,7 +3686,7 @@ async function renderEquipo() {
     if (!checkins.length) {
       energyEl.innerHTML = '<div class="tuana-empty">Completá el morning brief para ver tu energía.</div>';
     } else {
-      const EC = ['','#F43F5E','#F59E0B','#71717A','#F59E0B','#10B981'];
+      const EC = ['','#F43F5E','#818CF8','#71717A','#818CF8','#10B981'];
       energyEl.innerHTML = checkins.map(c => {
         const dt = new Date(c.date + 'T12:00:00');
         return `<div class="tuana-energy-dot" style="background:${EC[c.energy]||'#27272A'}" title="${DAYS[dt.getDay()]} ${dt.getDate()}/${dt.getMonth()+1} — ${c.energy}/5"></div>`;
