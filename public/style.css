@@ -3289,6 +3289,12 @@ body.ambient #app::before {
 }
 
 @media (max-width: 639px) {
+  /* header */
+  #live-clock { display: none; }
+  .week-label { min-width: 72px; font-size: 10px; }
+  #header { padding: 0 10px; gap: 4px; }
+
+  /* calendario */
   #time-gutter { width: 30px; }
   #day-headers { padding-left: 30px; }
   .time-label { font-size: 7px; }

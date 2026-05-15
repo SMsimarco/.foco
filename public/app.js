@@ -1772,6 +1772,24 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 
+// swipe horizontal para navegar días en mobile
+(function() {
+  let tx = 0, ty = 0;
+  document.addEventListener('touchstart', e => {
+    if (!document.getElementById('view-semana') || document.getElementById('view-semana').style.display === 'none') return;
+    tx = e.touches[0].clientX;
+    ty = e.touches[0].clientY;
+  }, { passive: true });
+  document.addEventListener('touchend', e => {
+    if (!document.getElementById('view-semana') || document.getElementById('view-semana').style.display === 'none') return;
+    const dx = e.changedTouches[0].clientX - tx;
+    const dy = e.changedTouches[0].clientY - ty;
+    if (Math.abs(dx) > 55 && Math.abs(dx) > Math.abs(dy) * 1.5) {
+      changeWeek(dx < 0 ? 1 : -1);
+    }
+  }, { passive: true });
+})();
+
 // re-render semana si cambia orientación del dispositivo
 let _prevMobile = isMobile();
 window.addEventListener('resize', () => {
