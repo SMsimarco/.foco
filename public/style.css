@@ -792,6 +792,9 @@ html, body {
   border-bottom: 1px solid var(--border);
   flex-shrink: 0;
   padding-left: 44px;
+  background: var(--bg);
+  position: relative;
+  z-index: 10;
 }
 
 .day-header {
