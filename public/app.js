@@ -2379,7 +2379,7 @@ const CMD_ACTIONS = [
   { label: 'Vista Mes',         icon: '◉',  hint: '',  fn: () => setView('mes') },
   { label: 'Vista Proyectos',   icon: '◈',  hint: '',  fn: () => setView('patrones') },
   { label: 'Vista Sugerencias', icon: '✦',  hint: '',  fn: () => setView('sugerencias') },
-  { label: 'Vista Equipo',      icon: '◎',  hint: '',  fn: () => setView('equipo') },
+  { label: 'Vista Progreso',    icon: '◎',  hint: '',  fn: () => setView('equipo') },
   { label: 'Revisión semanal',  icon: '✳',  hint: '',  fn: () => { closeCmd(); startWeeklyReview(); } },
   { label: 'Objetivo semanal',  icon: '◈',  hint: '',  fn: () => { closeCmd(); openGoalEdit(); } },
   { label: 'Pulso del día',     icon: '◉',  hint: '',  fn: () => { closeCmd(); showEstadoDia(); } },
@@ -3301,7 +3301,7 @@ async function renderEquipo() {
   wrap.innerHTML = `
     <div class="tuana-wrap">
       <div class="tuana-header">
-        <div class="tuana-title">Tu año.</div>
+        <div class="tuana-title">Progreso.</div>
       </div>
 
       <div class="tuana-card">
