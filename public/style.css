@@ -2496,6 +2496,42 @@ body.ambient #app::before {
 
 .area-pill:hover { border-color: var(--text3); color: var(--text2); }
 
+/* ── REPETICIÓN (event panel) ── */
+.panel-recur-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.panel-recur-pills {
+  display: flex;
+  gap: 6px;
+}
+.recur-pill {
+  background: transparent;
+  border: 1px solid var(--border2);
+  border-radius: 20px;
+  padding: 5px 12px;
+  font-size: 11px;
+  color: var(--text3);
+  cursor: pointer;
+  font-family: 'Geist', sans-serif;
+  transition: all 0.15s;
+}
+.recur-pill:hover { border-color: var(--text3); color: var(--text2); }
+.recur-pill.active {
+  background: color-mix(in srgb, var(--accent) 15%, transparent);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* Indicador ↻ en eventos recurrentes */
+.ev-recur {
+  font-size: 9px;
+  opacity: 0.55;
+  margin-left: 4px;
+  vertical-align: middle;
+}
+
 /* ── ESTADO DEL DÍA ── */
 .estado-box {
   background: var(--surface);

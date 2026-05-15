@@ -638,6 +638,15 @@
       <div class="panel-area-pills" id="panel-area-pills"></div>
     </div>
 
+    <!-- Repetición -->
+    <div class="panel-recur-wrap">
+      <div class="panel-field-label">Repetición</div>
+      <div class="panel-recur-pills">
+        <button class="recur-pill active" id="recur-once" onclick="setPanelRecurrence(false)">Solo esta vez</button>
+        <button class="recur-pill" id="recur-weekly" onclick="setPanelRecurrence(true)">Cada semana</button>
+      </div>
+    </div>
+
     <!-- Acción principal: estado -->
     <button class="panel-done-main" id="panel-done-main" onclick="panelToggleDone()">
       <svg id="panel-done-icon" width="14" height="14" viewBox="0 0 14 14" fill="none">

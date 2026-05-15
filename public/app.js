@@ -412,6 +412,27 @@ async function loadWeek() {
     if (!eventsCache[ev.date]) eventsCache[ev.date] = [];
     eventsCache[ev.date].push(ev);
   });
+
+  // Inyectar eventos recurrentes en los días que correspondan
+  const { data: recData } = await db
+    .from('events')
+    .select('*')
+    .eq('user_id', currentUser.id)
+    .eq('recurrente', true);
+
+  (recData || []).forEach(ev => {
+    ev.start_time = ev.start_time ? ev.start_time.slice(0, 5) : ev.start_time;
+    ev.end_time   = ev.end_time   ? ev.end_time.slice(0, 5)   : ev.end_time;
+    week.forEach(d => {
+      if (d.getDay() === ev.dia_semana) {
+        const iso = toISO(d);
+        if (!eventsCache[iso]) eventsCache[iso] = [];
+        if (!eventsCache[iso].find(e => e.id === ev.id)) {
+          eventsCache[iso].push({ ...ev, date: iso });
+        }
+      }
+    });
+  });
 }
 
 async function loadMonth() {
@@ -754,7 +775,7 @@ function renderDayColumns(week) {
       const conflict = hasConflict(evs, ev);
 
       const block = document.createElement('div');
-      block.className = 'event-block' + (ev.done ? ' done' : '') + (conflict ? ' conflict' : '');
+      block.className = 'event-block' + (ev.done ? ' done' : '') + (conflict ? ' conflict' : '') + (ev.recurrente ? ' recurring' : '');
       block.style.cssText = `top:${y}px;height:${h}px`;
       block.style.setProperty('--event-color', color);
       block.style.setProperty('--event-color-30', color + '30');
@@ -762,7 +783,7 @@ function renderDayColumns(week) {
       block.setAttribute('data-event-id', ev.id);
       block.setAttribute('draggable', 'true');
       block.innerHTML = `
-        <div class="ev-title">${ev.title}</div>
+        <div class="ev-title">${ev.title}${ev.recurrente ? '<span class="ev-recur">↻</span>' : ''}</div>
         ${h > 24 ? `<div class="ev-time">${ev.start_time}–${ev.end_time}</div>` : ''}
         <button class="ev-del" onclick="event.stopPropagation();deleteEvent('${ev.id}','${toISO(d)}')">×</button>
       `;
@@ -2133,6 +2154,13 @@ function openEventPanel(ev, dateISO) {
   updateDoneButton(!!ev.done);
   renderAreaPills(ev.area || 'trabajo');
 
+  const recOnce = document.getElementById('recur-once');
+  const recWeekly = document.getElementById('recur-weekly');
+  if (recOnce && recWeekly) {
+    recOnce.classList.toggle('active', !ev.recurrente);
+    recWeekly.classList.toggle('active', !!ev.recurrente);
+  }
+
   document.getElementById('event-panel').classList.add('open');
   document.getElementById('panel-overlay').classList.add('open');
 }
@@ -2182,6 +2210,33 @@ async function panelDeleteEvent() {
   if (!panelEvent) return;
   await deleteEvent(panelEvent.id, panelDateISO);
   closeEventPanel();
+}
+
+async function setPanelRecurrence(recurrente) {
+  if (!panelEvent) return;
+  const diaSemana = new Date(panelDateISO + 'T12:00:00').getDay();
+
+  const { error } = await db.from('events').update({
+    recurrente,
+    dia_semana: recurrente ? diaSemana : null
+  }).eq('id', panelEvent.id);
+
+  if (error) { console.error(error); return; }
+
+  panelEvent.recurrente = recurrente;
+  panelEvent.dia_semana = recurrente ? diaSemana : null;
+
+  const cached = (eventsCache[panelDateISO] || []).find(e => e.id === panelEvent.id);
+  if (cached) {
+    cached.recurrente = recurrente;
+    cached.dia_semana = recurrente ? diaSemana : null;
+  }
+
+  document.getElementById('recur-once').classList.toggle('active', !recurrente);
+  document.getElementById('recur-weekly').classList.toggle('active', recurrente);
+
+  saveScroll(); renderSemana(); restoreScroll();
+  showToast(recurrente ? 'Se repite cada semana' : 'Solo esta vez', 'success');
 }
 
 // ── FOCUS TIMER — panel compacto ────────────────────────────
