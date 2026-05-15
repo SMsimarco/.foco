@@ -3280,7 +3280,8 @@ function renderTuanaChart() {
     y: pT + cH - (v / maxVal) * cH
   }));
 
-  // Catmull-Rom → cubic bezier
+  // Catmull-Rom → cubic bezier (control points clamped to chart floor)
+  const floorY = pT + cH;
   function curvePath(pts) {
     if (pts.length < 2) return `M${pts[0].x},${pts[0].y}`;
     const t = 0.3;
@@ -3290,9 +3291,9 @@ function renderTuanaChart() {
       const p1 = pts[i], p2 = pts[i+1];
       const p3 = pts[i+2] || p2;
       const cp1x = p1.x + (p2.x - p0.x) * t;
-      const cp1y = p1.y + (p2.y - p0.y) * t;
+      const cp1y = Math.min(p1.y + (p2.y - p0.y) * t, floorY);
       const cp2x = p2.x - (p3.x - p1.x) * t;
-      const cp2y = p2.y - (p3.y - p1.y) * t;
+      const cp2y = Math.min(p2.y - (p3.y - p1.y) * t, floorY);
       d += ` C${cp1x.toFixed(1)},${cp1y.toFixed(1)} ${cp2x.toFixed(1)},${cp2y.toFixed(1)} ${p2.x.toFixed(1)},${p2.y.toFixed(1)}`;
     }
     return d;
@@ -3333,14 +3334,9 @@ function renderTuanaChart() {
         <stop offset="0%" stop-color="#6366F1" stop-opacity="0.22"/>
         <stop offset="85%" stop-color="#6366F1" stop-opacity="0"/>
       </linearGradient>
-      <clipPath id="chartClip">
-        <rect x="${pL}" y="${pT}" width="${cW}" height="${cH}"/>
-      </clipPath>
     </defs>
-    <g clip-path="url(#chartClip)">
-      <path d="${area}" fill="url(#ag)"/>
-      <path d="${line}" fill="none" stroke="#6366F1" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/>
-    </g>
+    <path d="${area}" fill="url(#ag)"/>
+    <path d="${line}" fill="none" stroke="#6366F1" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/>
     ${dotsHTML}
   `;
 
