@@ -3241,49 +3241,103 @@ function renderTuanaChart() {
   if (!chartEl) return;
 
   const done = tuanaEventsCache.filter(e => e.done);
-  const W = 300, H = 70, pad = 8;
-  let bars = [], labels = [];
+  let vals = [], labels = [];
 
   if (tuanaChartPeriod === 'semana') {
     for (let i = 6; i >= 0; i--) {
       const d = new Date(); d.setHours(0,0,0,0); d.setDate(d.getDate() - i);
-      bars.push(done.filter(e => e.date === toISO(d)).length);
+      vals.push(done.filter(e => e.date === toISO(d)).length);
       labels.push(DAYS[d.getDay()]);
     }
   } else if (tuanaChartPeriod === 'mes') {
     for (let i = 3; i >= 0; i--) {
       const end   = new Date(); end.setHours(0,0,0,0); end.setDate(end.getDate() - i * 7);
       const start = new Date(end); start.setDate(end.getDate() - 6);
-      const s = toISO(start), e = toISO(end);
-      bars.push(done.filter(ev => ev.date >= s && ev.date <= e).length);
+      const s = toISO(start), e2 = toISO(end);
+      vals.push(done.filter(ev => ev.date >= s && ev.date <= e2).length);
       labels.push(`${start.getDate()}/${start.getMonth()+1}`);
     }
   } else {
-    const monthNames = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+    const MN = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
     const now = new Date();
     for (let i = 11; i >= 0; i--) {
-      const d    = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      const yyyy = d.getFullYear();
-      const mm   = String(d.getMonth() + 1).padStart(2, '0');
-      bars.push(done.filter(ev => ev.date.startsWith(`${yyyy}-${mm}`)).length);
-      labels.push(monthNames[d.getMonth()]);
+      const d  = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const yy = d.getFullYear(), mm = String(d.getMonth()+1).padStart(2,'0');
+      vals.push(done.filter(ev => ev.date.startsWith(`${yy}-${mm}`)).length);
+      labels.push(MN[d.getMonth()]);
     }
   }
 
-  const maxVal = Math.max(...bars, 1);
-  const n      = bars.length;
-  const barW   = (W - pad * 2) / n;
-  const gap    = barW * 0.25;
+  const W = 300, H = 100;
+  const pT = 22, pB = 4, pL = 16, pR = 16;
+  const cW = W - pL - pR, cH = H - pT - pB;
+  const maxVal = Math.max(...vals, 1);
+  const n = vals.length;
+  const maxIdx = vals.indexOf(Math.max(...vals));
 
-  const svgBars = bars.map((v, i) => {
-    const x  = pad + i * barW + gap / 2;
-    const bw = barW - gap;
-    const bh = Math.max((v / maxVal) * (H - pad * 2), v > 0 ? 3 : 0);
-    const y  = H - pad - bh;
-    return `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${bw.toFixed(1)}" height="${bh.toFixed(1)}" rx="2.5" fill="${v > 0 ? '#6366F1' : 'rgba(99,102,241,0.12)'}"/>`;
+  const pts = vals.map((v, i) => ({
+    x: pL + (n < 2 ? cW / 2 : i * cW / (n - 1)),
+    y: pT + cH - (v / maxVal) * cH
+  }));
+
+  // Catmull-Rom → cubic bezier
+  function curvePath(pts) {
+    if (pts.length < 2) return `M${pts[0].x},${pts[0].y}`;
+    const t = 0.3;
+    let d = `M${pts[0].x.toFixed(1)},${pts[0].y.toFixed(1)}`;
+    for (let i = 0; i < pts.length - 1; i++) {
+      const p0 = pts[i-1] || pts[i];
+      const p1 = pts[i], p2 = pts[i+1];
+      const p3 = pts[i+2] || p2;
+      const cp1x = p1.x + (p2.x - p0.x) * t;
+      const cp1y = p1.y + (p2.y - p0.y) * t;
+      const cp2x = p2.x - (p3.x - p1.x) * t;
+      const cp2y = p2.y - (p3.y - p1.y) * t;
+      d += ` C${cp1x.toFixed(1)},${cp1y.toFixed(1)} ${cp2x.toFixed(1)},${cp2y.toFixed(1)} ${p2.x.toFixed(1)},${p2.y.toFixed(1)}`;
+    }
+    return d;
+  }
+
+  const hasData = vals.some(v => v > 0);
+  if (!hasData) {
+    chartEl.innerHTML = `<text x="150" y="52" text-anchor="middle" fill="#3F3F46" font-size="10" font-family="Geist,sans-serif">Sin datos todavía</text>`;
+    if (labelsEl) labelsEl.innerHTML = '';
+    return;
+  }
+
+  const line = curvePath(pts);
+  const area = `${line} L${pts[pts.length-1].x.toFixed(1)},${(pT+cH).toFixed(1)} L${pts[0].x.toFixed(1)},${(pT+cH).toFixed(1)} Z`;
+  const showAll = tuanaChartPeriod !== 'año';
+
+  const dotsHTML = pts.map((pt, i) => {
+    const isMax = i === maxIdx && vals[maxIdx] > 0;
+    const showVal = vals[i] > 0 && (showAll || isMax);
+    const labelY = (pt.y - 7).toFixed(1);
+    return `
+      ${showVal ? `<text x="${pt.x.toFixed(1)}" y="${labelY}" text-anchor="middle"
+        fill="${isMax ? '#A5B4FC' : 'rgba(255,255,255,0.38)'}"
+        font-size="${isMax ? 9.5 : 8.5}" font-family="Geist,sans-serif"
+        font-weight="${isMax ? 600 : 400}">${vals[i]}</text>` : ''}
+      <circle cx="${pt.x.toFixed(1)}" cy="${pt.y.toFixed(1)}"
+        r="${isMax ? 5 : 3.5}"
+        fill="${isMax ? '#6366F1' : '#09090B'}"
+        stroke="${isMax ? '#A5B4FC' : '#6366F1'}"
+        stroke-width="${isMax ? 0 : 1.5}"/>
+      ${isMax ? `<circle cx="${pt.x.toFixed(1)}" cy="${pt.y.toFixed(1)}" r="9" fill="#6366F1" fill-opacity="0.12"/>` : ''}
+    `;
   }).join('');
 
-  chartEl.innerHTML = svgBars || `<text x="150" y="38" text-anchor="middle" fill="#52525B" font-size="10" font-family="Geist,sans-serif">Sin datos todavía</text>`;
+  chartEl.innerHTML = `
+    <defs>
+      <linearGradient id="ag" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#6366F1" stop-opacity="0.22"/>
+        <stop offset="85%" stop-color="#6366F1" stop-opacity="0"/>
+      </linearGradient>
+    </defs>
+    <path d="${area}" fill="url(#ag)"/>
+    <path d="${line}" fill="none" stroke="#6366F1" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/>
+    ${dotsHTML}
+  `;
 
   if (labelsEl) {
     const step = tuanaChartPeriod === 'año' ? 3 : 1;
@@ -3346,7 +3400,7 @@ async function renderEquipo() {
             <button class="tuana-period-btn${tuanaChartPeriod==='año'?' active':''}" data-p="año" onclick="setTuanaChartPeriod('año')">Año</button>
           </div>
         </div>
-        <svg class="tuana-chart" id="tu-chart" viewBox="0 0 300 70" preserveAspectRatio="none"></svg>
+        <svg class="tuana-chart" id="tu-chart" viewBox="0 0 300 100" preserveAspectRatio="none"></svg>
         <div class="tuana-chart-labels" id="tu-chart-labels"></div>
       </div>
 
