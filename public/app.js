@@ -1671,6 +1671,11 @@ async function setView(view) {
   const weekNav = document.getElementById('week-nav');
   if (weekNav) weekNav.style.visibility = view === 'semana' ? 'visible' : 'hidden';
 
+  const inputBar = document.getElementById('input-bar');
+  const chipsBar = document.getElementById('chips-bar');
+  if (inputBar) inputBar.style.display = view === 'semana' ? '' : 'none';
+  if (chipsBar) chipsBar.style.display = view === 'semana' ? '' : 'none';
+
   if (view === 'semana') {
     ghost = null;
     await loadWeek();
