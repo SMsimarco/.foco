@@ -391,7 +391,7 @@ async function showApp() {
 
 async function loadWeek() {
   if (!currentUser) return;
-  const week = getVisibleDays();
+  const week = getWeekDates(weekOffset);
   const start = toISO(week[0]);
   const end = toISO(week[week.length - 1]);
 
