@@ -1998,10 +1998,6 @@ html, body {
   color: var(--text3);
   font-variant-numeric: tabular-nums;
   letter-spacing: 0.04em;
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
-  pointer-events: none;
 }
 
 /* ── PARTICLES CANVAS ── */
