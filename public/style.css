@@ -2856,11 +2856,11 @@ body.ambient #app::before {
 }
 
 .slab-title {
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--text2);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text);
   text-transform: uppercase;
-  letter-spacing: 0.07em;
+  letter-spacing: 0.1em;
 }
 
 .slab-add-btn {
@@ -2932,8 +2932,8 @@ body.ambient #app::before {
 .slab-item:hover { border-color: var(--accent); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
 
 .slab-item-name {
-  font-size: 13px;
-  font-weight: 500;
+  font-size: 14px;
+  font-weight: 600;
   color: var(--text);
   font-family: 'Geist', sans-serif;
   line-height: 1.35;
@@ -2941,9 +2941,9 @@ body.ambient #app::before {
 
 .nota-text {
   color: var(--text2);
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 400;
-  line-height: 1.5;
+  line-height: 1.55;
   white-space: pre-wrap;
 }
 
@@ -2969,26 +2969,41 @@ body.ambient #app::before {
   display: flex;
   align-items: center;
   gap: 6px;
+  margin-top: 2px;
 }
 
 .recorda-date {
-  font-size: 11px;
-  color: var(--text3);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text2);
   font-variant-numeric: tabular-nums;
 }
 
 .recorda-badge {
-  font-size: 10px;
-  font-weight: 600;
-  padding: 2px 7px;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 9px;
   border-radius: 20px;
   font-variant-numeric: tabular-nums;
   background: var(--border2);
-  color: var(--text3);
+  color: var(--text2);
+  letter-spacing: 0.02em;
 }
-.recorda-badge.week  { background: rgba(129,140,248,0.12); color: var(--accent); }
-.recorda-badge.soon  { background: rgba(251,146,60,0.15);  color: #FB923C; }
-.recorda-badge.overdue { background: rgba(248,113,113,0.15); color: var(--danger); }
+.recorda-badge.week {
+  background: rgba(129,140,248,0.18);
+  color: var(--accent2);
+  box-shadow: 0 0 8px rgba(129,140,248,0.2);
+}
+.recorda-badge.soon {
+  background: rgba(251,146,60,0.2);
+  color: #FDBA74;
+  box-shadow: 0 0 8px rgba(251,146,60,0.2);
+}
+.recorda-badge.overdue {
+  background: rgba(248,113,113,0.2);
+  color: #FCA5A5;
+  box-shadow: 0 0 8px rgba(248,113,113,0.2);
+}
 
 /* Proyectos */
 .proj-item { cursor: pointer; }
@@ -3008,12 +3023,12 @@ body.ambient #app::before {
 
 .proj-chip {
   font-size: 10px;
-  font-weight: 500;
-  padding: 2px 7px;
+  font-weight: 700;
+  padding: 3px 8px;
   border-radius: 20px;
   border: 1px solid;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.05em;
   flex-shrink: 0;
   margin-left: auto;
 }
