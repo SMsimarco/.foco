@@ -620,9 +620,28 @@ html, body {
 
 /* ── INPUT BAR ── */
 #input-bar {
-  padding: 10px 16px;
+  padding: 8px 16px 10px;
   border-bottom: 1px solid var(--border);
   flex-shrink: 0;
+}
+
+.input-bar-label {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.input-bar-title {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text2);
+  letter-spacing: 0.01em;
+}
+
+.input-bar-hint {
+  font-size: 10px;
+  color: var(--text4);
 }
 
 .input-pill {
@@ -676,7 +695,7 @@ html, body {
   -webkit-box-shadow: none;
 }
 
-#nl-input::placeholder { color: #27272A; }
+#nl-input::placeholder { color: #52525B; }
 
 .enter-hint {
   font-size: 10px;
