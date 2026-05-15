@@ -179,7 +179,7 @@ html, body {
   padding: 0 16px;
   border-bottom: 1px solid rgba(255,255,255,0.05);
   flex-shrink: 0;
-  background: rgba(9,9,11,0.8);
+  background: rgba(9,9,11,0.97);
   backdrop-filter: blur(12px);
   position: sticky;
   top: 0;
