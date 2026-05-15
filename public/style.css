@@ -620,38 +620,47 @@ html, body {
 
 /* ── INPUT BAR ── */
 #input-bar {
-  padding: 8px 16px 10px;
+  padding: 10px 16px 12px;
   border-bottom: 1px solid var(--border);
   flex-shrink: 0;
-}
-
-.input-bar-label {
   display: flex;
-  align-items: baseline;
+  flex-direction: column;
   gap: 8px;
-  margin-bottom: 6px;
 }
 
-.input-bar-title {
-  font-size: 12px;
+.add-activity-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  padding: 9px 16px;
+  font-size: 13px;
   font-weight: 500;
-  color: var(--text2);
-  letter-spacing: 0.01em;
+  cursor: pointer;
+  width: 100%;
+  transition: opacity 0.15s, transform 0.1s;
+  font-family: 'Geist', sans-serif;
 }
 
-.input-bar-hint {
-  font-size: 10px;
-  color: var(--text4);
+.add-activity-btn:active { opacity: 0.85; transform: scale(0.99); }
+
+.add-activity-plus {
+  font-size: 18px;
+  font-weight: 300;
+  line-height: 1;
 }
 
 .input-pill {
   display: flex;
   align-items: center;
   gap: 12px;
-  border: 1px solid rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.18);
   border-radius: 12px;
   padding: 13px 18px;
-  background: rgba(255,255,255,0.03);
+  background: rgba(255,255,255,0.06);
   transition: all 0.2s ease;
   cursor: text;
   position: relative;
