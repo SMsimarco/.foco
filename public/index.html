@@ -40,6 +40,55 @@
   <!-- PARTICLES CANVAS -->
   <canvas id="particles-canvas" class="particles-canvas"></canvas>
 
+  <!-- EVENING CHECK-IN -->
+  <div id="evening-screen" class="morning-screen" style="display:none">
+    <div class="morning-box">
+      <div class="morning-greeting">Cerrando el día.</div>
+      <div class="morning-sub" id="evening-sub">Tomá 2 minutos.</div>
+      <div class="morning-section-label">¿Hiciste lo más importante de hoy?</div>
+      <div class="evening-main-btns">
+        <button class="evening-main-btn" data-v="yes" onclick="selectEveningMain('yes')">
+          <div class="evening-dot" style="background:#10B981"></div>
+          <span class="evening-btn-label">Sí</span>
+        </button>
+        <button class="evening-main-btn" data-v="partial" onclick="selectEveningMain('partial')">
+          <div class="evening-dot" style="background:#F59E0B"></div>
+          <span class="evening-btn-label">Parcial</span>
+        </button>
+        <button class="evening-main-btn" data-v="no" onclick="selectEveningMain('no')">
+          <div class="evening-dot" style="background:#F43F5E"></div>
+          <span class="evening-btn-label">No</span>
+        </button>
+      </div>
+      <div class="morning-section-label" style="margin-top:20px">¿Cómo cerrás el día?</div>
+      <div class="energy-btns">
+        <button class="energy-btn" data-e="1" onclick="selectEveningEnergy(1)">
+          <div style="width:8px;height:8px;border-radius:50%;background:#F43F5E;margin:0 auto 4px"></div>
+          <span style="font-size:9px;color:rgba(255,255,255,0.4);font-family:'Geist',sans-serif">Mal</span>
+        </button>
+        <button class="energy-btn" data-e="2" onclick="selectEveningEnergy(2)">
+          <div style="width:8px;height:8px;border-radius:50%;background:#F59E0B;margin:0 auto 4px"></div>
+          <span style="font-size:9px;color:rgba(255,255,255,0.4);font-family:'Geist',sans-serif">Bajo</span>
+        </button>
+        <button class="energy-btn" data-e="3" onclick="selectEveningEnergy(3)">
+          <div style="width:8px;height:8px;border-radius:50%;background:#71717A;margin:0 auto 4px"></div>
+          <span style="font-size:9px;color:rgba(255,255,255,0.4);font-family:'Geist',sans-serif">Ok</span>
+        </button>
+        <button class="energy-btn" data-e="4" onclick="selectEveningEnergy(4)">
+          <div style="width:8px;height:8px;border-radius:50%;background:#6366F1;margin:0 auto 4px"></div>
+          <span style="font-size:9px;color:rgba(255,255,255,0.4);font-family:'Geist',sans-serif">Bien</span>
+        </button>
+        <button class="energy-btn" data-e="5" onclick="selectEveningEnergy(5)">
+          <div style="width:8px;height:8px;border-radius:50%;background:#10B981;margin:0 auto 4px"></div>
+          <span style="font-size:9px;color:rgba(255,255,255,0.4);font-family:'Geist',sans-serif">Genial</span>
+        </button>
+      </div>
+      <div class="morning-section-label" style="margin-top:20px">¿Algo que no querés olvidar?</div>
+      <input class="morning-inp" id="evening-note" type="text" placeholder="Opcional..."/>
+      <button class="morning-cta" id="evening-cta" onclick="submitEveningCheckin()">Cerrar el día →</button>
+    </div>
+  </div>
+
   <!-- MORNING BRIEF -->
   <div id="morning-screen" class="morning-screen" style="display:none">
     <div class="morning-box">
@@ -121,6 +170,13 @@
     <span class="chip-hint">Enter para agregar</span>
   </div>
 
+  <!-- GOAL BAR -->
+  <div id="goal-bar" class="goal-bar" onclick="openGoalEdit()" style="display:none">
+    <span class="goal-bar-label">foco semanal</span>
+    <span class="goal-bar-text" id="goal-bar-text"></span>
+    <span class="goal-bar-edit">✎</span>
+  </div>
+
   <!-- MAIN -->
   <div id="main">
 
@@ -133,24 +189,29 @@
       </div>
     </div>
 
-    <!-- PATRONES -->
+    <!-- PIPELINE -->
     <div id="view-patrones" style="display:none">
-      <div class="dashboard-wrap">
-        <div class="dash-stats">
-          <div class="dash-stat"><div class="dash-stat-val" id="stat-done">—</div><div class="dash-stat-label">completadas</div></div>
-          <div class="dash-stat"><div class="dash-stat-val" id="stat-rate">—</div><div class="dash-stat-label">tasa histórica</div></div>
-          <div class="dash-stat"><div class="dash-stat-val" id="stat-hour">—</div><div class="dash-stat-label">mejor hora</div></div>
+      <div class="pipe-top">
+        <div class="pipe-stats">
+          <div class="pipe-stat">
+            <div class="pipe-stat-val" id="pipe-total">$0</div>
+            <div class="pipe-stat-lbl">pipeline activo</div>
+          </div>
+          <div class="pipe-stat">
+            <div class="pipe-stat-val" id="pipe-activos">0</div>
+            <div class="pipe-stat-lbl">leads abiertos</div>
+          </div>
+          <div class="pipe-stat">
+            <div class="pipe-stat-val" id="pipe-cierre">—</div>
+            <div class="pipe-stat-lbl">tasa de cierre</div>
+          </div>
         </div>
-        <div class="dash-section">
-          <div class="dash-section-title">Por día de semana</div>
-          <div class="day-bar-chart" id="day-bar-chart"></div>
-        </div>
-        <div class="dash-section">
-          <div class="dash-section-title">Mapa de hábitos</div>
-          <div class="heatmap-grid" id="heatmap-grid"></div>
-          <div class="hm-insight" id="hm-insight"></div>
-        </div>
+        <button class="pipe-new-btn" onclick="openLeadModal(null)">
+          <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M6.5 1v11M1 6.5h11" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          Lead
+        </button>
       </div>
+      <div class="kanban-board" id="kanban-board"></div>
     </div>
 
     <!-- MES -->
@@ -172,6 +233,23 @@
         <div class="mes-day-name">Dom</div>
       </div>
       <div class="mes-grid" id="mes-grid"></div>
+    </div>
+
+    <!-- EQUIPO -->
+    <div id="view-equipo" style="display:none">
+      <div class="equipo-wrap">
+        <div class="equipo-coming-title">Equipo</div>
+        <div class="equipo-coming-sub">Ver el estado de tu equipo sin reuniones.</div>
+        <div class="equipo-coming-card">
+          <div class="equipo-coming-tag">Próximamente</div>
+          <div class="equipo-coming-list">
+            <div class="equipo-coming-item">Commitment scores del equipo</div>
+            <div class="equipo-coming-item">Energía promedio semanal</div>
+            <div class="equipo-coming-item">Alertas de sobrecarga</div>
+            <div class="equipo-coming-item">Dashboard para managers</div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- SUGERENCIAS -->
@@ -203,6 +281,27 @@
       <!-- Conflictos (se generan dinámicamente) -->
       <div id="sug-conflicts"></div>
 
+      <!-- Estado del día -->
+      <div class="sug-card" id="sug-estado-card">
+        <div class="sug-tag">
+          <div class="sug-tag-dot" style="background:#06B6D4"></div>
+          <span style="color:#06B6D4">Pulso del día</span>
+        </div>
+        <div class="sug-title" id="sug-estado-title">¿Cómo estás hoy?</div>
+        <div class="sug-desc" id="sug-estado-desc">30 segundos. Tres preguntas.</div>
+        <button class="sug-review-cta" id="sug-estado-btn" style="color:#06B6D4;border-color:rgba(6,182,212,0.25);background:rgba(6,182,212,0.08)" onclick="showEstadoDia()">Registrar estado →</button>
+      </div>
+
+      <!-- Áreas de vida -->
+      <div class="sug-card" id="sug-areas-card">
+        <div class="sug-tag">
+          <div class="sug-tag-dot" style="background:#10B981"></div>
+          <span style="color:#10B981">Áreas de vida</span>
+        </div>
+        <div class="sug-title">Tu semana, desglosada</div>
+        <div class="areas-breakdown" id="areas-breakdown"></div>
+      </div>
+
       <!-- Sugerencias IA -->
       <div class="sug-card suggestion" id="sug-ia-card">
         <div class="sug-tag">
@@ -226,6 +325,18 @@
         <div class="sug-desc" id="sug-review-text">
           Completá una reflexión corta para cerrar la semana.
         </div>
+        <button class="sug-review-cta" onclick="startWeeklyReview()">Comenzar revisión →</button>
+      </div>
+
+      <!-- Una palabra -->
+      <div class="sug-card" id="sug-palabra-card">
+        <div class="sug-tag">
+          <div class="sug-tag-dot" style="background:#A78BFA"></div>
+          <span style="color:#A78BFA">Una palabra</span>
+        </div>
+        <div class="sug-title">¿Cómo definís esta semana?</div>
+        <div class="palabras-historia" id="palabras-historia"></div>
+        <button class="sug-review-cta" style="color:#A78BFA;border-color:rgba(167,139,250,0.25);background:rgba(167,139,250,0.08)" onclick="showPalabra()">Agregar →</button>
       </div>
 
       <!-- Input IA -->
@@ -261,10 +372,12 @@
     <button class="nav-btn" id="nav-patrones" onclick="setView('patrones')">
       <span class="nav-icon">
         <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-          <polyline points="1,14 5,9 8,11 12,5 17,8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <rect x="1" y="1" width="4" height="16" rx="1.5" stroke="currentColor" stroke-width="1.5"/>
+          <rect x="7" y="1" width="4" height="11" rx="1.5" stroke="currentColor" stroke-width="1.5"/>
+          <rect x="13" y="1" width="4" height="6" rx="1.5" stroke="currentColor" stroke-width="1.5"/>
         </svg>
       </span>
-      <span>Patrones</span>
+      <span>Pipeline</span>
     </button>
     <button class="nav-btn" id="nav-sugerencias" onclick="setView('sugerencias')">
       <span class="nav-icon">
@@ -274,6 +387,66 @@
       </span>
       <span>Sugerencias</span>
     </button>
+    <button class="nav-btn" id="nav-equipo" onclick="setView('equipo')">
+      <span class="nav-icon">
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+          <circle cx="6" cy="6" r="3" stroke="currentColor" stroke-width="1.5"/>
+          <circle cx="13" cy="6" r="2.5" stroke="currentColor" stroke-width="1.5"/>
+          <path d="M1 16c0-2.76 2.24-5 5-5s5 2.24 5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          <path d="M13 11c1.93 0 3.5 1.57 3.5 3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+      </span>
+      <span>Equipo</span>
+    </button>
+  </div>
+
+
+  <!-- LEAD MODAL -->
+  <div id="lead-backdrop" class="lead-backdrop" onclick="closeLeadModal()" style="display:none"></div>
+  <div id="lead-modal" class="lead-modal" style="display:none">
+    <div class="lm-head">
+      <div class="lm-title" id="lm-title">Nuevo lead</div>
+      <button class="lm-close" onclick="closeLeadModal()">×</button>
+    </div>
+    <div class="lm-body">
+      <div class="lm-field">
+        <label class="lm-lbl">Nombre / empresa</label>
+        <input class="lm-inp" id="lm-nombre" type="text" placeholder="ruldhs, Carlos Santos..."/>
+      </div>
+      <div class="lm-field">
+        <label class="lm-lbl">Tipo de proyecto</label>
+        <input class="lm-inp" id="lm-tipo" type="text" placeholder="Agente email, Chatbot WhatsApp..."/>
+      </div>
+      <div class="lm-row2">
+        <div class="lm-field">
+          <label class="lm-lbl">Precio (USD)</label>
+          <input class="lm-inp" id="lm-precio" type="number" min="0" placeholder="500"/>
+        </div>
+        <div class="lm-field">
+          <label class="lm-lbl">Origen</label>
+          <select class="lm-inp lm-sel" id="lm-origen">
+            <option value="fiverr">Fiverr</option>
+            <option value="directo">Directo</option>
+            <option value="referido">Referido</option>
+            <option value="velar">Velar Agency</option>
+          </select>
+        </div>
+      </div>
+      <div class="lm-field">
+        <label class="lm-lbl">Estado</label>
+        <div class="lm-estados" id="lm-estados"></div>
+      </div>
+      <div class="lm-field">
+        <label class="lm-lbl">Notas</label>
+        <textarea class="lm-inp lm-ta" id="lm-notas" placeholder="Detalles, contexto, próximos pasos..."></textarea>
+      </div>
+    </div>
+    <div class="lm-foot">
+      <button class="lm-del" id="lm-del" onclick="deleteLeadModal()" style="display:none">Eliminar</button>
+      <div style="flex:1"></div>
+      <button class="lm-cancel" onclick="closeLeadModal()">Cancelar</button>
+      <button class="lm-save" onclick="saveLeadModal()">Guardar</button>
+    </div>
   </div>
 
 </div>
@@ -353,6 +526,109 @@
   </div>
 </div>
 
+<!-- WEEKLY REVIEW -->
+<div id="review-overlay" class="digest-overlay" style="display:none">
+  <div class="review-box">
+    <div class="review-progress" id="review-progress">1 de 3</div>
+
+    <div class="review-step" id="rv-1">
+      <div class="review-q">¿Qué fue lo más importante que lograste esta semana?</div>
+      <textarea class="review-textarea" id="rv-ans-1" placeholder="Escribí libremente..."></textarea>
+      <button class="morning-cta" onclick="reviewNext(1)">Siguiente →</button>
+    </div>
+
+    <div class="review-step" id="rv-2" style="display:none">
+      <div class="review-q">¿Qué no salió como esperabas? ¿Por qué?</div>
+      <textarea class="review-textarea" id="rv-ans-2" placeholder="Sin juicio, solo observar..."></textarea>
+      <button class="morning-cta" onclick="reviewNext(2)">Siguiente →</button>
+    </div>
+
+    <div class="review-step" id="rv-3" style="display:none">
+      <div class="review-q">¿Qué vas a hacer diferente la próxima semana?</div>
+      <textarea class="review-textarea" id="rv-ans-3" placeholder="Una cosa concreta..."></textarea>
+      <button class="morning-cta" onclick="reviewNext(3)">Generar mi ficha →</button>
+    </div>
+
+    <div class="review-step" id="rv-loading" style="display:none">
+      <div style="color:var(--text4);font-size:13px;text-align:center;padding:48px 0;font-family:'Geist',sans-serif">
+        Claude está analizando tu semana...
+      </div>
+    </div>
+
+    <div class="review-step" id="rv-result" style="display:none">
+      <div class="review-ficha-label">Tu ficha de la semana</div>
+      <div class="review-ficha" id="rv-ficha-content"></div>
+      <button class="digest-close" onclick="closeReview()" style="margin-top:8px">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MONTHLY INSIGHT -->
+<div id="monthly-overlay" class="digest-overlay" style="display:none">
+  <div class="digest-box">
+    <div class="digest-week-label" id="monthly-period">—</div>
+    <div class="digest-headline" id="monthly-headline">—</div>
+    <div class="digest-insight" id="monthly-insight-text"></div>
+    <div class="digest-tip" id="monthly-tip"></div>
+    <button class="digest-close" onclick="closeMonthlyInsight()">Cerrar</button>
+  </div>
+</div>
+
+<!-- ESTADO DEL DÍA -->
+<div id="estado-overlay" class="digest-overlay" style="display:none">
+  <div class="estado-box">
+    <div class="estado-header">
+      <div class="estado-label-top">Pulso del día</div>
+      <div class="estado-fecha" id="estado-fecha">—</div>
+    </div>
+    <div class="estado-field">
+      <div class="estado-field-label">¿Cómo estás?</div>
+      <textarea class="review-textarea" id="estado-como" placeholder="Hoy me siento..."></textarea>
+    </div>
+    <div class="estado-field">
+      <div class="estado-field-label">¿Qué te preocupa?</div>
+      <textarea class="review-textarea" id="estado-preocupa" placeholder="Me preocupa..." style="min-height:56px"></textarea>
+    </div>
+    <div class="estado-field">
+      <div class="estado-field-label">¿De qué estás orgulloso/a hoy?</div>
+      <textarea class="review-textarea" id="estado-orgullo" placeholder="Me siento bien de..." style="min-height:56px"></textarea>
+    </div>
+    <button class="morning-cta" onclick="submitEstadoDia()">Guardar →</button>
+    <button class="digest-close" onclick="closeEstadoDia()" style="margin-top:-4px">Saltar</button>
+  </div>
+</div>
+
+<!-- CARTA DEL DOMINGO -->
+<div id="carta-overlay" class="digest-overlay" style="display:none">
+  <div class="carta-box">
+    <div class="carta-meta" id="carta-meta">—</div>
+    <div class="carta-saludo" id="carta-saludo">—</div>
+    <div class="carta-cuerpo" id="carta-cuerpo"></div>
+    <div class="carta-firma">foco.</div>
+    <button class="digest-close" onclick="closeCarta()">Cerrar</button>
+  </div>
+</div>
+
+<!-- PALABRA DE LA SEMANA -->
+<div id="palabra-overlay" class="digest-overlay" style="display:none">
+  <div class="palabra-box">
+    <div class="palabra-prompt">¿Una palabra para esta semana?</div>
+    <div class="palabra-sub">Una sola. La que mejor la define.</div>
+    <input class="palabra-inp" id="palabra-inp" type="text" maxlength="20" placeholder="caos · foco · crecimiento · calma..."/>
+    <div class="palabras-previas" id="palabras-previas"></div>
+    <button class="morning-cta" onclick="submitPalabra()">Guardar →</button>
+    <button class="digest-close" onclick="closePalabra()" style="margin-top:-4px">Saltar</button>
+  </div>
+</div>
+
+<!-- GOAL EDIT -->
+<div id="goal-edit-overlay" style="position:fixed;inset:0;z-index:699;display:none" onclick="closeGoalEdit()"></div>
+<div id="goal-edit-modal" class="goal-edit-modal" style="display:none">
+  <div class="goal-edit-title">Objetivo de la semana</div>
+  <input id="goal-edit-inp" class="auth-input" type="text" placeholder="Lo más importante esta semana es..."/>
+  <button class="morning-cta" style="margin-top:4px" onclick="saveGoalEdit()">Guardar →</button>
+</div>
+
 <!-- PANEL OVERLAY -->
 <div id="panel-overlay" class="panel-overlay" onclick="closeEventPanel()"></div>
 
@@ -374,6 +650,12 @@
               rows="2"
               oninput="autoresizeDetails(this)"
               onblur="savePanelDetails()"></textarea>
+
+    <!-- Área de vida -->
+    <div class="panel-area-wrap" id="panel-area-wrap">
+      <div class="panel-field-label">Área</div>
+      <div class="panel-area-pills" id="panel-area-pills"></div>
+    </div>
 
     <!-- Acción principal: estado -->
     <button class="panel-done-main" id="panel-done-main" onclick="panelToggleDone()">

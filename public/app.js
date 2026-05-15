@@ -10,6 +10,15 @@ const CLAUDE_API_KEY = null; // Key en servidor — no exponer en frontend
 const { createClient } = supabase;
 const db = createClient(SUPABASE_URL, SUPABASE_KEY);
 
+// ── ÁREAS DE VIDA ────────────────────────────────────────────
+const AREAS = {
+  trabajo:     { label: 'Trabajo',     color: '#6366F1' },
+  salud:       { label: 'Salud',       color: '#10B981' },
+  relaciones:  { label: 'Relaciones',  color: '#F43F5E' },
+  aprendizaje: { label: 'Aprendizaje', color: '#F59E0B' },
+  descanso:    { label: 'Descanso',    color: '#06B6D4' }
+};
+
 // ── ESTADO GLOBAL ───────────────────────────────────────────
 const SLOT_H = 48; // px por hora — NO CAMBIAR
 const DAYS = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
@@ -28,6 +37,14 @@ const COLORS = [
   '#818CF8', // índigo claro
 ];
 
+const PIPE_COLS = [
+  { id: 'contactado', label: 'Contactado', color: '#71717A' },
+  { id: 'cotizando',  label: 'Cotizando',  color: '#6366F1' },
+  { id: 'negociando', label: 'Negociando', color: '#F59E0B' },
+  { id: 'cerrado',    label: 'Cerrado',    color: '#10B981' },
+  { id: 'perdido',    label: 'Perdido',    color: '#F43F5E' }
+];
+
 let currentUser = null;
 let currentProfile = null;
 let weekOffset = 0;
@@ -40,11 +57,23 @@ let _lastTapDi = -1;
 let notifOn = true;
 let authMode = 'login';
 
+// Pipeline state
+let draggedLeadId = null;
+let leadModalId = null;
+let lmEstado = 'contactado';
+
 // Onboarding state
 let obSelectedHour = 9;
 
 // Morning brief state
 let morningEnergy = null;
+
+// Evening checkin state
+let eveningMainChoice = null;
+let eveningEnergy = null;
+
+// Weekly review state
+let reviewAnswers = {};
 
 // Panel state
 let panelEvent = null;
@@ -119,7 +148,8 @@ function isPast(date) {
   return date < now && !isToday(date);
 }
 
-function eventColor(title) {
+function eventColor(title, area) {
+  if (area && AREAS[area]) return AREAS[area].color;
   let hash = 0;
   for (let i = 0; i < title.length; i++) {
     hash = ((hash << 5) - hash) + title.charCodeAt(i);
@@ -331,7 +361,12 @@ async function showApp() {
   loadTemplates();
   checkOnboarding();
   checkMorningBrief();
+  checkEveningCheckin();
+  checkEstadoDia();
+  checkCartaDomingo();
   checkWeeklyDigest();
+  checkMonthlyInsight();
+  initGoalBar();
   startLiveClock();
 }
 
@@ -698,7 +733,7 @@ function renderDayColumns(week) {
       const [eh, em] = ev.end_time.split(':').map(Number);
       const y = toY(sh, sm);
       const h = Math.max(toY(eh, em) - y, 18);
-      const color = eventColor(ev.title);
+      const color = eventColor(ev.title, ev.area);
       const conflict = hasConflict(evs, ev);
 
       const block = document.createElement('div');
@@ -914,7 +949,7 @@ async function renderMes() {
     el.className = 'mes-day' + (today ? ' today' : '');
 
     const dots = evs.slice(0, 6).map(ev =>
-      `<div class="mes-dot" style="background:${eventColor(ev.title)};opacity:${ev.done ? 0.3 : 1}"></div>`
+      `<div class="mes-dot" style="background:${eventColor(ev.title, ev.area)};opacity:${ev.done ? 0.3 : 1}"></div>`
     ).join('');
 
     el.innerHTML = `
@@ -947,7 +982,192 @@ function changeMes(dir) {
   renderMes();
 }
 
-// ── RENDER PATRONES ─────────────────────────────────────────
+// ── PIPELINE ────────────────────────────────────────────────
+
+async function renderPipeline() {
+  const uid = currentUser.id;
+  const { data } = await db.from('leads').select('*').eq('user_id', uid).order('created_at', { ascending: false });
+  const leads = data || [];
+
+  const activos  = leads.filter(l => !['cerrado','perdido'].includes(l.estado));
+  const cerrados = leads.filter(l => l.estado === 'cerrado');
+  const totalVal = activos.reduce((s, l) => s + (Number(l.precio) || 0), 0);
+  const tasaCierre = leads.length > 0 ? Math.round(cerrados.length / leads.length * 100) : null;
+
+  document.getElementById('pipe-total').textContent   = '$' + totalVal.toLocaleString('es-AR');
+  document.getElementById('pipe-activos').textContent = activos.length;
+  document.getElementById('pipe-cierre').textContent  = tasaCierre !== null ? tasaCierre + '%' : '—';
+
+  const board = document.getElementById('kanban-board');
+  board.innerHTML = '';
+
+  PIPE_COLS.forEach(col => {
+    const colLeads = leads.filter(l => l.estado === col.id);
+    const colSum   = colLeads.reduce((s, l) => s + (Number(l.precio) || 0), 0);
+
+    const el = document.createElement('div');
+    el.className = 'kanban-col';
+    el.dataset.estado = col.id;
+
+    el.addEventListener('dragover',  e => { e.preventDefault(); el.classList.add('drag-over'); });
+    el.addEventListener('dragleave', e => { if (!el.contains(e.relatedTarget)) el.classList.remove('drag-over'); });
+    el.addEventListener('drop', e => {
+      e.preventDefault();
+      el.classList.remove('drag-over');
+      if (draggedLeadId) moveLeadTo(draggedLeadId, col.id);
+    });
+
+    el.innerHTML = `
+      <div class="kanban-col-hd">
+        <span class="kcol-dot" style="background:${col.color}"></span>
+        <span class="kcol-title">${col.label}</span>
+        <span class="kcol-count">${colLeads.length}</span>
+        ${colSum > 0 ? `<span class="kcol-sum">$${colSum.toLocaleString('es-AR')}</span>` : ''}
+        <button class="kcol-add" onclick="openLeadModal(null,'${col.id}')">+</button>
+      </div>
+      <div class="kanban-cards">
+        ${colLeads.length === 0
+          ? '<div class="kcard-empty">Arrastrá un lead aquí</div>'
+          : colLeads.map(l => leadCardHTML(l, col.color)).join('')}
+      </div>
+    `;
+
+    board.appendChild(el);
+  });
+
+  board.querySelectorAll('.lead-card').forEach(card => {
+    card.addEventListener('dragstart', () => {
+      draggedLeadId = card.dataset.id;
+      setTimeout(() => card.classList.add('dragging'), 0);
+    });
+    card.addEventListener('dragend', () => {
+      draggedLeadId = null;
+      card.classList.remove('dragging');
+    });
+  });
+}
+
+function leadCardHTML(lead, color) {
+  const dias = Math.floor((Date.now() - new Date(lead.updated_at).getTime()) / 86400000);
+  const urgent = dias >= 5 && !['cerrado','perdido'].includes(lead.estado);
+  const diasLabel = dias === 0 ? 'hoy' : dias === 1 ? 'ayer' : `hace ${dias}d`;
+  return `
+    <div class="lead-card${urgent ? ' lead-card--urgent' : ''}"
+         data-id="${escH(lead.id)}"
+         draggable="true"
+         style="--cc:${color}"
+         onclick="openLeadModal('${escH(lead.id)}')">
+      <div class="lcard-name">${escH(lead.nombre)}</div>
+      ${lead.tipo ? `<div class="lcard-tipo">${escH(lead.tipo)}</div>` : ''}
+      ${lead.precio > 0 ? `<div class="lcard-precio">$${Number(lead.precio).toLocaleString('es-AR')}</div>` : ''}
+      <div class="lcard-foot">
+        <span class="lcard-origen">${escH(lead.origen || '')}</span>
+        <span class="lcard-dias${urgent ? ' urgent' : ''}">${diasLabel}</span>
+      </div>
+    </div>
+  `;
+}
+
+function escH(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+async function moveLeadTo(id, estado) {
+  await db.from('leads')
+    .update({ estado, updated_at: new Date().toISOString() })
+    .eq('id', id).eq('user_id', currentUser.id);
+  renderPipeline();
+}
+
+async function openLeadModal(id, estadoDefault) {
+  leadModalId = id || null;
+  lmEstado = estadoDefault || 'contactado';
+
+  const title  = document.getElementById('lm-title');
+  const delBtn = document.getElementById('lm-del');
+
+  if (id) {
+    const { data } = await db.from('leads').select('*').eq('id', id).single();
+    if (!data) return;
+    document.getElementById('lm-nombre').value = data.nombre || '';
+    document.getElementById('lm-tipo').value   = data.tipo   || '';
+    document.getElementById('lm-precio').value = data.precio || '';
+    document.getElementById('lm-origen').value = data.origen || 'fiverr';
+    document.getElementById('lm-notas').value  = data.notas  || '';
+    lmEstado = data.estado || 'contactado';
+    title.textContent = 'Editar lead';
+    delBtn.style.display = 'block';
+  } else {
+    document.getElementById('lm-nombre').value = '';
+    document.getElementById('lm-tipo').value   = '';
+    document.getElementById('lm-precio').value = '';
+    document.getElementById('lm-origen').value = 'fiverr';
+    document.getElementById('lm-notas').value  = '';
+    title.textContent = 'Nuevo lead';
+    delBtn.style.display = 'none';
+  }
+
+  renderLmEstados();
+
+  document.getElementById('lead-backdrop').style.display = 'block';
+  document.getElementById('lead-modal').style.display    = 'flex';
+  setTimeout(() => document.getElementById('lm-nombre').focus(), 60);
+}
+
+function renderLmEstados() {
+  document.getElementById('lm-estados').innerHTML = PIPE_COLS.map(col => `
+    <button class="lm-estado-btn${lmEstado === col.id ? ' active' : ''}"
+            style="${lmEstado === col.id ? `background:${col.color};border-color:${col.color};color:#fff` : ''}"
+            onclick="selectLmEstado('${col.id}')">
+      ${col.label}
+    </button>
+  `).join('');
+}
+
+function selectLmEstado(id) {
+  lmEstado = id;
+  renderLmEstados();
+}
+
+function closeLeadModal() {
+  document.getElementById('lead-backdrop').style.display = 'none';
+  document.getElementById('lead-modal').style.display    = 'none';
+  leadModalId = null;
+}
+
+async function saveLeadModal() {
+  const nombre = document.getElementById('lm-nombre').value.trim();
+  if (!nombre) { document.getElementById('lm-nombre').focus(); return; }
+
+  const payload = {
+    nombre,
+    tipo:       document.getElementById('lm-tipo').value.trim(),
+    precio:     parseFloat(document.getElementById('lm-precio').value) || 0,
+    origen:     document.getElementById('lm-origen').value,
+    notas:      document.getElementById('lm-notas').value.trim(),
+    estado:     lmEstado,
+    updated_at: new Date().toISOString()
+  };
+
+  if (leadModalId) {
+    await db.from('leads').update(payload).eq('id', leadModalId).eq('user_id', currentUser.id);
+  } else {
+    await db.from('leads').insert({ ...payload, user_id: currentUser.id });
+  }
+
+  closeLeadModal();
+  renderPipeline();
+}
+
+async function deleteLeadModal() {
+  if (!leadModalId) return;
+  if (!confirm('¿Eliminar este lead?')) return;
+  await db.from('leads').delete().eq('id', leadModalId).eq('user_id', currentUser.id);
+  closeLeadModal();
+  renderPipeline();
+}
+
+// ── RENDER PATRONES (legacy stub) ───────────────────────────
 
 async function renderPatrones() {
   const uid = currentUser.id;
@@ -1087,6 +1307,9 @@ async function renderPatrones() {
     insightEl.style.display = 'block';
     insightEl.textContent = `Tu mejor momento es el ${bestDay} a las ${bestHour}h — completás el ${Math.round(bestHourRate * 100)}% de lo que agendás ahí.`;
   }
+
+  renderMoodTimeline();
+  renderAreasTimeline();
 }
 
 // ── RENDER SUGERENCIAS ──────────────────────────────────────
@@ -1095,6 +1318,9 @@ async function renderSugerencias() {
   updateSugStats();
   renderConflicts();
   generateAISummary();
+  renderAreasBreakdown();
+  renderPalabrasHistoria();
+  updateEstadoCard();
 }
 
 function updateSugStats() {
@@ -1248,7 +1474,7 @@ async function handleAI() {
 async function setView(view) {
   currentView = view;
 
-  ['semana', 'mes', 'patrones', 'sugerencias'].forEach(v => {
+  ['semana', 'mes', 'patrones', 'sugerencias', 'equipo'].forEach(v => {
     const el = document.getElementById('view-' + v);
     if (el) el.style.display = v === view ? 'flex' : 'none';
 
@@ -1274,9 +1500,11 @@ async function setView(view) {
   } else if (view === 'mes') {
     await renderMes();
   } else if (view === 'patrones') {
-    await renderPatrones();
+    await renderPipeline();
   } else if (view === 'sugerencias') {
     await renderSugerencias();
+  } else if (view === 'equipo') {
+    renderEquipo();
   }
 }
 
@@ -1805,7 +2033,7 @@ function openEventPanel(ev, dateISO) {
   document.getElementById('panel-meta').textContent =
     `${ev.start_time} – ${ev.end_time} · ${dayStr}`;
 
-  const color = eventColor(ev.title);
+  const color = eventColor(ev.title, ev.area);
   document.getElementById('event-panel').style.setProperty('--event-color', color);
   const bar = document.getElementById('panel-color-bar');
   if (bar) bar.style.background = color;
@@ -1817,6 +2045,7 @@ function openEventPanel(ev, dateISO) {
   }
 
   updateDoneButton(!!ev.done);
+  renderAreaPills(ev.area || 'trabajo');
 
   document.getElementById('event-panel').classList.add('open');
   document.getElementById('panel-overlay').classList.add('open');
@@ -2107,6 +2336,11 @@ const CMD_ACTIONS = [
   { label: 'Vista Mes',         icon: '◉',  hint: '',  fn: () => setView('mes') },
   { label: 'Vista Patrones',    icon: '◈',  hint: '',  fn: () => setView('patrones') },
   { label: 'Vista Sugerencias', icon: '✦',  hint: '',  fn: () => setView('sugerencias') },
+  { label: 'Vista Equipo',      icon: '◎',  hint: '',  fn: () => setView('equipo') },
+  { label: 'Revisión semanal',  icon: '✳',  hint: '',  fn: () => { closeCmd(); startWeeklyReview(); } },
+  { label: 'Objetivo semanal',  icon: '◈',  hint: '',  fn: () => { closeCmd(); openGoalEdit(); } },
+  { label: 'Pulso del día',     icon: '◉',  hint: '',  fn: () => { closeCmd(); showEstadoDia(); } },
+  { label: 'Palabra de semana', icon: '❋',  hint: '',  fn: () => { closeCmd(); showPalabra(); } },
   { label: 'Nuevo evento',      icon: '+',  hint: 'N', fn: () => { closeCmd(); document.getElementById('nl-input').focus(); } },
   { label: 'Modo foco ambiente',icon: '✿',  hint: '',  fn: () => { closeCmd(); toggleAmbientMode(); } },
   { label: 'Cerrar sesión',     icon: '↪',  hint: '',  fn: () => logout() },
@@ -2207,7 +2441,7 @@ function addEventToDOM(ev, dateISO, dayIndex) {
   const [eh, em] = ev.end_time.split(':').map(Number);
   const y = toY(sh, sm);
   const h = Math.max(toY(eh, em) - y, 18);
-  const color = eventColor(ev.title);
+  const color = eventColor(ev.title, ev.area);
   const conflict = hasConflict(eventsCache[dateISO] || [], ev);
 
   const block = document.createElement('div');
@@ -2238,6 +2472,720 @@ function addEventToDOM(ev, dateISO, dayIndex) {
 
   col.appendChild(block);
   updateMomentum();
+}
+
+// ── EVENING CHECK-IN ─────────────────────────────────────────
+
+async function checkEveningCheckin() {
+  if (!currentUser) return;
+  if (new Date().getHours() < 18) return;
+
+  const { data } = await db
+    .from('evening_checkins')
+    .select('id')
+    .eq('user_id', currentUser.id)
+    .eq('date', toISO(new Date()))
+    .limit(1);
+
+  if (!data || !data.length) showEveningCheckin();
+}
+
+function showEveningCheckin() {
+  const today = toISO(new Date());
+  const count = (eventsCache[today] || []).length;
+  const done = (eventsCache[today] || []).filter(e => e.done).length;
+
+  const sub = document.getElementById('evening-sub');
+  if (sub) {
+    sub.textContent = count
+      ? `Completaste ${done} de ${count} cosas hoy.`
+      : 'Tomá 2 minutos para reflexionar.';
+  }
+
+  eveningMainChoice = null;
+  eveningEnergy = null;
+  document.querySelectorAll('.evening-main-btn').forEach(b => b.classList.remove('selected'));
+  document.querySelectorAll('#evening-screen .energy-btn').forEach(b => b.classList.remove('selected'));
+  const noteEl = document.getElementById('evening-note');
+  if (noteEl) noteEl.value = '';
+  document.getElementById('evening-screen').style.display = 'flex';
+}
+
+function selectEveningMain(v) {
+  eveningMainChoice = v;
+  document.querySelectorAll('.evening-main-btn').forEach(b =>
+    b.classList.toggle('selected', b.dataset.v === v)
+  );
+}
+
+function selectEveningEnergy(e) {
+  eveningEnergy = e;
+  document.querySelectorAll('#evening-screen .energy-btn').forEach(btn =>
+    btn.classList.toggle('selected', parseInt(btn.dataset.e) === e)
+  );
+}
+
+async function submitEveningCheckin() {
+  const btn = document.getElementById('evening-cta');
+  if (btn) btn.disabled = true;
+
+  const note = document.getElementById('evening-note')?.value.trim() || null;
+
+  await db.from('evening_checkins').upsert({
+    user_id: currentUser.id,
+    date: toISO(new Date()),
+    completed_main: eveningMainChoice,
+    energy_evening: eveningEnergy,
+    note
+  });
+
+  document.getElementById('evening-screen').style.display = 'none';
+  eveningMainChoice = null;
+  eveningEnergy = null;
+  if (btn) btn.disabled = false;
+  showToast('Día cerrado', 'success');
+}
+
+// ── GOAL BAR ─────────────────────────────────────────────────
+
+function initGoalBar() {
+  if (!currentUser) return;
+  const weekStart = toISO(getWeekDates(0)[0]);
+  const key = `foco_goal_${currentUser.id}_${weekStart}`;
+  const goal = localStorage.getItem(key)
+    || localStorage.getItem(`foco_week_goal_${currentUser.id}`);
+
+  const bar = document.getElementById('goal-bar');
+  const text = document.getElementById('goal-bar-text');
+  if (!bar || !text) return;
+
+  if (goal) {
+    text.textContent = goal;
+    bar.style.display = 'flex';
+  } else {
+    bar.style.display = 'none';
+  }
+}
+
+function openGoalEdit() {
+  if (!currentUser) return;
+  const weekStart = toISO(getWeekDates(0)[0]);
+  const key = `foco_goal_${currentUser.id}_${weekStart}`;
+  const current = localStorage.getItem(key)
+    || localStorage.getItem(`foco_week_goal_${currentUser.id}`) || '';
+
+  const inp = document.getElementById('goal-edit-inp');
+  if (inp) inp.value = current;
+
+  document.getElementById('goal-edit-overlay').style.display = 'block';
+  document.getElementById('goal-edit-modal').style.display = 'flex';
+  setTimeout(() => inp?.focus(), 80);
+}
+
+function closeGoalEdit() {
+  document.getElementById('goal-edit-overlay').style.display = 'none';
+  document.getElementById('goal-edit-modal').style.display = 'none';
+}
+
+function saveGoalEdit() {
+  const val = document.getElementById('goal-edit-inp')?.value.trim();
+  const weekStart = toISO(getWeekDates(0)[0]);
+  const key = `foco_goal_${currentUser.id}_${weekStart}`;
+
+  if (val) {
+    localStorage.setItem(key, val);
+    localStorage.setItem(`foco_week_goal_${currentUser.id}`, val);
+  } else {
+    localStorage.removeItem(key);
+    localStorage.removeItem(`foco_week_goal_${currentUser.id}`);
+  }
+
+  closeGoalEdit();
+  initGoalBar();
+  showToast('Objetivo guardado', 'success');
+}
+
+// ── WEEKLY REVIEW ─────────────────────────────────────────────
+
+function startWeeklyReview() {
+  reviewAnswers = {};
+  ['rv-1','rv-2','rv-3','rv-loading','rv-result'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = id === 'rv-1' ? 'flex' : 'none';
+  });
+  ['rv-ans-1','rv-ans-2','rv-ans-3'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  document.getElementById('review-progress').textContent = '1 de 3';
+  document.getElementById('review-overlay').style.display = 'flex';
+  setTimeout(() => document.getElementById('rv-ans-1')?.focus(), 100);
+}
+
+function reviewNext(step) {
+  const ans = document.getElementById(`rv-ans-${step}`)?.value.trim();
+  reviewAnswers[step] = ans || '—';
+
+  if (step < 3) {
+    document.getElementById(`rv-${step}`).style.display = 'none';
+    document.getElementById(`rv-${step + 1}`).style.display = 'flex';
+    document.getElementById('review-progress').textContent = `${step + 1} de 3`;
+    setTimeout(() => document.getElementById(`rv-ans-${step + 1}`)?.focus(), 80);
+  } else {
+    document.getElementById('rv-3').style.display = 'none';
+    document.getElementById('rv-loading').style.display = 'flex';
+    document.getElementById('review-progress').textContent = '';
+    generateReviewFicha();
+  }
+}
+
+async function generateReviewFicha() {
+  const week = getWeekDates(weekOffset);
+  const allEvs = week.flatMap(d => eventsCache[toISO(d)] || []);
+  const done = allEvs.filter(e => e.done).length;
+  const total = allEvs.length;
+  const weekGoal = localStorage.getItem(`foco_week_goal_${currentUser.id}`) || 'sin objetivo definido';
+
+  let parsed = null;
+  try {
+    const response = await fetch('/api/claude', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 400,
+        system: `Sos el coach personal del usuario. Recibís sus respuestas de revisión semanal y generás una "ficha de la semana" personalizada, honesta y concisa, en español rioplatense.
+Respondé SOLO con JSON válido sin markdown:
+{"titulo":"frase de 5-6 palabras que define la semana","patron":"patrón que observás en sus respuestas, máx 40 palabras","fortaleza":"algo concreto que hicieron bien, máx 30 palabras","reto":"desafío principal para la próxima semana, máx 30 palabras"}`,
+        messages: [{
+          role: 'user',
+          content: `Objetivo: ${weekGoal}\nEstadísticas: ${done}/${total} completados.\n\n1. Lo mejor que logré: ${reviewAnswers[1]}\n2. Lo que no salió: ${reviewAnswers[2]}\n3. Lo que voy a cambiar: ${reviewAnswers[3]}`
+        }]
+      })
+    });
+    const data = await response.json();
+    const raw = (data.content?.[0]?.text || '').trim();
+    try { parsed = JSON.parse(raw); } catch {
+      const m = raw.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
+      try { parsed = JSON.parse(m?.[1] || ''); } catch { parsed = null; }
+    }
+  } catch { parsed = null; }
+
+  if (!parsed) {
+    parsed = {
+      titulo: `Semana de ${done}/${total}`,
+      patron: 'Seguís construyendo el hábito de reflexionar.',
+      fortaleza: reviewAnswers[1] || 'Tu disposición a reflexionar.',
+      reto: reviewAnswers[3] || 'Mantener el rumbo.'
+    };
+  }
+
+  const weekStart = toISO(week[0]);
+  await db.from('weekly_reviews').upsert({
+    user_id: currentUser.id,
+    week_start: weekStart,
+    answer_1: reviewAnswers[1],
+    answer_2: reviewAnswers[2],
+    answer_3: reviewAnswers[3],
+    ai_ficha: JSON.stringify(parsed)
+  });
+
+  const fichaEl = document.getElementById('rv-ficha-content');
+  if (fichaEl) {
+    fichaEl.innerHTML = `
+      <div class="ficha-titulo">${parsed.titulo}</div>
+      <div class="ficha-section">
+        <div class="ficha-label">Patrón</div>
+        <div class="ficha-text">${parsed.patron}</div>
+      </div>
+      <div class="ficha-section">
+        <div class="ficha-label">Fortaleza</div>
+        <div class="ficha-text">${parsed.fortaleza}</div>
+      </div>
+      <div class="ficha-section">
+        <div class="ficha-label">Reto próxima semana</div>
+        <div class="ficha-text" style="color:var(--accent)">${parsed.reto}</div>
+      </div>
+    `;
+  }
+
+  document.getElementById('rv-loading').style.display = 'none';
+  document.getElementById('rv-result').style.display = 'flex';
+}
+
+function closeReview() {
+  document.getElementById('review-overlay').style.display = 'none';
+}
+
+// ── MONTHLY INSIGHT ───────────────────────────────────────────
+
+async function checkMonthlyInsight() {
+  if (!currentUser) return;
+  const now = new Date();
+  if (now.getDate() < 3) return;
+
+  const monthStart = toISO(new Date(now.getFullYear(), now.getMonth(), 1));
+  const key = `foco_monthly_${currentUser.id}_${monthStart}`;
+  if (localStorage.getItem(key)) return;
+
+  const { data } = await db
+    .from('weekly_digests')
+    .select('*')
+    .eq('user_id', currentUser.id)
+    .order('week_start', { ascending: false })
+    .limit(4);
+
+  if (!data || data.length < 2) return;
+
+  const insight = await generateMonthlyInsight(data);
+  if (insight) {
+    localStorage.setItem(key, '1');
+    showMonthlyInsightModal(insight, monthStart);
+  }
+}
+
+async function generateMonthlyInsight(digests) {
+  const summary = digests.map(d =>
+    `Semana ${d.week_start}: ${Math.round((d.completion_rate || 0) * 100)}% completado, commitment ${d.commitment_score || 0}%${d.ai_insight ? `, insight: "${d.ai_insight}"` : ''}`
+  ).join('\n');
+
+  try {
+    const response = await fetch('/api/claude', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 350,
+        system: `Sos el coach de productividad. Analizás el último mes del usuario y generás un insight profundo que no podría ver sin mirar los datos longitudinalmente. En español rioplatense.
+Respondé SOLO con JSON válido sin markdown:
+{"titular":"observación de 6 palabras sobre el mes","patron":"patrón que emerge de las semanas, no obvio, máx 50 palabras","tendencia":"si va subiendo bajando o estable con contexto, máx 30 palabras","consejo":"una sola acción para el próximo mes, máx 25 palabras"}`,
+        messages: [{ role: 'user', content: `Datos del último mes:\n${summary}` }]
+      })
+    });
+    const data = await response.json();
+    const raw = (data.content?.[0]?.text || '').trim();
+    try { return JSON.parse(raw); } catch { return null; }
+  } catch { return null; }
+}
+
+function showMonthlyInsightModal(insight, monthStart) {
+  const [, m] = monthStart.split('-');
+  const mesNombre = MONTHS_FULL[parseInt(m) - 1] || '';
+  document.getElementById('monthly-period').textContent = `Tu mes de ${mesNombre}`;
+  document.getElementById('monthly-headline').textContent = insight.titular || '—';
+  document.getElementById('monthly-insight-text').textContent = [insight.patron, insight.tendencia].filter(Boolean).join(' ');
+  document.getElementById('monthly-tip').textContent = insight.consejo ? `→ ${insight.consejo}` : '';
+  document.getElementById('monthly-overlay').style.display = 'flex';
+}
+
+function closeMonthlyInsight() {
+  document.getElementById('monthly-overlay').style.display = 'none';
+}
+
+// ── ÁREAS — panel pills ───────────────────────────────────────
+
+let panelCurrentArea = 'trabajo';
+
+function renderAreaPills(selectedArea) {
+  panelCurrentArea = selectedArea || 'trabajo';
+  const container = document.getElementById('panel-area-pills');
+  if (!container) return;
+  container.innerHTML = Object.entries(AREAS).map(([key, a]) => `
+    <button class="area-pill${panelCurrentArea === key ? ' selected' : ''}"
+            style="--area-color:${a.color}"
+            onclick="selectPanelArea('${key}')">
+      ${a.label}
+    </button>
+  `).join('');
+}
+
+async function selectPanelArea(areaKey) {
+  if (!panelEvent) return;
+  panelCurrentArea = areaKey;
+  renderAreaPills(areaKey);
+  panelEvent.area = areaKey;
+  await db.from('events').update({ area: areaKey }).eq('id', panelEvent.id);
+  const color = eventColor(panelEvent.title, areaKey);
+  document.getElementById('event-panel').style.setProperty('--event-color', color);
+  const bar = document.getElementById('panel-color-bar');
+  if (bar) bar.style.background = color;
+  const block = document.querySelector(`[data-event-id="${panelEvent.id}"]`);
+  if (block) {
+    block.style.setProperty('--event-color', color);
+    block.style.setProperty('--event-color-30', color + '30');
+    block.style.setProperty('--event-color-15', color + '15');
+  }
+}
+
+// ── ESTADO DEL DÍA ────────────────────────────────────────────
+
+async function checkEstadoDia() {
+  if (!currentUser) return;
+  const h = new Date().getHours();
+  if (h < 10 || h >= 20) return; // solo entre 10 y 20hs
+
+  const { data } = await db
+    .from('daily_states')
+    .select('id')
+    .eq('user_id', currentUser.id)
+    .eq('date', toISO(new Date()))
+    .limit(1);
+
+  // no auto-mostrar — accesible desde sugerencias
+  updateEstadoCard(data && data.length > 0);
+}
+
+async function updateEstadoCard(alreadyFilled) {
+  if (!currentUser) return;
+  const titleEl = document.getElementById('sug-estado-title');
+  const descEl = document.getElementById('sug-estado-desc');
+  const btnEl = document.getElementById('sug-estado-btn');
+
+  if (alreadyFilled === undefined) {
+    const { data } = await db
+      .from('daily_states')
+      .select('como_estas')
+      .eq('user_id', currentUser.id)
+      .eq('date', toISO(new Date()))
+      .limit(1);
+    alreadyFilled = data && data.length > 0;
+    if (alreadyFilled && data[0].como_estas && titleEl) {
+      titleEl.textContent = `"${data[0].como_estas.slice(0, 50)}"`;
+      if (descEl) descEl.textContent = 'Pulso registrado hoy.';
+      if (btnEl) btnEl.textContent = 'Editar →';
+      return;
+    }
+  }
+
+  if (alreadyFilled) {
+    if (titleEl) titleEl.textContent = 'Pulso registrado hoy.';
+    if (descEl) descEl.textContent = 'Volvé mañana o editalo.';
+    if (btnEl) btnEl.textContent = 'Editar →';
+  }
+}
+
+function showEstadoDia() {
+  const now = new Date();
+  const fechaEl = document.getElementById('estado-fecha');
+  if (fechaEl) {
+    fechaEl.textContent = now.toLocaleDateString('es-AR', {
+      weekday: 'long', day: 'numeric', month: 'long'
+    });
+  }
+  ['estado-como','estado-preocupa','estado-orgullo'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  document.getElementById('estado-overlay').style.display = 'flex';
+  setTimeout(() => document.getElementById('estado-como')?.focus(), 100);
+}
+
+function closeEstadoDia() {
+  document.getElementById('estado-overlay').style.display = 'none';
+}
+
+async function submitEstadoDia() {
+  const como = document.getElementById('estado-como')?.value.trim() || null;
+  const preocupa = document.getElementById('estado-preocupa')?.value.trim() || null;
+  const orgullo = document.getElementById('estado-orgullo')?.value.trim() || null;
+
+  await db.from('daily_states').upsert({
+    user_id: currentUser.id,
+    date: toISO(new Date()),
+    como_estas: como,
+    preocupacion: preocupa,
+    orgullo
+  });
+
+  closeEstadoDia();
+  updateEstadoCard(true);
+  showToast('Pulso guardado', 'success');
+}
+
+// ── CARTA DEL DOMINGO ─────────────────────────────────────────
+
+async function checkCartaDomingo() {
+  if (!currentUser) return;
+  const now = new Date();
+  if (now.getDay() !== 0) return;     // solo domingos
+  if (now.getHours() < 19) return;    // desde las 19hs
+
+  const weekStart = toISO(getWeekDates(weekOffset)[0]);
+  const key = `foco_carta_${currentUser.id}_${weekStart}`;
+  if (localStorage.getItem(key)) return;
+
+  const carta = await generateCartaDomingo();
+  if (carta) {
+    localStorage.setItem(key, '1');
+    showCartaModal(carta);
+  }
+}
+
+async function generateCartaDomingo() {
+  const week = getWeekDates(weekOffset);
+  const allEvs = week.flatMap(d => eventsCache[toISO(d)] || []);
+  const done = allEvs.filter(e => e.done).length;
+  const total = allEvs.length;
+  if (!total) return null;
+
+  const firstName = (currentProfile?.display_name || '').split(' ')[0] || 'vos';
+
+  const eventsText = week.flatMap(d =>
+    (eventsCache[toISO(d)] || []).map(ev =>
+      `${DAYS_FULL[d.getDay()]}: ${ev.title}${ev.done ? ' ✓' : ''} [${ev.area || 'trabajo'}]`
+    )
+  ).join('\n');
+
+  // Buscar estados del día de la semana
+  const { data: estados } = await db
+    .from('daily_states')
+    .select('date, como_estas, preocupacion, orgullo')
+    .eq('user_id', currentUser.id)
+    .gte('date', toISO(week[0]))
+    .lte('date', toISO(week[6]));
+
+  const estadosText = (estados || []).map(e =>
+    `${e.date}: "${e.como_estas || ''}" / preocupación: "${e.preocupacion || ''}" / orgullo: "${e.orgullo || ''}"`
+  ).join('\n');
+
+  try {
+    const response = await fetch('/api/claude', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 500,
+        system: `Sos un coach y mentor que escribe una carta personal al usuario cada domingo. Tenés acceso a su semana completa.
+Escribís en español rioplatense, cálido pero honesto. La carta tiene:
+- Un saludo personalizado con el nombre
+- Una observación específica sobre la semana (NO genérica)
+- Una conexión entre lo que hicieron y cómo se sintieron
+- Una pregunta reflexiva para la próxima semana
+- Cierre breve
+
+Máximo 120 palabras. Sin listas. Prosa fluida. Como un mentor de verdad.
+Respondé SOLO con JSON: {"saludo":"texto del saludo","cuerpo":"el cuerpo de la carta"}`,
+        messages: [{
+          role: 'user',
+          content: `Nombre: ${firstName}\nEventos: ${total}, completados: ${done}\n\nAgenda:\n${eventsText}\n\nEstados del día:\n${estadosText || 'Sin registros.'}`
+        }]
+      })
+    });
+    const data = await response.json();
+    const raw = (data.content?.[0]?.text || '').trim();
+    try { return JSON.parse(raw); } catch {
+      const m = raw.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
+      try { return JSON.parse(m?.[1] || ''); } catch { return null; }
+    }
+  } catch { return null; }
+}
+
+function showCartaModal(carta) {
+  const now = new Date();
+  document.getElementById('carta-meta').textContent =
+    now.toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long' });
+  document.getElementById('carta-saludo').textContent = carta.saludo || '';
+  document.getElementById('carta-cuerpo').textContent = carta.cuerpo || '';
+  document.getElementById('carta-overlay').style.display = 'flex';
+}
+
+function closeCarta() {
+  document.getElementById('carta-overlay').style.display = 'none';
+}
+
+// ── PALABRA DE LA SEMANA ──────────────────────────────────────
+
+async function showPalabra() {
+  const weekStart = toISO(getWeekDates(0)[0]);
+
+  // Ver si ya existe para esta semana
+  const { data: existing } = await db
+    .from('weekly_words')
+    .select('word')
+    .eq('user_id', currentUser.id)
+    .eq('week_start', weekStart)
+    .limit(1);
+
+  const inp = document.getElementById('palabra-inp');
+  if (inp) inp.value = existing?.[0]?.word || '';
+
+  // Cargar historial (últimas 8 semanas)
+  const { data: historia } = await db
+    .from('weekly_words')
+    .select('week_start, word')
+    .eq('user_id', currentUser.id)
+    .order('week_start', { ascending: false })
+    .limit(8);
+
+  const prevEl = document.getElementById('palabras-previas');
+  if (prevEl && historia?.length) {
+    prevEl.innerHTML = historia.map(w =>
+      `<span class="palabra-chip">${w.word}</span>`
+    ).join('');
+  }
+
+  document.getElementById('palabra-overlay').style.display = 'flex';
+  setTimeout(() => inp?.focus(), 100);
+}
+
+function closePalabra() {
+  document.getElementById('palabra-overlay').style.display = 'none';
+}
+
+async function submitPalabra() {
+  const word = document.getElementById('palabra-inp')?.value.trim();
+  if (!word) { closePalabra(); return; }
+
+  const weekStart = toISO(getWeekDates(0)[0]);
+  await db.from('weekly_words').upsert({
+    user_id: currentUser.id,
+    week_start: weekStart,
+    word
+  });
+
+  closePalabra();
+  renderPalabrasHistoria();
+  showToast(`"${word}" — tu semana`, 'success');
+}
+
+async function renderPalabrasHistoria() {
+  if (!currentUser) return;
+  const { data } = await db
+    .from('weekly_words')
+    .select('week_start, word')
+    .eq('user_id', currentUser.id)
+    .order('week_start', { ascending: false })
+    .limit(12);
+
+  const el = document.getElementById('palabras-historia');
+  if (!el) return;
+
+  if (!data || !data.length) {
+    el.innerHTML = '<div style="font-size:11px;color:var(--text4);font-family:\'Geist\',sans-serif">Todavía no hay palabras.</div>';
+    return;
+  }
+
+  el.innerHTML = data.map(w =>
+    `<span class="palabra-chip">${w.word}</span>`
+  ).join('');
+}
+
+// ── MOOD TIMELINE ─────────────────────────────────────────────
+
+async function renderMoodTimeline() {
+  const el = document.getElementById('mood-timeline');
+  if (!el || !currentUser) return;
+
+  const since = toISO(new Date(Date.now() - 56 * 86400000)); // 8 semanas
+  const { data } = await db
+    .from('daily_checkins')
+    .select('date, energy')
+    .eq('user_id', currentUser.id)
+    .gte('date', since)
+    .order('date', { ascending: true });
+
+  if (!data || !data.length) {
+    el.innerHTML = '<div style="font-size:11px;color:var(--text4);font-family:\'Geist\',sans-serif;padding:8px 0">Completá el morning brief algunos días para ver tu energía en el tiempo.</div>';
+    return;
+  }
+
+  const energyColors = ['','#F43F5E','#F59E0B','#71717A','#6366F1','#10B981'];
+  el.innerHTML = `
+    <div class="mood-dots">
+      ${data.map(d => {
+        const c = energyColors[d.energy] || '#27272A';
+        const dateObj = new Date(d.date + 'T12:00:00');
+        const label = DAYS[dateObj.getDay()] + ' ' + dateObj.getDate();
+        return `<div class="mood-dot" style="background:${c}" title="${label} — energía ${d.energy}/5"></div>`;
+      }).join('')}
+    </div>
+    <div class="mood-legend">
+      <span style="color:var(--text4);font-size:9px">${data[0].date}</span>
+      <span style="color:var(--text4);font-size:9px">${data[data.length-1].date}</span>
+    </div>
+  `;
+}
+
+// ── AREAS TIMELINE & BREAKDOWN ───────────────────────────────
+
+async function renderAreasTimeline() {
+  const el = document.getElementById('areas-timeline');
+  if (!el || !currentUser) return;
+
+  const since = toISO(new Date(Date.now() - 28 * 86400000)); // 4 semanas
+  const { data } = await db
+    .from('events')
+    .select('area')
+    .eq('user_id', currentUser.id)
+    .gte('date', since);
+
+  if (!data || !data.length) {
+    el.innerHTML = '<div style="font-size:11px;color:var(--text4);font-family:\'Geist\',sans-serif;padding:8px 0">Categorizá eventos en el panel para ver el balance.</div>';
+    return;
+  }
+
+  const counts = {};
+  data.forEach(ev => {
+    const a = ev.area || 'trabajo';
+    counts[a] = (counts[a] || 0) + 1;
+  });
+  const total = data.length;
+
+  el.innerHTML = Object.entries(AREAS).map(([key, area]) => {
+    const n = counts[key] || 0;
+    const pct = Math.round(n / total * 100);
+    if (!n) return '';
+    return `
+      <div class="area-row">
+        <span class="area-row-label">${area.label}</span>
+        <div class="area-row-bar">
+          <div class="area-row-fill" style="width:${pct}%;background:${area.color}"></div>
+        </div>
+        <span class="area-row-pct">${pct}%</span>
+      </div>
+    `;
+  }).filter(Boolean).join('');
+}
+
+async function renderAreasBreakdown() {
+  const el = document.getElementById('areas-breakdown');
+  if (!el || !currentUser) return;
+
+  const week = getWeekDates(weekOffset);
+  const allEvs = week.flatMap(d => eventsCache[toISO(d)] || []);
+
+  if (!allEvs.length) {
+    el.innerHTML = '<div style="font-size:11px;color:var(--text4)">Sin eventos esta semana.</div>';
+    return;
+  }
+
+  const counts = {};
+  allEvs.forEach(ev => {
+    const a = ev.area || 'trabajo';
+    counts[a] = (counts[a] || 0) + 1;
+  });
+  const total = allEvs.length;
+
+  el.innerHTML = Object.entries(AREAS).map(([key, area]) => {
+    const n = counts[key] || 0;
+    if (!n) return '';
+    const pct = Math.round(n / total * 100);
+    return `
+      <div class="area-row">
+        <span class="area-row-label">${area.label}</span>
+        <div class="area-row-bar">
+          <div class="area-row-fill" style="width:${pct}%;background:${area.color}"></div>
+        </div>
+        <span class="area-row-pct">${n}</span>
+      </div>
+    `;
+  }).filter(Boolean).join('');
+}
+
+// ── EQUIPO ────────────────────────────────────────────────────
+
+function renderEquipo() {
+  // placeholder — team mode en desarrollo
 }
 
 // ── ARRANCAR ────────────────────────────────────────────────
