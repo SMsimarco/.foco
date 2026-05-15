@@ -3223,8 +3223,198 @@ async function renderAreasBreakdown() {
 
 // ── EQUIPO ────────────────────────────────────────────────────
 
-function renderEquipo() {
-  // placeholder — team mode en desarrollo
+async function renderEquipo() {
+  const uid  = currentUser.id;
+  const wrap = document.getElementById('view-equipo');
+  if (!wrap) return;
+
+  wrap.innerHTML = `
+    <div class="tuana-wrap">
+      <div class="tuana-header">
+        <div class="tuana-title">Tu año.</div>
+      </div>
+
+      <div class="tuana-card">
+        <div class="tuana-section-label">Actividad — últimos 6 meses</div>
+        <div class="tuana-heatmap-scroll">
+          <div class="tuana-hm-grid" id="tu-heatmap"></div>
+        </div>
+        <div class="tuana-heatmap-legend">
+          <span>Menos</span>
+          <div class="tuana-legend-dots">
+            <div class="tuana-legend-dot" style="background:#1C1C1F"></div>
+            <div class="tuana-legend-dot" style="background:#312E81"></div>
+            <div class="tuana-legend-dot" style="background:#4338CA"></div>
+            <div class="tuana-legend-dot" style="background:#6366F1"></div>
+            <div class="tuana-legend-dot" style="background:#A5B4FC"></div>
+          </div>
+          <span>Más</span>
+        </div>
+      </div>
+
+      <div class="tuana-highlights">
+        <div class="tuana-hl">
+          <div class="tuana-hl-val" id="tu-total-done">—</div>
+          <div class="tuana-hl-lbl">completadas</div>
+        </div>
+        <div class="tuana-hl">
+          <div class="tuana-hl-val" id="tu-best-week">—</div>
+          <div class="tuana-hl-lbl">mejor semana</div>
+        </div>
+        <div class="tuana-hl">
+          <div class="tuana-hl-val" id="tu-racha">—</div>
+          <div class="tuana-hl-lbl">racha actual</div>
+        </div>
+      </div>
+
+      <div class="tuana-card">
+        <div class="tuana-section-label">Commitment — últimas 12 semanas</div>
+        <svg class="tuana-chart" id="tu-chart" viewBox="0 0 300 60" preserveAspectRatio="none"></svg>
+        <div class="tuana-chart-labels" id="tu-chart-labels"></div>
+      </div>
+
+      <div class="tuana-card">
+        <div class="tuana-section-label">Energía — últimos 30 días</div>
+        <div class="tuana-energy-dots" id="tu-energy"></div>
+      </div>
+
+      <div class="tuana-card">
+        <div class="tuana-section-label">Palabras del año</div>
+        <div class="tuana-palabras" id="tu-palabras"></div>
+      </div>
+    </div>
+  `;
+
+  const since6m  = toISO(new Date(Date.now() - 182 * 86400000));
+  const since30d = toISO(new Date(Date.now() - 30  * 86400000));
+  const since60d = toISO(new Date(Date.now() - 60  * 86400000));
+  const since1y  = toISO(new Date(Date.now() - 365 * 86400000));
+
+  const [evRes, checkinRes, streakRes, digestRes, wordsRes] = await Promise.all([
+    db.from('events').select('date, done').eq('user_id', uid).gte('date', since6m),
+    db.from('daily_checkins').select('date, energy').eq('user_id', uid).gte('date', since30d).order('date', { ascending: true }),
+    db.from('daily_checkins').select('date').eq('user_id', uid).gte('date', since60d).order('date', { ascending: false }),
+    db.from('weekly_digests').select('week_start, commitment_score').eq('user_id', uid).order('week_start', { ascending: false }).limit(12),
+    db.from('weekly_words').select('week_start, word').eq('user_id', uid).gte('week_start', since1y).order('week_start', { ascending: false })
+  ]);
+
+  const events   = evRes.data      || [];
+  const checkins = checkinRes.data || [];
+  const streakData = streakRes.data || [];
+  const digests  = (digestRes.data || []).reverse();
+  const words    = wordsRes.data   || [];
+
+  // ── Heatmap ──────────────────────────────────────────────────
+  const doneByDate = {};
+  events.forEach(e => { if (e.done) doneByDate[e.date] = (doneByDate[e.date] || 0) + 1; });
+
+  const heatmapEl = document.getElementById('tu-heatmap');
+  if (heatmapEl) {
+    const today = new Date(); today.setHours(0,0,0,0);
+    const start = new Date(today);
+    start.setDate(start.getDate() - 181);
+    const dow = start.getDay();
+    start.setDate(start.getDate() - (dow === 0 ? 6 : dow - 1));
+
+    const totalDays = Math.ceil((today - start) / 86400000) + 1;
+    const weeks     = Math.ceil(totalDays / 7);
+    const heatColors = ['#1C1C1F','#312E81','#4338CA','#6366F1','#A5B4FC'];
+    heatmapEl.style.gridTemplateRows = 'repeat(7, 10px)';
+
+    let html = '';
+    for (let w = 0; w < weeks; w++) {
+      for (let d = 0; d < 7; d++) {
+        const cellDate = new Date(start);
+        cellDate.setDate(start.getDate() + w * 7 + d);
+        if (cellDate > today) { html += `<div class="tuana-hm-cell" style="background:transparent"></div>`; continue; }
+        const iso   = toISO(cellDate);
+        const count = doneByDate[iso] || 0;
+        const lvl   = count === 0 ? 0 : count === 1 ? 1 : count === 2 ? 2 : count <= 4 ? 3 : 4;
+        const ring  = iso === toISO(today) ? ' today' : '';
+        html += `<div class="tuana-hm-cell${ring}" style="background:${heatColors[lvl]}" title="${iso}: ${count} completadas"></div>`;
+      }
+    }
+    heatmapEl.innerHTML = html;
+  }
+
+  // ── Highlights ───────────────────────────────────────────────
+  const elDone = document.getElementById('tu-total-done');
+  if (elDone) elDone.textContent = events.filter(e => e.done).length;
+
+  const elBest = document.getElementById('tu-best-week');
+  if (elBest && digests.length) {
+    const best = digests.reduce((m, d) => (d.commitment_score || 0) > (m.commitment_score || 0) ? d : m, digests[0]);
+    elBest.textContent = (best.commitment_score || 0) + '%';
+  }
+
+  const elRacha = document.getElementById('tu-racha');
+  if (elRacha) {
+    const checkinSet = new Set(streakData.map(c => c.date));
+    let streak = 0;
+    const cursor = new Date(); cursor.setHours(0,0,0,0);
+    if (!checkinSet.has(toISO(cursor))) cursor.setDate(cursor.getDate() - 1);
+    while (checkinSet.has(toISO(cursor))) { streak++; cursor.setDate(cursor.getDate() - 1); }
+    elRacha.textContent = streak > 0 ? streak + (streak === 1 ? ' día' : ' días') : '—';
+  }
+
+  // ── Commitment chart ─────────────────────────────────────────
+  const chartEl = document.getElementById('tu-chart');
+  if (chartEl) {
+    if (digests.length > 1) {
+      const W = 300, H = 60, pad = 8;
+      const vals  = digests.map(d => d.commitment_score || 0);
+      const xStep = (W - pad * 2) / (vals.length - 1);
+      const toY   = v => H - pad - (v / 100) * (H - pad * 2);
+      const points = vals.map((v, i) => `${pad + i * xStep},${toY(v)}`).join(' ');
+      const area   = `${pad},${H - pad} ${points} ${pad + (vals.length-1)*xStep},${H - pad}`;
+      chartEl.innerHTML = `
+        <defs>
+          <linearGradient id="cg" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#6366F1" stop-opacity="0.28"/>
+            <stop offset="100%" stop-color="#6366F1" stop-opacity="0"/>
+          </linearGradient>
+        </defs>
+        <polygon points="${area}" fill="url(#cg)"/>
+        <polyline points="${points}" fill="none" stroke="#6366F1" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+        ${vals.map((v, i) => `<circle cx="${pad + i * xStep}" cy="${toY(v)}" r="2.5" fill="#6366F1"/>`).join('')}
+      `;
+
+      const labelsEl = document.getElementById('tu-chart-labels');
+      if (labelsEl) {
+        labelsEl.innerHTML = digests.map((d, i) => {
+          if (i === 0 || i === digests.length - 1 || i === Math.floor(digests.length / 2)) {
+            const dt = new Date(d.week_start + 'T12:00:00');
+            return `<span>${dt.getDate()}/${dt.getMonth()+1}</span>`;
+          }
+          return '<span></span>';
+        }).join('');
+      }
+    } else {
+      chartEl.innerHTML = `<text x="150" y="35" text-anchor="middle" fill="#52525B" font-size="10" font-family="Geist,sans-serif">Completá algunas semanas para ver el gráfico</text>`;
+    }
+  }
+
+  // ── Energía ──────────────────────────────────────────────────
+  const energyEl = document.getElementById('tu-energy');
+  if (energyEl) {
+    if (!checkins.length) {
+      energyEl.innerHTML = '<div class="tuana-empty">Completá el morning brief para ver tu energía.</div>';
+    } else {
+      const EC = ['','#F43F5E','#F59E0B','#71717A','#6366F1','#10B981'];
+      energyEl.innerHTML = checkins.map(c => {
+        const dt = new Date(c.date + 'T12:00:00');
+        return `<div class="tuana-energy-dot" style="background:${EC[c.energy]||'#27272A'}" title="${DAYS[dt.getDay()]} ${dt.getDate()}/${dt.getMonth()+1} — ${c.energy}/5"></div>`;
+      }).join('');
+    }
+  }
+
+  // ── Palabras ─────────────────────────────────────────────────
+  const palabrasEl = document.getElementById('tu-palabras');
+  if (palabrasEl) {
+    palabrasEl.innerHTML = words.length
+      ? words.map(w => `<span class="palabra-chip">${escH(w.word)}</span>`).join('')
+      : '<div class="tuana-empty">Todavía no hay palabras. Agregá una desde Sugerencias.</div>';
+  }
 }
 
 // ── ARRANCAR ────────────────────────────────────────────────
