@@ -1402,58 +1402,114 @@ html, body {
 #view-sugerencias {
   flex: 1;
   overflow-y: auto;
-  padding: 12px 14px;
+  padding: 12px 14px 24px;
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
 
+/* ── HERO ── */
+.sug-hero {
+  background: linear-gradient(135deg, rgba(99,102,241,0.12) 0%, rgba(139,92,246,0.08) 100%);
+  border: 1px solid rgba(99,102,241,0.25);
+  border-radius: 14px;
+  padding: 16px;
+  flex-shrink: 0;
+}
+
+.sug-hero-eyebrow {
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #818CF8;
+  margin-bottom: 12px;
+}
+
+/* ── SECTION LABEL ── */
+.sug-section {
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--text3);
+  padding: 6px 2px 2px;
+  flex-shrink: 0;
+}
+
+/* ── CARDS ── */
 .sug-card {
-  background: var(--bg3);
-  border: 1px solid var(--border);
-  border-radius: 11px;
-  padding: 13px 15px;
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: 12px;
+  padding: 14px 15px;
   flex-shrink: 0;
 }
 
 .sug-card.conflict {
-  border-color: rgba(244,63,94,0.25);
+  border-color: rgba(244,63,94,0.3);
   background: rgba(244,63,94,0.05);
 }
 
-.sug-card.suggestion {
+.sug-card--accent {
   border-color: rgba(99,102,241,0.25);
   background: rgba(99,102,241,0.05);
 }
 
-.sug-card.review {
+.sug-card--purple {
   border-color: rgba(139,92,246,0.25);
   background: rgba(139,92,246,0.05);
 }
 
-.sug-tag {
+.sug-card-label {
   font-size: 9px;
   font-weight: 500;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.07em;
   text-transform: uppercase;
-  margin-bottom: 7px;
+  color: var(--text3);
+  margin-bottom: 8px;
+}
+
+.sug-card-top {
   display: flex;
   align-items: center;
-  gap: 5px;
+  justify-content: space-between;
+  gap: 12px;
 }
 
-.sug-tag-dot {
-  width: 4px;
-  height: 4px;
-  border-radius: 50%;
+.sug-card-top > div { flex: 1; min-width: 0; }
+
+/* ── INLINE BUTTON ── */
+.sug-inline-btn {
+  background: rgba(255,255,255,0.06);
+  border: 1px solid var(--border2);
+  color: var(--text2);
+  border-radius: 8px;
+  padding: 7px 12px;
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
   flex-shrink: 0;
+  transition: border-color 0.15s, color 0.15s;
+  font-family: 'Geist', sans-serif;
 }
 
+.sug-inline-btn:hover { border-color: var(--accent); color: var(--text); }
+
+.sug-inline-btn--purple {
+  border-color: rgba(139,92,246,0.3);
+  color: #A78BFA;
+}
+
+.sug-inline-btn--purple:hover { border-color: #8B5CF6; color: #C4B5FD; }
+
+/* ── TEXT ── */
 .sug-title {
   font-size: 13px;
   color: var(--text);
   font-weight: 500;
-  margin-bottom: 5px;
+  margin-bottom: 4px;
   line-height: 1.35;
 }
 
@@ -1461,30 +1517,31 @@ html, body {
   font-size: 11px;
   color: var(--text2);
   line-height: 1.6;
-  margin-bottom: 10px;
+  margin-bottom: 0;
 }
 
+/* ── STATS ── */
 .sug-stats {
   display: flex;
   gap: 6px;
-  margin-bottom: 10px;
+  margin-bottom: 12px;
 }
 
 .sug-stat {
   flex: 1;
-  background: var(--bg2);
+  background: rgba(0,0,0,0.25);
   border-radius: 8px;
-  padding: 9px 6px;
+  padding: 10px 6px;
   text-align: center;
 }
 
-.sug-stat-n { font-size: 19px; font-weight: 500; color: var(--text); }
+.sug-stat-n { font-size: 22px; font-weight: 500; color: var(--text); line-height: 1; }
 .sug-stat-l {
   font-size: 8px;
-  color: var(--text4);
+  color: rgba(255,255,255,0.3);
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  margin-top: 2px;
+  margin-top: 4px;
 }
 
 .sug-btns { display: flex; gap: 6px; }

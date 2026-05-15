@@ -245,12 +245,9 @@
     <!-- SUGERENCIAS -->
     <div id="view-sugerencias" style="display:none">
 
-      <!-- Resumen -->
-      <div class="sug-card" id="sug-resumen">
-        <div class="sug-tag">
-          <div class="sug-tag-dot" style="background:#6366F1"></div>
-          <span style="color:#6366F1">Resumen semanal</span>
-        </div>
+      <!-- HERO: Resumen semanal -->
+      <div class="sug-hero" id="sug-resumen">
+        <div class="sug-hero-eyebrow">Esta semana</div>
         <div class="sug-stats">
           <div class="sug-stat">
             <div class="sug-stat-n" id="sug-done">—</div>
@@ -268,77 +265,71 @@
         <div class="sug-desc" id="sug-resumen-text">Cargando análisis...</div>
       </div>
 
-      <!-- Conflictos (se generan dinámicamente) -->
-      <div id="sug-conflicts"></div>
+      <!-- SECTION: Hoy -->
+      <div class="sug-section">Hoy</div>
 
-      <!-- Estado del día -->
-      <div class="sug-card" id="sug-estado-card">
-        <div class="sug-tag">
-          <div class="sug-tag-dot" style="background:#06B6D4"></div>
-          <span style="color:#06B6D4">Pulso del día</span>
+      <div class="sug-card sug-action-card" id="sug-estado-card">
+        <div class="sug-card-top">
+          <div>
+            <div class="sug-title" id="sug-estado-title">¿Cómo estás hoy?</div>
+            <div class="sug-desc" id="sug-estado-desc">30 segundos. Tres preguntas.</div>
+          </div>
+          <button class="sug-inline-btn" id="sug-estado-btn" onclick="showEstadoDia()">Registrar →</button>
         </div>
-        <div class="sug-title" id="sug-estado-title">¿Cómo estás hoy?</div>
-        <div class="sug-desc" id="sug-estado-desc">30 segundos. Tres preguntas.</div>
-        <button class="sug-review-cta" id="sug-estado-btn" style="color:#06B6D4;border-color:rgba(6,182,212,0.25);background:rgba(6,182,212,0.08)" onclick="showEstadoDia()">Registrar estado →</button>
       </div>
 
-      <!-- Áreas de vida -->
+      <!-- Conflictos -->
+      <div id="sug-conflicts"></div>
+
+      <!-- SECTION: Tu semana -->
+      <div class="sug-section">Tu semana</div>
+
       <div class="sug-card" id="sug-areas-card">
-        <div class="sug-tag">
-          <div class="sug-tag-dot" style="background:#10B981"></div>
-          <span style="color:#10B981">Áreas de vida</span>
-        </div>
-        <div class="sug-title">Tu semana, desglosada</div>
+        <div class="sug-card-label">Áreas de vida</div>
         <div class="areas-breakdown" id="areas-breakdown"></div>
       </div>
 
-      <!-- Sugerencias IA -->
-      <div class="sug-card suggestion" id="sug-ia-card">
-        <div class="sug-tag">
-          <div class="sug-tag-dot" style="background:#6366F1"></div>
-          <span style="color:#6366F1">Sugerencia de IA</span>
-        </div>
-        <div class="sug-title">El jueves está vacío</div>
-        <div class="sug-desc">
+      <div class="sug-card sug-card--accent" id="sug-ia-card">
+        <div class="sug-card-label" style="color:#818CF8">Sugerencia IA</div>
+        <div class="sug-title" id="sug-ia-title">El jueves está vacío</div>
+        <div class="sug-desc" id="sug-ia-desc">
           Si tenés tareas pendientes, los jueves a la mañana son un buen momento
           para planificar o avanzar con trabajo de foco.
         </div>
       </div>
 
-      <!-- Weekly review -->
-      <div class="sug-card review" id="sug-review">
-        <div class="sug-tag">
-          <div class="sug-tag-dot" style="background:#8B5CF6"></div>
-          <span style="color:#8B5CF6">Revisión semanal</span>
+      <!-- SECTION: Reflexionar -->
+      <div class="sug-section">Reflexionar</div>
+
+      <div class="sug-card sug-card--purple" id="sug-review">
+        <div class="sug-card-top">
+          <div>
+            <div class="sug-title">Revisión semanal</div>
+            <div class="sug-desc" id="sug-review-text">Cerrá la semana con una reflexión corta.</div>
+          </div>
+          <button class="sug-inline-btn sug-inline-btn--purple" onclick="startWeeklyReview()">Comenzar →</button>
         </div>
-        <div class="sug-title">¿Cómo estuvo la semana?</div>
-        <div class="sug-desc" id="sug-review-text">
-          Completá una reflexión corta para cerrar la semana.
-        </div>
-        <button class="sug-review-cta" onclick="startWeeklyReview()">Comenzar revisión →</button>
       </div>
 
-      <!-- Una palabra -->
       <div class="sug-card" id="sug-palabra-card">
-        <div class="sug-tag">
-          <div class="sug-tag-dot" style="background:#A78BFA"></div>
-          <span style="color:#A78BFA">Una palabra</span>
+        <div class="sug-card-top">
+          <div>
+            <div class="sug-title">Una palabra</div>
+            <div class="sug-desc">¿Cómo definís esta semana?</div>
+            <div class="palabras-historia" id="palabras-historia"></div>
+          </div>
+          <button class="sug-inline-btn sug-inline-btn--purple" onclick="showPalabra()">Agregar →</button>
         </div>
-        <div class="sug-title">¿Cómo definís esta semana?</div>
-        <div class="palabras-historia" id="palabras-historia"></div>
-        <button class="sug-review-cta" style="color:#A78BFA;border-color:rgba(167,139,250,0.25);background:rgba(167,139,250,0.08)" onclick="showPalabra()">Agregar →</button>
       </div>
 
-      <!-- Input IA -->
+      <!-- SECTION: Asistente -->
+      <div class="sug-section">Preguntale a tu semana</div>
+
       <div class="sug-card">
-        <div class="sug-tag">
-          <div class="sug-tag-dot" style="background:#52525B"></div>
-          <span style="color:#52525B">Pedile algo a tu semana</span>
-        </div>
         <div class="ai-input-wrap">
           <input class="ai-inp" id="ai-inp" type="text"
             placeholder='"reorganizame la semana, tengo mucho el martes"'/>
-          <button class="ai-send" onclick="handleAI()">Enviar</button>
+          <button class="ai-send" onclick="handleAI()">↑</button>
         </div>
         <div class="ai-response" id="ai-response"></div>
       </div>
