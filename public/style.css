@@ -136,7 +136,7 @@ html, body {
 }
 
 .auth-input:focus { border-color: var(--accent); }
-.auth-input::placeholder { color: #1C1C1F; }
+.auth-input::placeholder { color: #52525B; }
 
 .auth-btn {
   width: 100%;
@@ -561,7 +561,7 @@ html, body {
   -webkit-appearance: none;
 }
 
-.morning-inp::placeholder { color: #1C1C1F; }
+.morning-inp::placeholder { color: #52525B; }
 
 .morning-cta {
   width: 100%;
@@ -1067,7 +1067,7 @@ html, body {
   -webkit-appearance: none;
 }
 
-.ghost-name-inp::placeholder { color: #1C1C1F; }
+.ghost-name-inp::placeholder { color: #52525B; }
 
 .ghost-times {
   display: flex;
@@ -1429,13 +1429,18 @@ html, body {
 /* ── SECTION LABEL ── */
 .sug-section {
   font-size: 10px;
-  font-weight: 500;
-  letter-spacing: 0.07em;
+  font-weight: 600;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--text3);
-  padding: 6px 2px 2px;
+  padding: 8px 2px 2px;
   flex-shrink: 0;
 }
+
+.sug-section--cyan   { color: #22D3EE; }
+.sug-section--green  { color: #34D399; }
+.sug-section--purple { color: #A78BFA; }
+.sug-section--indigo { color: #818CF8; }
 
 /* ── CARDS ── */
 .sug-card {
@@ -1451,14 +1456,24 @@ html, body {
   background: rgba(244,63,94,0.05);
 }
 
-.sug-card--accent {
-  border-color: rgba(99,102,241,0.25);
-  background: rgba(99,102,241,0.05);
+.sug-card--cyan {
+  border-left: 2px solid rgba(34,211,238,0.5);
+  background: rgba(6,182,212,0.04);
+}
+
+.sug-card--green {
+  border-left: 2px solid rgba(52,211,153,0.5);
+  background: rgba(16,185,129,0.04);
 }
 
 .sug-card--purple {
-  border-color: rgba(139,92,246,0.25);
-  background: rgba(139,92,246,0.05);
+  border-left: 2px solid rgba(167,139,250,0.5);
+  background: rgba(139,92,246,0.04);
+}
+
+.sug-card--indigo {
+  border-left: 2px solid rgba(99,102,241,0.5);
+  background: rgba(99,102,241,0.04);
 }
 
 .sug-card-label {
@@ -1597,7 +1612,7 @@ html, body {
   -webkit-appearance: none;
 }
 
-.ai-inp::placeholder { color: #1C1C1F; }
+.ai-inp::placeholder { color: #52525B; }
 
 .ai-send {
   background: var(--accent);
@@ -1797,7 +1812,7 @@ html, body {
 }
 
 .panel-details:focus { border-bottom-color: rgba(255,255,255,0.14); }
-.panel-details::placeholder { color: rgba(255,255,255,0.13); }
+.panel-details::placeholder { color: #52525B; }
 
 .panel-done-main {
   width: 100%;
