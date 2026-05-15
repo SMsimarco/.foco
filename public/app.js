@@ -3238,6 +3238,8 @@ function setTuanaChartPeriod(p) {
 function renderTuanaChart() {
   const chartEl  = document.getElementById('tu-chart');
   const labelsEl = document.getElementById('tu-chart-labels');
+  const bigEl    = document.getElementById('tu-chart-big');
+  const subEl    = document.getElementById('tu-chart-sub');
   if (!chartEl) return;
 
   const done = tuanaEventsCache.filter(e => e.done);
@@ -3268,20 +3270,25 @@ function renderTuanaChart() {
     }
   }
 
-  const W = 300, H = 104;
-  const pT = 26, pB = 4, pL = 16, pR = 16;
+  // Stat number
+  const total = vals.reduce((s, v) => s + v, 0);
+  const subMap = { semana: 'esta semana', mes: 'último mes', año: 'este año' };
+  if (bigEl) bigEl.textContent = total;
+  if (subEl) subEl.textContent = subMap[tuanaChartPeriod];
+
+  const W = 300, H = 72;
+  const pT = 8, pB = 6, pL = 12, pR = 12;
   const cW = W - pL - pR, cH = H - pT - pB;
   const maxVal = Math.max(...vals, 1);
   const n = vals.length;
-  const maxIdx = vals.indexOf(Math.max(...vals));
 
   const pts = vals.map((v, i) => ({
     x: pL + (n < 2 ? cW / 2 : i * cW / (n - 1)),
     y: pT + cH - (v / maxVal) * cH
   }));
 
-  // Catmull-Rom → cubic bezier (control points clamped to chart floor)
   const floorY = pT + cH;
+
   function curvePath(pts) {
     if (pts.length < 2) return `M${pts[0].x},${pts[0].y}`;
     const t = 0.3;
@@ -3299,62 +3306,29 @@ function renderTuanaChart() {
     return d;
   }
 
-  const hasData = vals.some(v => v > 0);
-  if (!hasData) {
-    chartEl.innerHTML = `<text x="150" y="52" text-anchor="middle" fill="#3F3F46" font-size="10" font-family="Geist,sans-serif">Sin datos todavía</text>`;
+  if (!vals.some(v => v > 0)) {
+    chartEl.innerHTML = '';
     if (labelsEl) labelsEl.innerHTML = '';
     return;
   }
 
   const line = curvePath(pts);
-  const area = `${line} L${pts[pts.length-1].x.toFixed(1)},${(pT+cH).toFixed(1)} L${pts[0].x.toFixed(1)},${(pT+cH).toFixed(1)} Z`;
-  const showAll = tuanaChartPeriod !== 'año';
-
-  const grid = [0.25, 0.5, 0.75].map(r => {
-    const y = (pT + cH - r * cH).toFixed(1);
-    return `<line x1="${pL}" y1="${y}" x2="${W-pR}" y2="${y}" stroke="rgba(255,255,255,0.03)" stroke-width="1" stroke-dasharray="3,6"/>`;
-  }).join('');
-
-  const ticks = pts.map(pt =>
-    `<line x1="${pt.x.toFixed(1)}" y1="${(floorY-3).toFixed(1)}" x2="${pt.x.toFixed(1)}" y2="${floorY.toFixed(1)}" stroke="rgba(255,255,255,0.18)" stroke-width="1"/>`
-  ).join('');
-
-  // Peak indicator: vertical dashed line from max point to baseline
-  const peakLine = vals[maxIdx] > 0 ? `
-    <line x1="${pts[maxIdx].x.toFixed(1)}" y1="${pts[maxIdx].y.toFixed(1)}"
-          x2="${pts[maxIdx].x.toFixed(1)}" y2="${floorY.toFixed(1)}"
-          stroke="#818CF8" stroke-width="1" stroke-opacity="0.35" stroke-dasharray="2,3"/>` : '';
-
-  // Floating value labels (no circles)
-  const valueLabels = pts.map((pt, i) => {
-    if (vals[i] === 0) return '';
-    const isMax = i === maxIdx;
-    const show  = showAll || isMax;
-    if (!show) return '';
-    return `<text x="${pt.x.toFixed(1)}" y="${(pt.y - 7).toFixed(1)}" text-anchor="middle"
-      fill="${isMax ? '#C7D2FE' : 'rgba(255,255,255,0.28)'}"
-      font-size="${isMax ? 10 : 8}" font-family="Geist,sans-serif"
-      font-weight="${isMax ? 600 : 400}">${vals[i]}</text>`;
-  }).join('');
+  const area = `${line} L${pts[pts.length-1].x.toFixed(1)},${floorY} L${pts[0].x.toFixed(1)},${floorY} Z`;
 
   chartEl.innerHTML = `
     <defs>
       <linearGradient id="ag" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0%"   stop-color="#6366F1" stop-opacity="0.28"/>
+        <stop offset="0%"   stop-color="#6366F1" stop-opacity="0.3"/>
         <stop offset="100%" stop-color="#6366F1" stop-opacity="0"/>
       </linearGradient>
-      <filter id="lg" x="-20%" y="-80%" width="140%" height="260%">
-        <feGaussianBlur stdDeviation="2.5" result="b"/>
+      <filter id="lg" x="-5%" y="-80%" width="110%" height="260%">
+        <feGaussianBlur stdDeviation="2" result="b"/>
         <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
       </filter>
     </defs>
-    ${grid}
     <path d="${area}" fill="url(#ag)"/>
-    <path d="${line}" fill="none" stroke="#3730A3" stroke-width="6" stroke-opacity="0.25" stroke-linejoin="round" stroke-linecap="round"/>
-    <path d="${line}" fill="none" stroke="#A5B4FC" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round" filter="url(#lg)"/>
-    ${peakLine}
-    ${ticks}
-    ${valueLabels}
+    <path d="${line}" fill="none" stroke="#3730A3" stroke-width="5" stroke-opacity="0.22" stroke-linejoin="round" stroke-linecap="round"/>
+    <path d="${line}" fill="none" stroke="#A5B4FC" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round" filter="url(#lg)"/>
   `;
 
   if (labelsEl) {
@@ -3411,14 +3385,20 @@ async function renderEquipo() {
 
       <div class="tuana-card">
         <div class="tuana-card-top">
-          <div class="tuana-section-label">Tareas completadas</div>
+          <div>
+            <div class="tuana-section-label">Tareas completadas</div>
+            <div class="tuana-chart-stat">
+              <span class="tuana-chart-big" id="tu-chart-big">—</span>
+              <span class="tuana-chart-sub" id="tu-chart-sub"></span>
+            </div>
+          </div>
           <div class="tuana-period-toggle">
-            <button class="tuana-period-btn${tuanaChartPeriod==='semana'?' active':''}" data-p="semana" onclick="setTuanaChartPeriod('semana')">Semana</button>
+            <button class="tuana-period-btn${tuanaChartPeriod==='semana'?' active':''}" data-p="semana" onclick="setTuanaChartPeriod('semana')">Sem</button>
             <button class="tuana-period-btn${tuanaChartPeriod==='mes'?' active':''}" data-p="mes" onclick="setTuanaChartPeriod('mes')">Mes</button>
             <button class="tuana-period-btn${tuanaChartPeriod==='año'?' active':''}" data-p="año" onclick="setTuanaChartPeriod('año')">Año</button>
           </div>
         </div>
-        <svg class="tuana-chart" id="tu-chart" viewBox="0 0 300 104" preserveAspectRatio="none"></svg>
+        <svg class="tuana-chart" id="tu-chart" viewBox="0 0 300 72" preserveAspectRatio="none"></svg>
         <div class="tuana-chart-labels" id="tu-chart-labels"></div>
       </div>
 

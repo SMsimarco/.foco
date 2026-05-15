@@ -3208,9 +3208,27 @@ body.ambient #app::before {
   color: var(--text);
   box-shadow: 0 1px 3px rgba(0,0,0,0.3);
 }
+.tuana-chart-stat {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  margin: 4px 0 2px;
+}
+.tuana-chart-big {
+  font-size: 32px;
+  font-weight: 500;
+  color: var(--text);
+  font-family: 'Geist', sans-serif;
+  line-height: 1;
+}
+.tuana-chart-sub {
+  font-size: 10px;
+  color: var(--text4);
+  font-family: 'Geist', sans-serif;
+}
 .tuana-chart {
   width: 100%;
-  height: 104px;
+  height: 72px;
 }
 .tuana-chart-labels {
   display: flex;
