@@ -3774,8 +3774,7 @@ body.ambient #app::before {
 @media (max-width: 639px) {
   /* header */
   .live-clock { font-size: 11px; padding: 2px 7px; }
-  .week-label { min-width: 90px; font-size: 11px; padding: 3px 8px; }
-  .week-label { min-width: 72px; font-size: 10px; }
+  .week-label { min-width: 72px; font-size: 10px; padding: 3px 8px; }
   #header { padding: 0 10px; gap: 4px; }
 
   /* calendario */
@@ -3783,4 +3782,26 @@ body.ambient #app::before {
   #day-headers { padding-left: 30px; }
   .time-label { font-size: 7px; }
   .time-cell { padding: 3px 3px 0; }
+
+  /* patrones — columnas apiladas verticalmente */
+  .slab-view {
+    flex-direction: column !important;
+    overflow-x: hidden;
+    overflow-y: auto;
+    padding: 12px 12px 32px;
+    gap: 10px;
+  }
+
+  .slab-section {
+    flex: none;
+    width: 100%;
+    max-height: none;
+  }
+
+  #recordatorios-list,
+  #notas-list,
+  #proyectos-simple-list {
+    overflow-y: visible;
+    max-height: none;
+  }
 }
