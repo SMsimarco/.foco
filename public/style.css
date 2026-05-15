@@ -3018,3 +3018,73 @@ body.ambient #app::before {
   transition: opacity 0.15s;
 }
 .lm-save:hover { opacity: 0.82; }
+
+/* ── Proyecto card extras ────────────────────────────────── */
+.pcard-area {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 9px;
+}
+.pcard-area-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.pcard-fecha {
+  font-size: 9px;
+  color: var(--text4);
+}
+.pcard-fecha.overdue { color: var(--danger); font-weight: 600; }
+.pcard-fecha.today   { color: #F59E0B; font-weight: 600; }
+.pcard-fecha.soon    { color: #F59E0B; }
+.pcard-progress-bar {
+  height: 2px;
+  background: rgba(255,255,255,0.07);
+  border-radius: 2px;
+  margin-top: 8px;
+  overflow: hidden;
+}
+.pcard-progress-fill {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 0.3s;
+}
+
+/* ── Área pills en modal ─────────────────────────────────── */
+.lm-areas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.lm-area-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  background: transparent;
+  border: 1px solid var(--border2);
+  border-radius: 20px;
+  color: var(--text3);
+  font-size: 11px;
+  font-family: 'Geist', sans-serif;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+}
+.lm-area-btn:hover { border-color: var(--text3); color: var(--text2); }
+.lm-area-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* ── Progress slider en modal ───────────────────────────── */
+.lm-progreso-slider {
+  width: 100%;
+  accent-color: var(--accent);
+  cursor: pointer;
+  margin-top: 8px;
+  height: 4px;
+}

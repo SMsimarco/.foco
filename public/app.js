@@ -37,12 +37,11 @@ const COLORS = [
   '#818CF8', // índigo claro
 ];
 
-const PIPE_COLS = [
-  { id: 'contactado', label: 'Contactado', color: '#71717A' },
-  { id: 'cotizando',  label: 'Cotizando',  color: '#6366F1' },
-  { id: 'negociando', label: 'Negociando', color: '#F59E0B' },
-  { id: 'cerrado',    label: 'Cerrado',    color: '#10B981' },
-  { id: 'perdido',    label: 'Perdido',    color: '#F43F5E' }
+const PROJ_COLS = [
+  { id: 'idea',      label: 'Idea',      color: '#71717A' },
+  { id: 'en_curso',  label: 'En curso',  color: '#6366F1' },
+  { id: 'bloqueado', label: 'Bloqueado', color: '#F59E0B' },
+  { id: 'hecho',     label: 'Hecho',     color: '#10B981' },
 ];
 
 let currentUser = null;
@@ -57,10 +56,11 @@ let _lastTapDi = -1;
 let notifOn = true;
 let authMode = 'login';
 
-// Pipeline state
-let draggedLeadId = null;
-let leadModalId = null;
-let lmEstado = 'contactado';
+// Proyectos state
+let draggedProjId = null;
+let projModalId = null;
+let pmEstado = 'idea';
+let pmArea = null;
 
 // Onboarding state
 let obSelectedHour = 9;
@@ -982,28 +982,31 @@ function changeMes(dir) {
   renderMes();
 }
 
-// ── PIPELINE ────────────────────────────────────────────────
+// ── PROYECTOS ────────────────────────────────────────────────
 
-async function renderPipeline() {
+async function renderProyectos() {
   const uid = currentUser.id;
-  const { data } = await db.from('leads').select('*').eq('user_id', uid).order('created_at', { ascending: false });
-  const leads = data || [];
+  const { data } = await db.from('proyectos').select('*').eq('user_id', uid).order('created_at', { ascending: false });
+  const proyectos = data || [];
 
-  const activos  = leads.filter(l => !['cerrado','perdido'].includes(l.estado));
-  const cerrados = leads.filter(l => l.estado === 'cerrado');
-  const totalVal = activos.reduce((s, l) => s + (Number(l.precio) || 0), 0);
-  const tasaCierre = leads.length > 0 ? Math.round(cerrados.length / leads.length * 100) : null;
+  const ahora = new Date();
+  const inicioMes = new Date(ahora.getFullYear(), ahora.getMonth(), 1).toISOString();
 
-  document.getElementById('pipe-total').textContent   = '$' + totalVal.toLocaleString('es-AR');
-  document.getElementById('pipe-activos').textContent = activos.length;
-  document.getElementById('pipe-cierre').textContent  = tasaCierre !== null ? tasaCierre + '%' : '—';
+  const enCurso        = proyectos.filter(p => p.estado === 'en_curso');
+  const hechosEstesMes = proyectos.filter(p => p.estado === 'hecho' && p.updated_at >= inicioMes);
+  const avgProgreso    = enCurso.length > 0
+    ? Math.round(enCurso.reduce((s, p) => s + (p.progreso || 0), 0) / enCurso.length)
+    : null;
+
+  document.getElementById('pipe-total').textContent   = enCurso.length;
+  document.getElementById('pipe-activos').textContent = hechosEstesMes.length;
+  document.getElementById('pipe-cierre').textContent  = avgProgreso !== null ? avgProgreso + '%' : '—';
 
   const board = document.getElementById('kanban-board');
   board.innerHTML = '';
 
-  PIPE_COLS.forEach(col => {
-    const colLeads = leads.filter(l => l.estado === col.id);
-    const colSum   = colLeads.reduce((s, l) => s + (Number(l.precio) || 0), 0);
+  PROJ_COLS.forEach(col => {
+    const colProys = proyectos.filter(p => p.estado === col.id);
 
     const el = document.createElement('div');
     el.className = 'kanban-col';
@@ -1014,21 +1017,20 @@ async function renderPipeline() {
     el.addEventListener('drop', e => {
       e.preventDefault();
       el.classList.remove('drag-over');
-      if (draggedLeadId) moveLeadTo(draggedLeadId, col.id);
+      if (draggedProjId) moverProyecto(draggedProjId, col.id);
     });
 
     el.innerHTML = `
       <div class="kanban-col-hd">
         <span class="kcol-dot" style="background:${col.color}"></span>
         <span class="kcol-title">${col.label}</span>
-        <span class="kcol-count">${colLeads.length}</span>
-        ${colSum > 0 ? `<span class="kcol-sum">$${colSum.toLocaleString('es-AR')}</span>` : ''}
-        <button class="kcol-add" onclick="openLeadModal(null,'${col.id}')">+</button>
+        <span class="kcol-count">${colProys.length}</span>
+        <button class="kcol-add" onclick="openProjModal(null,'${col.id}')">+</button>
       </div>
       <div class="kanban-cards">
-        ${colLeads.length === 0
-          ? '<div class="kcard-empty">Arrastrá un lead aquí</div>'
-          : colLeads.map(l => leadCardHTML(l, col.color)).join('')}
+        ${colProys.length === 0
+          ? '<div class="kcard-empty">Arrastrá un proyecto aquí</div>'
+          : colProys.map(p => proyectoCardHTML(p, col.color)).join('')}
       </div>
     `;
 
@@ -1037,33 +1039,48 @@ async function renderPipeline() {
 
   board.querySelectorAll('.lead-card').forEach(card => {
     card.addEventListener('dragstart', () => {
-      draggedLeadId = card.dataset.id;
+      draggedProjId = card.dataset.id;
       setTimeout(() => card.classList.add('dragging'), 0);
     });
     card.addEventListener('dragend', () => {
-      draggedLeadId = null;
+      draggedProjId = null;
       card.classList.remove('dragging');
     });
   });
 }
 
-function leadCardHTML(lead, color) {
-  const dias = Math.floor((Date.now() - new Date(lead.updated_at).getTime()) / 86400000);
-  const urgent = dias >= 5 && !['cerrado','perdido'].includes(lead.estado);
-  const diasLabel = dias === 0 ? 'hoy' : dias === 1 ? 'ayer' : `hace ${dias}d`;
+function proyectoCardHTML(p, color) {
+  const area = p.area && AREAS[p.area] ? AREAS[p.area] : null;
+  const hoy = new Date(); hoy.setHours(0,0,0,0);
+  let fechaStr = '';
+  if (p.fecha_limite) {
+    const fl = new Date(p.fecha_limite + 'T00:00:00');
+    const diff = Math.ceil((fl - hoy) / 86400000);
+    if (diff < 0)        fechaStr = `<span class="pcard-fecha overdue">Vencido</span>`;
+    else if (diff === 0) fechaStr = `<span class="pcard-fecha today">Hoy</span>`;
+    else if (diff <= 3)  fechaStr = `<span class="pcard-fecha soon">${diff}d</span>`;
+    else                 fechaStr = `<span class="pcard-fecha">${fl.getDate()}/${fl.getMonth()+1}</span>`;
+  }
+  const progreso = p.progreso || 0;
   return `
-    <div class="lead-card${urgent ? ' lead-card--urgent' : ''}"
-         data-id="${escH(lead.id)}"
+    <div class="lead-card"
+         data-id="${escH(p.id)}"
          draggable="true"
          style="--cc:${color}"
-         onclick="openLeadModal('${escH(lead.id)}')">
-      <div class="lcard-name">${escH(lead.nombre)}</div>
-      ${lead.tipo ? `<div class="lcard-tipo">${escH(lead.tipo)}</div>` : ''}
-      ${lead.precio > 0 ? `<div class="lcard-precio">$${Number(lead.precio).toLocaleString('es-AR')}</div>` : ''}
+         onclick="openProjModal('${escH(p.id)}')">
+      <div class="lcard-name">${escH(p.nombre)}</div>
+      ${p.descripcion ? `<div class="lcard-tipo">${escH(p.descripcion)}</div>` : ''}
       <div class="lcard-foot">
-        <span class="lcard-origen">${escH(lead.origen || '')}</span>
-        <span class="lcard-dias${urgent ? ' urgent' : ''}">${diasLabel}</span>
+        ${area
+          ? `<span class="pcard-area"><span class="pcard-area-dot" style="background:${area.color}"></span><span style="color:${area.color}">${area.label}</span></span>`
+          : '<span></span>'}
+        ${fechaStr}
       </div>
+      ${progreso > 0 ? `
+        <div class="pcard-progress-bar">
+          <div class="pcard-progress-fill" style="width:${progreso}%;background:${color}"></div>
+        </div>
+      ` : ''}
     </div>
   `;
 }
@@ -1072,99 +1089,121 @@ function escH(s) {
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
-async function moveLeadTo(id, estado) {
-  await db.from('leads')
+async function moverProyecto(id, estado) {
+  await db.from('proyectos')
     .update({ estado, updated_at: new Date().toISOString() })
     .eq('id', id).eq('user_id', currentUser.id);
-  renderPipeline();
+  renderProyectos();
 }
 
-async function openLeadModal(id, estadoDefault) {
-  leadModalId = id || null;
-  lmEstado = estadoDefault || 'contactado';
+async function openProjModal(id, estadoDefault) {
+  projModalId = id || null;
+  pmEstado = estadoDefault || 'idea';
+  pmArea = null;
 
   const title  = document.getElementById('lm-title');
   const delBtn = document.getElementById('lm-del');
 
   if (id) {
-    const { data } = await db.from('leads').select('*').eq('id', id).single();
+    const { data } = await db.from('proyectos').select('*').eq('id', id).single();
     if (!data) return;
-    document.getElementById('lm-nombre').value = data.nombre || '';
-    document.getElementById('lm-tipo').value   = data.tipo   || '';
-    document.getElementById('lm-precio').value = data.precio || '';
-    document.getElementById('lm-origen').value = data.origen || 'fiverr';
-    document.getElementById('lm-notas').value  = data.notas  || '';
-    lmEstado = data.estado || 'contactado';
-    title.textContent = 'Editar lead';
+    document.getElementById('lm-nombre').value              = data.nombre      || '';
+    document.getElementById('lm-desc').value                = data.descripcion || '';
+    document.getElementById('lm-fecha').value               = data.fecha_limite || '';
+    document.getElementById('lm-progreso').value            = data.progreso || 0;
+    document.getElementById('lm-progreso-val').textContent  = (data.progreso || 0) + '%';
+    document.getElementById('lm-notas').value               = data.notas || '';
+    pmEstado = data.estado || 'idea';
+    pmArea   = data.area   || null;
+    title.textContent    = 'Editar proyecto';
     delBtn.style.display = 'block';
   } else {
-    document.getElementById('lm-nombre').value = '';
-    document.getElementById('lm-tipo').value   = '';
-    document.getElementById('lm-precio').value = '';
-    document.getElementById('lm-origen').value = 'fiverr';
-    document.getElementById('lm-notas').value  = '';
-    title.textContent = 'Nuevo lead';
+    document.getElementById('lm-nombre').value             = '';
+    document.getElementById('lm-desc').value               = '';
+    document.getElementById('lm-fecha').value              = '';
+    document.getElementById('lm-progreso').value           = 0;
+    document.getElementById('lm-progreso-val').textContent = '0%';
+    document.getElementById('lm-notas').value              = '';
+    title.textContent    = 'Nuevo proyecto';
     delBtn.style.display = 'none';
   }
 
-  renderLmEstados();
+  renderPmEstados();
+  renderPmAreas();
 
   document.getElementById('lead-backdrop').style.display = 'block';
   document.getElementById('lead-modal').style.display    = 'flex';
   setTimeout(() => document.getElementById('lm-nombre').focus(), 60);
 }
 
-function renderLmEstados() {
-  document.getElementById('lm-estados').innerHTML = PIPE_COLS.map(col => `
-    <button class="lm-estado-btn${lmEstado === col.id ? ' active' : ''}"
-            style="${lmEstado === col.id ? `background:${col.color};border-color:${col.color};color:#fff` : ''}"
-            onclick="selectLmEstado('${col.id}')">
+function renderPmEstados() {
+  document.getElementById('lm-estados').innerHTML = PROJ_COLS.map(col => `
+    <button class="lm-estado-btn${pmEstado === col.id ? ' active' : ''}"
+            style="${pmEstado === col.id ? `background:${col.color};border-color:${col.color};color:#fff` : ''}"
+            onclick="selectPmEstado('${col.id}')">
       ${col.label}
     </button>
   `).join('');
 }
 
-function selectLmEstado(id) {
-  lmEstado = id;
-  renderLmEstados();
+function selectPmEstado(id) {
+  pmEstado = id;
+  renderPmEstados();
 }
 
-function closeLeadModal() {
+function renderPmAreas() {
+  document.getElementById('lm-areas').innerHTML = Object.entries(AREAS).map(([key, a]) => `
+    <button class="lm-area-btn${pmArea === key ? ' active' : ''}"
+            style="${pmArea === key ? `border-color:${a.color};color:${a.color}` : ''}"
+            onclick="selectPmArea('${key}')">
+      <span class="lm-area-dot" style="background:${a.color}"></span>
+      ${a.label}
+    </button>
+  `).join('');
+}
+
+function selectPmArea(key) {
+  pmArea = pmArea === key ? null : key;
+  renderPmAreas();
+}
+
+function closeProjModal() {
   document.getElementById('lead-backdrop').style.display = 'none';
   document.getElementById('lead-modal').style.display    = 'none';
-  leadModalId = null;
+  projModalId = null;
 }
 
-async function saveLeadModal() {
+async function saveProjModal() {
   const nombre = document.getElementById('lm-nombre').value.trim();
   if (!nombre) { document.getElementById('lm-nombre').focus(); return; }
 
   const payload = {
     nombre,
-    tipo:       document.getElementById('lm-tipo').value.trim(),
-    precio:     parseFloat(document.getElementById('lm-precio').value) || 0,
-    origen:     document.getElementById('lm-origen').value,
-    notas:      document.getElementById('lm-notas').value.trim(),
-    estado:     lmEstado,
-    updated_at: new Date().toISOString()
+    descripcion:   document.getElementById('lm-desc').value.trim()    || null,
+    fecha_limite:  document.getElementById('lm-fecha').value           || null,
+    progreso:      parseInt(document.getElementById('lm-progreso').value) || 0,
+    area:          pmArea  || null,
+    notas:         document.getElementById('lm-notas').value.trim()   || null,
+    estado:        pmEstado,
+    updated_at:    new Date().toISOString()
   };
 
-  if (leadModalId) {
-    await db.from('leads').update(payload).eq('id', leadModalId).eq('user_id', currentUser.id);
+  if (projModalId) {
+    await db.from('proyectos').update(payload).eq('id', projModalId).eq('user_id', currentUser.id);
   } else {
-    await db.from('leads').insert({ ...payload, user_id: currentUser.id });
+    await db.from('proyectos').insert({ ...payload, user_id: currentUser.id });
   }
 
-  closeLeadModal();
-  renderPipeline();
+  closeProjModal();
+  renderProyectos();
 }
 
-async function deleteLeadModal() {
-  if (!leadModalId) return;
-  if (!confirm('¿Eliminar este lead?')) return;
-  await db.from('leads').delete().eq('id', leadModalId).eq('user_id', currentUser.id);
-  closeLeadModal();
-  renderPipeline();
+async function deleteProjModal() {
+  if (!projModalId) return;
+  if (!confirm('¿Eliminar este proyecto?')) return;
+  await db.from('proyectos').delete().eq('id', projModalId).eq('user_id', currentUser.id);
+  closeProjModal();
+  renderProyectos();
 }
 
 // ── RENDER PATRONES (legacy stub) ───────────────────────────
@@ -1500,7 +1539,7 @@ async function setView(view) {
   } else if (view === 'mes') {
     await renderMes();
   } else if (view === 'patrones') {
-    await renderPipeline();
+    await renderProyectos();
   } else if (view === 'sugerencias') {
     await renderSugerencias();
   } else if (view === 'equipo') {
@@ -2334,7 +2373,7 @@ const CMD_ACTIONS = [
   { label: 'Semana siguiente',  icon: '›',  hint: '→', fn: () => changeWeek(1) },
   { label: 'Vista Semana',      icon: '▦',  hint: '',  fn: () => setView('semana') },
   { label: 'Vista Mes',         icon: '◉',  hint: '',  fn: () => setView('mes') },
-  { label: 'Vista Patrones',    icon: '◈',  hint: '',  fn: () => setView('patrones') },
+  { label: 'Vista Proyectos',   icon: '◈',  hint: '',  fn: () => setView('patrones') },
   { label: 'Vista Sugerencias', icon: '✦',  hint: '',  fn: () => setView('sugerencias') },
   { label: 'Vista Equipo',      icon: '◎',  hint: '',  fn: () => setView('equipo') },
   { label: 'Revisión semanal',  icon: '✳',  hint: '',  fn: () => { closeCmd(); startWeeklyReview(); } },

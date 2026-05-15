@@ -194,21 +194,21 @@
       <div class="pipe-top">
         <div class="pipe-stats">
           <div class="pipe-stat">
-            <div class="pipe-stat-val" id="pipe-total">$0</div>
-            <div class="pipe-stat-lbl">pipeline activo</div>
+            <div class="pipe-stat-val" id="pipe-total">0</div>
+            <div class="pipe-stat-lbl">en curso</div>
           </div>
           <div class="pipe-stat">
             <div class="pipe-stat-val" id="pipe-activos">0</div>
-            <div class="pipe-stat-lbl">leads abiertos</div>
+            <div class="pipe-stat-lbl">completados este mes</div>
           </div>
           <div class="pipe-stat">
             <div class="pipe-stat-val" id="pipe-cierre">—</div>
-            <div class="pipe-stat-lbl">tasa de cierre</div>
+            <div class="pipe-stat-lbl">progreso promedio</div>
           </div>
         </div>
-        <button class="pipe-new-btn" onclick="openLeadModal(null)">
+        <button class="pipe-new-btn" onclick="openProjModal(null)">
           <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M6.5 1v11M1 6.5h11" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-          Lead
+          Proyecto
         </button>
       </div>
       <div class="kanban-board" id="kanban-board"></div>
@@ -377,7 +377,7 @@
           <rect x="13" y="1" width="4" height="6" rx="1.5" stroke="currentColor" stroke-width="1.5"/>
         </svg>
       </span>
-      <span>Pipeline</span>
+      <span>Proyectos</span>
     </button>
     <button class="nav-btn" id="nav-sugerencias" onclick="setView('sugerencias')">
       <span class="nav-icon">
@@ -402,34 +402,34 @@
 
 
   <!-- LEAD MODAL -->
-  <div id="lead-backdrop" class="lead-backdrop" onclick="closeLeadModal()" style="display:none"></div>
+  <div id="lead-backdrop" class="lead-backdrop" onclick="closeProjModal()" style="display:none"></div>
   <div id="lead-modal" class="lead-modal" style="display:none">
     <div class="lm-head">
-      <div class="lm-title" id="lm-title">Nuevo lead</div>
-      <button class="lm-close" onclick="closeLeadModal()">×</button>
+      <div class="lm-title" id="lm-title">Nuevo proyecto</div>
+      <button class="lm-close" onclick="closeProjModal()">×</button>
     </div>
     <div class="lm-body">
       <div class="lm-field">
-        <label class="lm-lbl">Nombre / empresa</label>
-        <input class="lm-inp" id="lm-nombre" type="text" placeholder="ruldhs, Carlos Santos..."/>
+        <label class="lm-lbl">Nombre</label>
+        <input class="lm-inp" id="lm-nombre" type="text" placeholder="Mi proyecto..."/>
       </div>
       <div class="lm-field">
-        <label class="lm-lbl">Tipo de proyecto</label>
-        <input class="lm-inp" id="lm-tipo" type="text" placeholder="Agente email, Chatbot WhatsApp..."/>
+        <label class="lm-lbl">Descripción</label>
+        <input class="lm-inp" id="lm-desc" type="text" placeholder="¿De qué se trata?"/>
+      </div>
+      <div class="lm-field">
+        <label class="lm-lbl">Área</label>
+        <div class="lm-areas" id="lm-areas"></div>
       </div>
       <div class="lm-row2">
         <div class="lm-field">
-          <label class="lm-lbl">Precio (USD)</label>
-          <input class="lm-inp" id="lm-precio" type="number" min="0" placeholder="500"/>
+          <label class="lm-lbl">Fecha límite</label>
+          <input class="lm-inp" id="lm-fecha" type="date"/>
         </div>
         <div class="lm-field">
-          <label class="lm-lbl">Origen</label>
-          <select class="lm-inp lm-sel" id="lm-origen">
-            <option value="fiverr">Fiverr</option>
-            <option value="directo">Directo</option>
-            <option value="referido">Referido</option>
-            <option value="velar">Velar Agency</option>
-          </select>
+          <label class="lm-lbl">Progreso: <span id="lm-progreso-val">0%</span></label>
+          <input class="lm-progreso-slider" id="lm-progreso" type="range" min="0" max="100" value="0"
+                 oninput="document.getElementById('lm-progreso-val').textContent = this.value + '%'"/>
         </div>
       </div>
       <div class="lm-field">
@@ -442,10 +442,10 @@
       </div>
     </div>
     <div class="lm-foot">
-      <button class="lm-del" id="lm-del" onclick="deleteLeadModal()" style="display:none">Eliminar</button>
+      <button class="lm-del" id="lm-del" onclick="deleteProjModal()" style="display:none">Eliminar</button>
       <div style="flex:1"></div>
-      <button class="lm-cancel" onclick="closeLeadModal()">Cancelar</button>
-      <button class="lm-save" onclick="saveLeadModal()">Guardar</button>
+      <button class="lm-cancel" onclick="closeProjModal()">Cancelar</button>
+      <button class="lm-save" onclick="saveProjModal()">Guardar</button>
     </div>
   </div>
 
