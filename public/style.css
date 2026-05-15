@@ -3287,3 +3287,10 @@ body.ambient #app::before {
   font-family: 'Geist', sans-serif;
   line-height: 1.5;
 }
+
+@media (max-width: 639px) {
+  #time-gutter { width: 30px; }
+  #day-headers { padding-left: 30px; }
+  .time-label { font-size: 7px; }
+  .time-cell { padding: 3px 3px 0; }
+}

@@ -122,6 +122,17 @@ function getWeekDates(offset = 0) {
   });
 }
 
+function isMobile() { return window.innerWidth < 640; }
+
+function getVisibleDays() {
+  if (isMobile()) {
+    const base = new Date(); base.setHours(0,0,0,0);
+    base.setDate(base.getDate() + weekOffset * 3);
+    return [0, 1, 2].map(i => { const d = new Date(base); d.setDate(base.getDate() + i); return d; });
+  }
+  return getWeekDates(weekOffset);
+}
+
 function toISO(date) {
   return date.toISOString().split('T')[0];
 }
@@ -380,9 +391,9 @@ async function showApp() {
 
 async function loadWeek() {
   if (!currentUser) return;
-  const week = getWeekDates(weekOffset);
+  const week = getVisibleDays();
   const start = toISO(week[0]);
-  const end = toISO(week[6]);
+  const end = toISO(week[week.length - 1]);
 
   const { data, error } = await db
     .from('events')
@@ -663,11 +674,11 @@ function scrollToCurrentTime() {
 }
 
 function renderSemana() {
-  const week = getWeekDates(weekOffset);
+  const week = getVisibleDays();
 
   const fmt = d => `${d.getDate()}/${d.getMonth() + 1}`;
   document.getElementById('week-label').textContent =
-    `${fmt(week[0])} — ${fmt(week[6])}`;
+    `${fmt(week[0])} — ${fmt(week[week.length - 1])}`;
 
   renderDayHeaders(week);
   renderTimeGutter();
@@ -1758,6 +1769,18 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       e.stopPropagation();
     });
+  }
+});
+
+// re-render semana si cambia orientación del dispositivo
+let _prevMobile = isMobile();
+window.addEventListener('resize', () => {
+  const nowMobile = isMobile();
+  if (nowMobile !== _prevMobile) {
+    _prevMobile = nowMobile;
+    if (document.getElementById('view-semana')?.style.display !== 'none') {
+      loadWeek().then(() => { saveScroll(); renderSemana(); restoreScroll(); });
+    }
   }
 });
 
