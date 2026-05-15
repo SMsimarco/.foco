@@ -1686,6 +1686,7 @@ async function setView(view) {
   } else if (view === 'patrones') {
     await renderProyectos();
   } else if (view === 'sugerencias') {
+    await loadWeek();
     await renderSugerencias();
   } else if (view === 'equipo') {
     renderEquipo();
@@ -3409,8 +3410,8 @@ async function renderAreasBreakdown() {
 
   const counts = {};
   allEvs.forEach(ev => {
-    const a = ev.area || 'trabajo';
-    counts[a] = (counts[a] || 0) + 1;
+    if (!ev.area) return;
+    counts[ev.area] = (counts[ev.area] || 0) + 1;
   });
   const total = allEvs.length;
 
