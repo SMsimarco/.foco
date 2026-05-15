@@ -209,20 +209,26 @@ html, body {
   color: var(--text3);
   font-size: 16px;
   cursor: pointer;
-  padding: 4px 8px;
-  border-radius: 6px;
+  padding: 4px 10px;
+  border-radius: 8px;
   transition: all 0.12s;
   line-height: 1;
 }
 
-.week-nav-btn:hover { color: var(--text); background: var(--border); }
+.week-nav-btn:hover { color: var(--text); background: var(--border2); }
 
 .week-label {
-  font-size: 11px;
-  color: var(--text2);
-  min-width: 112px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text);
+  min-width: 120px;
   text-align: center;
   font-variant-numeric: tabular-nums;
+  letter-spacing: 0.03em;
+  background: var(--border);
+  border: 1px solid var(--border2);
+  border-radius: 8px;
+  padding: 4px 10px;
 }
 
 .header-right {
@@ -3498,6 +3504,7 @@ body.ambient #app::before {
 @media (max-width: 639px) {
   /* header */
   .live-clock { font-size: 11px; padding: 2px 7px; }
+  .week-label { min-width: 90px; font-size: 11px; padding: 3px 8px; }
   .week-label { min-width: 72px; font-size: 10px; }
   #header { padding: 0 10px; gap: 4px; }
 
