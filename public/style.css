@@ -16,8 +16,9 @@
   --text2:   #8E9196;
   --text3:   #52555A;
   --text4:   #34373C;
-  --accent:  #E4E4E7;
-  --accent2: #7D827A;
+  --accent:    #E4E4E7;
+  --accent-ui: #8AA3B5; /* azul pizarra — solo estados interactivos/activos */
+  --accent2:   #7D827A;
   --success: #A7F3D0;
   --warning: #FDE68A;
   --danger:  #FECDD3;
@@ -133,7 +134,7 @@ html, body {
   transition: border-color 0.2s;
 }
 
-.auth-input:focus { border-color: var(--accent); }
+.auth-input:focus { border-color: var(--accent-ui); }
 .auth-input::placeholder { color: #52525B; }
 
 .auth-btn {
@@ -352,8 +353,8 @@ html, body {
   justify-content: space-between;
 }
 
-.time-option:hover { border-color: var(--accent); color: var(--text); }
-.time-option.selected { border-color: var(--accent); background: rgba(228,228,231,.1); color: var(--text); }
+.time-option:hover { border-color: var(--accent-ui); color: var(--text); }
+.time-option.selected { border-color: var(--accent-ui); background: rgba(138,163,181,0.08); color: var(--text); }
 
 .onboarding-dots {
   display: flex;
@@ -370,7 +371,7 @@ html, body {
   transition: background .2s;
 }
 
-.onboarding-dot.active { background: var(--accent); }
+.onboarding-dot.active { background: var(--accent-ui); }
 
 /* ── WEEKLY DIGEST ── */
 .digest-overlay {
@@ -640,7 +641,7 @@ html, body {
 }
 
 .input-pill:focus-within {
-  border-color: var(--accent);
+  border-color: var(--accent-ui);
 }
 
 .input-pill .icon {
@@ -717,9 +718,9 @@ html, body {
   to   { opacity: 1; transform: scale(1) translateY(0); }
 }
 
-.chip-date { background: rgba(228,228,231,0.06); color: var(--text2); border: 1px solid var(--border2); }
-.chip-time { background: rgba(228,228,231,0.04); color: var(--text3); border: 1px solid var(--border); }
-.chip-name { background: rgba(167,243,208,0.08); color: #A7F3D0; border: 1px solid rgba(167,243,208,0.2); }
+.chip-date { background: rgba(138,163,181,0.1);  color: #9EB8CC; border: 1px solid rgba(138,163,181,0.25); }
+.chip-time { background: rgba(253,230,138,0.06); color: #FDE68A; border: 1px solid rgba(253,230,138,0.18); }
+.chip-name { background: rgba(167,243,208,0.06); color: #A7F3D0; border: 1px solid rgba(167,243,208,0.15); }
 .chip-warn { background: rgba(254,205,211,0.06); color: var(--danger); border: 1px solid rgba(254,205,211,0.15); }
 .chip-hint { font-size: 10px; color: var(--text4); margin-left: auto; }
 
@@ -792,7 +793,7 @@ html, body {
   width: 4px;
   height: 4px;
   border-radius: 50%;
-  background: var(--accent);
+  background: var(--accent-ui);
   margin-top: 1px;
 }
 
@@ -841,7 +842,7 @@ html, body {
 }
 
 .day-col:last-child { border-right: none; }
-.day-col.today-col { background: rgba(228,228,231,0.015); }
+.day-col.today-col { background: rgba(138,163,181,0.03); }
 
 .hour-line {
   position: absolute;
@@ -976,7 +977,7 @@ html, body {
 
 @keyframes ghostPulse {
   0%, 100% { border-color: var(--border2); }
-  50%       { border-color: var(--accent); }
+  50%       { border-color: var(--accent-ui); }
 }
 
 @keyframes ghostEnter {
@@ -1614,9 +1615,8 @@ html, body {
   transform: translateX(-50%);
   width: 20px;
   height: 2px;
-  background: var(--accent);
+  background: var(--accent-ui);
   border-radius: 1px;
-  box-shadow: 0 0 6px rgba(228,228,231,0.6);
 }
 
 .nav-icon {
@@ -1925,11 +1925,15 @@ html, body {
   color: var(--text);
   font-variant-numeric: tabular-nums;
   letter-spacing: 0.06em;
-  background: color-mix(in srgb, var(--accent) 10%, transparent);
-  border: 1px solid color-mix(in srgb, var(--accent) 20%, transparent);
-  border-radius: 8px;
+  background: rgba(138,163,181,0.08);
+  border: 1px solid rgba(138,163,181,0.22);
+  border-radius: 6px;
   padding: 3px 9px;
 }
+
+/* ── SVG accent-ui overrides ── */
+#commitment-arc { stroke: var(--accent-ui); }
+#panel-ring     { stroke: var(--accent-ui); }
 
 /* ── PARTICLES CANVAS ── */
 .particles-canvas {
@@ -1957,7 +1961,7 @@ html, body {
 }
 
 /* ── DRAG OVER COLUMN ── */
-.day-col.drag-over { background: rgba(228,228,231,0.06); }
+.day-col.drag-over { background: rgba(138,163,181,0.06); }
 
 /* ── COMMAND PALETTE ── */
 .cmd-overlay {
@@ -2544,9 +2548,9 @@ body.ambient #app::before {
 }
 .recur-pill:hover { border-color: var(--text3); color: var(--text2); }
 .recur-pill.active {
-  background: color-mix(in srgb, var(--accent) 15%, transparent);
-  border-color: var(--accent);
-  color: var(--accent);
+  background: rgba(138,163,181,0.12);
+  border-color: var(--accent-ui);
+  color: var(--accent-ui);
 }
 
 /* Indicador ↻ en eventos recurrentes */
