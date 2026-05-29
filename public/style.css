@@ -627,15 +627,17 @@ html, body {
   display: flex;
   align-items: center;
   gap: 10px;
-  background: transparent;
-  border: none;
-  border-radius: 0;
-  padding: 10px 0;
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: 6px;
+  padding: 10px 14px;
+  margin: 8px 0;
   transition: border-color 0.15s;
   cursor: text;
   position: relative;
 }
 
+.input-pill:focus-within { border-color: var(--accent-ui); }
 .input-pill:focus-within .icon { color: var(--accent-ui); }
 
 .input-pill .icon {
@@ -889,23 +891,32 @@ html, body {
   overflow: hidden;
   z-index: 2;
   min-height: 20px;
-  background: var(--bg3);
+  background: linear-gradient(105deg,
+    var(--event-color-30, rgba(138,163,181,0.18)) 0%,
+    var(--event-color-15, rgba(138,163,181,0.06)) 55%,
+    transparent 100%);
   border-left: 3px solid var(--event-color, var(--accent-ui));
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);
   transition: transform 0.15s cubic-bezier(.4,0,.2,1), opacity 0.15s ease;
   animation: eventEnter 0.25s cubic-bezier(.34,1.56,.64,1);
 }
 
 .event-block:hover {
   transform: translateX(1px);
-  background: var(--surface);
+  background: linear-gradient(105deg,
+    var(--event-color-30, rgba(138,163,181,0.30)) 0%,
+    var(--event-color-15, rgba(138,163,181,0.12)) 55%,
+    transparent 100%);
   z-index: 3;
 }
 
 .event-block:hover .ev-del { opacity: 1; }
 .event-block.done {
-  opacity: 0.4;
-  background: transparent;
-  border-left-color: var(--border2);
+  opacity: 0.38;
+  background: linear-gradient(105deg,
+    var(--event-color-30, rgba(138,163,181,0.12)) 0%,
+    transparent 55%);
+  border-left-color: var(--event-color, var(--border2));
 }
 .event-block.done .ev-title { text-decoration: none; }
 .event-block.conflict { outline: 1px solid rgba(254,205,211,0.5); outline-offset: -1px; }
