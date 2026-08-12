@@ -9,19 +9,19 @@
   <link rel="stylesheet" href="/style.css"/>
   <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500&family=Instrument+Serif:ital@1&display=swap" rel="stylesheet"/>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <script src="https://accounts.google.com/gsi/client" id="google-identity-script" async defer></script>
 </head>
 <body>
 
 <!-- AUTH SCREEN -->
 <div id="auth-screen" class="auth-screen">
-  <div class="auth-box">
+  <div class="auth-box" id="auth-box-form">
     <div class="auth-logo">foco.</div>
     <p class="auth-tagline">Organizá tu semana.</p>
 
-    <div class="auth-tabs">
-      <button class="auth-tab active" id="tab-login" onclick="switchTab('login')">Entrar</button>
-      <button class="auth-tab" id="tab-register" onclick="switchTab('register')">Registrarme</button>
-    </div>
+    <div id="google-btn" class="auth-google"></div>
+
+    <div class="auth-divider"><span></span>o con email<span></span></div>
 
     <div id="field-name" style="display:none">
       <input id="auth-name" type="text" class="auth-input" placeholder="Tu nombre"/>
@@ -31,6 +31,14 @@
 
     <button class="auth-btn" id="auth-btn" onclick="handleAuth()">Entrar</button>
     <div class="auth-error" id="auth-error"></div>
+
+    <div class="auth-switch" id="auth-switch" onclick="switchTab('register')">¿No tenés cuenta? <span>Registrate</span></div>
+  </div>
+
+  <div class="auth-box" id="auth-box-confirm" style="display:none">
+    <div class="auth-logo">foco.</div>
+    <p class="auth-confirm-text">📩 Te mandamos un email para confirmar la cuenta. Confirmalo y después entrá con tu email y contraseña.</p>
+    <button class="auth-btn" onclick="backToLogin()">Volver a entrar</button>
   </div>
 </div>
 

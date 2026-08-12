@@ -273,13 +273,24 @@ function startLiveClock() {
 
 // ── AUTH ────────────────────────────────────────────────────
 
+const GOOGLE_CLIENT_ID = 'REEMPLAZAR_CON_TU_CLIENT_ID.apps.googleusercontent.com';
+
 function switchTab(mode) {
   authMode = mode;
-  document.getElementById('tab-login').classList.toggle('active', mode === 'login');
-  document.getElementById('tab-register').classList.toggle('active', mode === 'register');
   document.getElementById('field-name').style.display = mode === 'register' ? 'block' : 'none';
   document.getElementById('auth-btn').textContent = mode === 'login' ? 'Entrar' : 'Crear cuenta';
   document.getElementById('auth-error').textContent = '';
+  const sw = document.getElementById('auth-switch');
+  sw.innerHTML = mode === 'login'
+    ? '¿No tenés cuenta? <span>Registrate</span>'
+    : '¿Ya tenés cuenta? <span>Entrá</span>';
+  sw.onclick = () => switchTab(mode === 'login' ? 'register' : 'login');
+}
+
+function backToLogin() {
+  document.getElementById('auth-box-confirm').style.display = 'none';
+  document.getElementById('auth-box-form').style.display = 'flex';
+  switchTab('login');
 }
 
 async function handleAuth() {
@@ -310,12 +321,15 @@ async function handleAuth() {
       if (!name) { errorEl.textContent = 'Ingresá tu nombre.'; btn.disabled = false; btn.textContent = 'Crear cuenta'; return; }
       const { data, error } = await db.auth.signUp({ email, password });
       if (error) throw error;
-      if (data.user) {
+      if (data.session) {
         currentUser = data.user;
         await db.from('profiles').upsert({ id: data.user.id, display_name: name });
         const { data: profile } = await db.from('profiles').select('*').eq('id', currentUser.id).single();
         currentProfile = profile;
         showApp();
+      } else {
+        document.getElementById('auth-box-form').style.display = 'none';
+        document.getElementById('auth-box-confirm').style.display = 'flex';
       }
     }
   } catch (err) {
@@ -323,6 +337,66 @@ async function handleAuth() {
     btn.disabled = false;
     btn.textContent = authMode === 'login' ? 'Entrar' : 'Crear cuenta';
   }
+}
+
+// ── GOOGLE SIGN-IN ──────────────────────────────────────────
+
+async function generarNonce() {
+  const nonceCrudo = btoa(String.fromCharCode(...crypto.getRandomValues(new Uint8Array(32))));
+  const bytes = new TextEncoder().encode(nonceCrudo);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', bytes);
+  const nonceHasheado = Array.from(new Uint8Array(hashBuffer))
+    .map(b => b.toString(16).padStart(2, '0'))
+    .join('');
+  return { nonceCrudo, nonceHasheado };
+}
+
+async function handleGoogleCredential(response) {
+  const errorEl = document.getElementById('auth-error');
+  const { nonceCrudo } = window.__focoGoogleNonce || {};
+  const { data, error } = await db.auth.signInWithIdToken({
+    provider: 'google',
+    token: response.credential,
+    nonce: nonceCrudo
+  });
+  if (error) {
+    errorEl.textContent = error.message;
+    return;
+  }
+  currentUser = data.user;
+  let { data: profile } = await db.from('profiles').select('*').eq('id', currentUser.id).single();
+  if (!profile) {
+    const name = currentUser.user_metadata?.full_name || currentUser.user_metadata?.name || 'Usuario';
+    await db.from('profiles').upsert({ id: currentUser.id, display_name: name });
+    const res = await db.from('profiles').select('*').eq('id', currentUser.id).single();
+    profile = res.data;
+  }
+  currentProfile = profile;
+  showApp();
+}
+
+async function initGoogleButton() {
+  if (!window.google?.accounts?.id || GOOGLE_CLIENT_ID.startsWith('REEMPLAZAR')) return;
+  const container = document.getElementById('google-btn');
+  if (!container) return;
+
+  window.__focoGoogleNonce = await generarNonce();
+
+  window.google.accounts.id.initialize({
+    client_id: GOOGLE_CLIENT_ID,
+    callback: handleGoogleCredential,
+    nonce: window.__focoGoogleNonce.nonceHasheado,
+    use_fedcm_for_prompt: true
+  });
+
+  window.google.accounts.id.renderButton(container, {
+    type: 'standard',
+    theme: 'filled_black',
+    size: 'large',
+    shape: 'pill',
+    text: 'continue_with',
+    width: 320
+  });
 }
 
 async function logout() {
@@ -366,6 +440,11 @@ async function init() {
 function showAuth() {
   document.getElementById('auth-screen').style.display = 'flex';
   document.getElementById('app').style.display = 'none';
+  if (window.google?.accounts?.id) {
+    initGoogleButton();
+  } else {
+    document.getElementById('google-identity-script')?.addEventListener('load', initGoogleButton, { once: true });
+  }
 }
 
 async function showApp() {

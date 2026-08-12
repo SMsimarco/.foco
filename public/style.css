@@ -97,30 +97,45 @@ html, body {
   margin-bottom: 10px;
 }
 
-.auth-tabs {
+.auth-google {
   display: flex;
-  background: var(--surface);
-  border-radius: 8px;
-  padding: 3px;
-  gap: 2px;
+  justify-content: center;
+  min-height: 40px;
 }
 
-.auth-tab {
-  flex: 1;
-  background: transparent;
-  border: none;
-  border-radius: 6px;
-  padding: 7px;
-  font-size: 12px;
-  font-weight: 500;
+.auth-divider {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 11px;
   color: var(--text3);
-  cursor: pointer;
-  transition: all 0.15s;
 }
 
-.auth-tab.active {
+.auth-divider span {
+  flex: 1;
+  height: 1px;
   background: var(--border2);
-  color: var(--text);
+}
+
+.auth-switch {
+  font-size: 12px;
+  color: var(--text3);
+  text-align: center;
+  cursor: pointer;
+  margin-top: 2px;
+}
+
+.auth-switch span {
+  color: var(--accent);
+  font-weight: 500;
+}
+
+.auth-confirm-text {
+  font-size: 13px;
+  color: var(--text2);
+  text-align: center;
+  line-height: 1.6;
+  margin-bottom: 6px;
 }
 
 .auth-input {
