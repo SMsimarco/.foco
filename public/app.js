@@ -10,6 +10,10 @@ const CLAUDE_API_KEY = null; // Key en servidor — no exponer en frontend
 const { createClient } = supabase;
 const db = createClient(SUPABASE_URL, SUPABASE_KEY);
 
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js'));
+}
+
 // ── ÁREAS DE VIDA ────────────────────────────────────────────
 const AREAS = {
   trabajo:     { label: 'Trabajo',     color: '#3B82F6' },
@@ -274,6 +278,7 @@ function startLiveClock() {
 // ── AUTH ────────────────────────────────────────────────────
 
 const GOOGLE_CLIENT_ID = '268120297099-c2uml03ln4c3uoffqpgiebju7tm2e2mg.apps.googleusercontent.com';
+const VAPID_PUBLIC_KEY = 'BFsTfVDGrFgb523bGBTe-kNZned8b0dojS1DcVp_GIAK-58MJHf0fLIDc664EG2wrPD-RZC8M6Vlsp-GiWF1v7M';
 
 function switchTab(mode) {
   authMode = mode;
@@ -406,9 +411,9 @@ async function logout() {
 function toggleNotif() {
   notifOn = !notifOn;
   const btn = document.getElementById('notif-btn');
-  const lbl = document.getElementById('notif-label');
   btn.classList.toggle('off', !notifOn);
   if (notifOn) setupNotifications();
+  else disableNotifications();
 }
 
 // ── INICIALIZACIÓN ──────────────────────────────────────────
@@ -606,7 +611,6 @@ async function addEvent(dateISO, title, startTime, endTime, recurrente = false, 
   } else {
     saveScroll(); renderSemana(); restoreScroll();
   }
-  scheduleNotification(data);
   showToast(`"${data.title}" agregado`, 'info');
 }
 
@@ -1802,37 +1806,50 @@ async function changeWeek(dir) {
   }, 260);
 }
 
-// ── NOTIFICACIONES ──────────────────────────────────────────
+// ── NOTIFICACIONES PUSH ─────────────────────────────────────
+// Suscripción real vía Push API + Service Worker: llegan aunque
+// la app esté cerrada. El disparo (15min antes del evento) lo
+// hace un GitHub Action server-side, no el navegador.
+
+function urlBase64ToUint8Array(base64String) {
+  const padding = '='.repeat((4 - base64String.length % 4) % 4);
+  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+  const raw = atob(base64);
+  return Uint8Array.from([...raw].map(c => c.charCodeAt(0)));
+}
 
 async function setupNotifications() {
-  if (!notifOn || !('Notification' in window)) return;
+  if (!notifOn || !('serviceWorker' in navigator) || !('PushManager' in window)) return;
   if (Notification.permission === 'default') {
-    await Notification.requestPermission();
+    const perm = await Notification.requestPermission();
+    if (perm !== 'granted') return;
   }
-  if (Notification.permission === 'granted') {
-    scheduleWeekNotifications();
+  if (Notification.permission !== 'granted') return;
+
+  const reg = await navigator.serviceWorker.ready;
+  let sub = await reg.pushManager.getSubscription();
+  if (!sub) {
+    sub = await reg.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
+    });
   }
+  const raw = sub.toJSON();
+  await db.from('push_subscriptions').upsert({
+    user_id: currentUser.id,
+    endpoint: raw.endpoint,
+    p256dh: raw.keys.p256dh,
+    auth: raw.keys.auth
+  }, { onConflict: 'endpoint' });
 }
 
-function scheduleWeekNotifications() {
-  const week = getWeekDates(weekOffset);
-  week.forEach(d => {
-    (eventsCache[toISO(d)] || []).forEach(ev => scheduleNotification(ev));
-  });
-}
-
-function scheduleNotification(ev) {
-  if (!notifOn || Notification.permission !== 'granted') return;
-  const eventTime = new Date(ev.date + 'T' + ev.start_time + ':00');
-  const notifTime = new Date(eventTime.getTime() - 15 * 60 * 1000);
-  const delay = notifTime - new Date();
-  if (delay > 0) {
-    setTimeout(() => {
-      new Notification('foco. — en 15 minutos', {
-        body: ev.title,
-        icon: '/icon-192.png'
-      });
-    }, delay);
+async function disableNotifications() {
+  if (!('serviceWorker' in navigator)) return;
+  const reg = await navigator.serviceWorker.ready;
+  const sub = await reg.pushManager.getSubscription();
+  if (sub) {
+    await db.from('push_subscriptions').delete().eq('endpoint', sub.endpoint);
+    await sub.unsubscribe();
   }
 }
 

@@ -1,4 +1,4 @@
-const CACHE = 'foco-v4';
+const CACHE = 'foco-v5';
 const STATIC = ['/', '/index.html', '/app.js', '/style.css', '/manifest.json'];
 
 self.addEventListener('install', e => {
@@ -35,5 +35,26 @@ self.addEventListener('fetch', e => {
       }
       return res;
     }))
+  );
+});
+
+self.addEventListener('push', e => {
+  const data = e.data ? e.data.json() : {};
+  const title = data.title || 'foco.';
+  e.waitUntil(self.registration.showNotification(title, {
+    body: data.body || '',
+    icon: '/icon-192.png',
+    badge: '/icon-192.png',
+    data: { url: data.url || '/' }
+  }));
+});
+
+self.addEventListener('notificationclick', e => {
+  e.notification.close();
+  e.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then(list => {
+      for (const c of list) if ('focus' in c) return c.focus();
+      if (clients.openWindow) return clients.openWindow(e.notification.data?.url || '/');
+    })
   );
 });
