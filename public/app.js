@@ -273,7 +273,7 @@ function startLiveClock() {
 
 // ── AUTH ────────────────────────────────────────────────────
 
-const GOOGLE_CLIENT_ID = 'REEMPLAZAR_CON_TU_CLIENT_ID.apps.googleusercontent.com';
+const GOOGLE_CLIENT_ID = '268120297099-c2uml03ln4c3uoffqpgiebju7tm2e2mg.apps.googleusercontent.com';
 
 function switchTab(mode) {
   authMode = mode;
