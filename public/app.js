@@ -891,16 +891,6 @@ function renderHoy() {
   }
   if (dateEl) dateEl.textContent = `${diaActual.getDate()} de ${MONTHS_LOWER[diaActual.getMonth()]}`;
 
-  // Progreso del día
-  const total = dayEvents.length;
-  const done = dayEvents.filter(e => e.done).length;
-  const fill = document.getElementById('hoy-progress-fill');
-  if (fill) fill.style.width = total ? `${Math.round(done / total * 100)}%` : '0%';
-  const progressText = document.getElementById('hoy-progress-text');
-  if (progressText) {
-    progressText.textContent = total ? `${done} de ${total} completadas` : 'Sin tareas por hoy';
-  }
-
   // Agrupar: foco (máx 3, no se repiten abajo) / con hora / sin hora
   const foco = dayEvents.filter(e => e.is_focus).slice(0, 3);
   const conHora = dayEvents.filter(e => !e.is_focus && e.start_time)
@@ -909,9 +899,9 @@ function renderHoy() {
 
   const listFoco = document.getElementById('hoy-list-foco');
   if (listFoco) {
-    let html = foco.map(ev => hoyRowHTML(ev, dateISO, !!ev.start_time)).join('');
-    for (let i = foco.length; i < 3; i++) html += hoyPlaceholderRowHTML();
-    listFoco.innerHTML = html;
+    listFoco.innerHTML = foco.length
+      ? foco.map(ev => hoyRowHTML(ev, dateISO, !!ev.start_time)).join('')
+      : hoyPlaceholderRowHTML();
   }
 
   const secHora = document.getElementById('hoy-section-hora');

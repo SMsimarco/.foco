@@ -702,7 +702,6 @@ html, body {
 .chip-time { background: rgba(253,230,138,0.06); color: #FDE68A; border: 1px solid rgba(253,230,138,0.18); }
 .chip-name { background: rgba(167,243,208,0.06); color: #A7F3D0; border: 1px solid rgba(167,243,208,0.15); }
 .chip-warn { background: rgba(254,205,211,0.06); color: var(--danger); border: 1px solid rgba(254,205,211,0.15); }
-.chip-hint { font-size: 10px; color: var(--text4); margin-left: auto; }
 
 /* ── MAIN ── */
 #main {
@@ -793,37 +792,6 @@ html, body {
 .hoy-day-nav-btn:active { opacity: 0.6; }
 
 /* Progreso */
-.hoy-progress-wrap {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin: 18px 0 20px;
-}
-
-.hoy-progress-bar {
-  flex: 1;
-  height: 4px;
-  border-radius: 2px;
-  background: var(--ios-card);
-  overflow: hidden;
-}
-
-.hoy-progress-fill {
-  height: 100%;
-  background: var(--ios-text);
-  border-radius: 2px;
-  width: 0%;
-  transition: width 0.25s cubic-bezier(.4,0,.2,1);
-}
-
-.hoy-progress-text {
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--ios-text2);
-  white-space: nowrap;
-  font-variant-numeric: tabular-nums;
-}
-
 /* Secciones — cards estilo "inset grouped list" */
 .hoy-section { margin-bottom: 22px; }
 
@@ -933,20 +901,6 @@ html, body {
   line-height: 1;
 }
 
-/* Sección "Tu foco" — título + explicación de qué es */
-.hoy-section-hd-wrap {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  padding: 0 4px 6px;
-}
-.hoy-section-hd-wrap .hoy-section-hd { padding: 0; }
-.hoy-section-caption {
-  font-size: 11px;
-  color: var(--ios-text2);
-  opacity: 0.7;
-}
-
 /* Input de creación — search bar iOS, arriba de todo, siempre visible */
 #view-semana #input-bar {
   padding: 4px 0 14px;
@@ -956,12 +910,12 @@ html, body {
 #view-semana .input-pill {
   background: var(--ios-card);
   border: none;
-  border-radius: 11px;
-  padding: 9px 12px;
+  border-radius: 13px;
+  padding: 13px 14px;
 }
 
-#view-semana .input-pill .icon { color: var(--ios-text2); }
-#view-semana #nl-input { color: var(--ios-text); font-family: inherit; font-size: 16px; }
+#view-semana .input-pill .icon { color: var(--ios-text2); font-size: 15px; }
+#view-semana #nl-input { color: var(--ios-text); font-family: inherit; font-size: 17px; }
 #view-semana #nl-input::placeholder { color: var(--ios-text2); }
 
 #view-semana #chips-bar { background: #000; }
