@@ -907,12 +907,17 @@ html, body {
   border-radius: 8px;
 }
 
-.hoy-row-placeholder {
-  color: var(--ios-text2);
-  font-size: 14px;
-  font-style: italic;
-  cursor: default;
+.hoy-row-chevron {
+  color: var(--ios-circle);
+  font-size: 16px;
+  flex-shrink: 0;
+  margin-left: 2px;
 }
+
+/* Placeholder "Agregar prioridad" — CTA real, no texto muerto */
+.hoy-row-placeholder { cursor: pointer; }
+.hoy-row-placeholder:active { background: rgba(255,255,255,0.04); }
+.hoy-row-placeholder .hoy-row-title { color: var(--ios-text2); }
 
 .hoy-placeholder-circle {
   width: 22px;
@@ -920,13 +925,31 @@ html, body {
   border-radius: 50%;
   border: 1.5px dashed var(--ios-circle);
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ios-circle);
+  font-size: 13px;
+  line-height: 1;
 }
 
-/* Input de creación — search bar iOS */
+/* Sección "Tu foco" — título + explicación de qué es */
+.hoy-section-hd-wrap {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: 0 4px 6px;
+}
+.hoy-section-hd-wrap .hoy-section-hd { padding: 0; }
+.hoy-section-caption {
+  font-size: 11px;
+  color: var(--ios-text2);
+  opacity: 0.7;
+}
+
+/* Input de creación — search bar iOS, arriba de todo, siempre visible */
 #view-semana #input-bar {
-  padding: 10px 16px;
-  border-top: 0.5px solid var(--ios-sep);
-  border-bottom: none;
+  padding: 4px 0 14px;
   flex-shrink: 0;
 }
 

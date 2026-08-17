@@ -854,8 +854,26 @@ function hoyRowHTML(ev, dateISO, mostrarHora) {
       </button>
       <span class="hoy-row-title${ev.done ? ' done' : ''}">${ev.title}</span>
       ${horaHTML}
+      <span class="hoy-row-chevron">›</span>
     </div>
   `;
+}
+
+function hoyPlaceholderRowHTML() {
+  return `
+    <div class="hoy-row hoy-row-placeholder" onclick="focusNlInput()">
+      <span class="hoy-placeholder-circle">+</span>
+      <span class="hoy-row-title">Agregar prioridad</span>
+    </div>
+  `;
+}
+
+// Enfoca el input de agregar y lo trae a la vista (arriba, siempre visible)
+function focusNlInput() {
+  const inp = document.getElementById('nl-input');
+  if (!inp) return;
+  inp.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  inp.focus();
 }
 
 function renderHoy() {
@@ -879,7 +897,9 @@ function renderHoy() {
   const fill = document.getElementById('hoy-progress-fill');
   if (fill) fill.style.width = total ? `${Math.round(done / total * 100)}%` : '0%';
   const progressText = document.getElementById('hoy-progress-text');
-  if (progressText) progressText.textContent = `${done} de ${total}`;
+  if (progressText) {
+    progressText.textContent = total ? `${done} de ${total} completadas` : 'Sin tareas por hoy';
+  }
 
   // Agrupar: foco (máx 3, no se repiten abajo) / con hora / sin hora
   const foco = dayEvents.filter(e => e.is_focus).slice(0, 3);
@@ -890,9 +910,7 @@ function renderHoy() {
   const listFoco = document.getElementById('hoy-list-foco');
   if (listFoco) {
     let html = foco.map(ev => hoyRowHTML(ev, dateISO, !!ev.start_time)).join('');
-    if (foco.length < 3) {
-      html += `<div class="hoy-row hoy-row-placeholder"><span class="hoy-placeholder-circle"></span>Elegí una tercera</div>`;
-    }
+    for (let i = foco.length; i < 3; i++) html += hoyPlaceholderRowHTML();
     listFoco.innerHTML = html;
   }
 

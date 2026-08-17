@@ -173,12 +173,28 @@
               <div class="hoy-date" id="hoy-date">—</div>
               <div class="hoy-title" id="hoy-title">Hoy</div>
             </div>
-            <button class="hoy-add-btn" onclick="document.getElementById('nl-input').focus()">+</button>
+            <button class="hoy-add-btn" onclick="focusNlInput()">+</button>
           </div>
           <div class="hoy-day-nav">
             <button class="hoy-day-nav-btn" onclick="changeDia(-1)">‹</button>
             <button class="hoy-day-nav-btn" onclick="changeDia(1)">›</button>
           </div>
+        </div>
+
+        <!-- INPUT BAR — arriba y siempre a la vista, no hay que scrollear para agregar -->
+        <div id="input-bar">
+          <div class="input-pill" onclick="document.getElementById('nl-input').focus()">
+            <i class="icon">✦</i>
+            <input id="nl-input" type="text"
+              placeholder='Agregar tarea... ej: "reunión mañana de 10 a 12"'/>
+            <span class="enter-hint">Enter ↵</span>
+          </div>
+        </div>
+
+        <!-- CHIPS -->
+        <div id="chips-bar">
+          <span id="chips-content"></span>
+          <span class="chip-hint">Enter para agregar</span>
         </div>
 
         <div class="hoy-progress-wrap">
@@ -187,7 +203,10 @@
         </div>
 
         <div class="hoy-section" id="hoy-section-foco">
-          <div class="hoy-section-hd">Tu foco</div>
+          <div class="hoy-section-hd-wrap">
+            <div class="hoy-section-hd">Tu foco</div>
+            <div class="hoy-section-caption">Hasta 3 prioridades del día</div>
+          </div>
           <div class="hoy-list" id="hoy-list-foco"></div>
         </div>
 
@@ -201,22 +220,6 @@
           <div class="hoy-list" id="hoy-list-libre"></div>
         </div>
 
-      </div>
-
-      <!-- INPUT BAR -->
-      <div id="input-bar">
-        <div class="input-pill" onclick="document.getElementById('nl-input').focus()">
-          <i class="icon">✦</i>
-          <input id="nl-input" type="text"
-            placeholder='ej: "reunión mañana de 10 a 12"'/>
-          <span class="enter-hint">Enter ↵</span>
-        </div>
-      </div>
-
-      <!-- CHIPS -->
-      <div id="chips-bar">
-        <span id="chips-content"></span>
-        <span class="chip-hint">Enter para agregar</span>
       </div>
     </div>
 
