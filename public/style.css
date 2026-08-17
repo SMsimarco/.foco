@@ -245,6 +245,11 @@ html, body {
   box-shadow: none;
 }
 
+.notif-btn.error .notif-dot {
+  background: #F59E0B;
+  box-shadow: 0 0 6px rgba(245,158,11,0.5);
+}
+
 .commitment-wrap {
   cursor: default;
 }

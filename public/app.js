@@ -1663,28 +1663,42 @@ function urlBase64ToUint8Array(base64String) {
 }
 
 async function setupNotifications() {
-  if (!notifOn || !('serviceWorker' in navigator) || !('PushManager' in window)) return;
-  if (Notification.permission === 'default') {
-    const perm = await Notification.requestPermission();
-    if (perm !== 'granted') return;
-  }
-  if (Notification.permission !== 'granted') return;
+  const btn = document.getElementById('notif-btn');
+  if (!notifOn) return;
 
-  const reg = await navigator.serviceWorker.ready;
-  let sub = await reg.pushManager.getSubscription();
-  if (!sub) {
-    sub = await reg.pushManager.subscribe({
-      userVisibleOnly: true,
-      applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
-    });
+  if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+    // iOS: Push solo funciona instalada como PWA (Compartir > Agregar a inicio), no en Safari
+    btn?.classList.add('error');
+    return;
   }
-  const raw = sub.toJSON();
-  await db.from('push_subscriptions').upsert({
-    user_id: currentUser.id,
-    endpoint: raw.endpoint,
-    p256dh: raw.keys.p256dh,
-    auth: raw.keys.auth
-  }, { onConflict: 'endpoint' });
+
+  try {
+    if (Notification.permission === 'default') {
+      const perm = await Notification.requestPermission();
+      if (perm !== 'granted') { btn?.classList.add('error'); return; }
+    }
+    if (Notification.permission !== 'granted') { btn?.classList.add('error'); return; }
+
+    const reg = await navigator.serviceWorker.ready;
+    let sub = await reg.pushManager.getSubscription();
+    if (!sub) {
+      sub = await reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
+      });
+    }
+    const raw = sub.toJSON();
+    await db.from('push_subscriptions').upsert({
+      user_id: currentUser.id,
+      endpoint: raw.endpoint,
+      p256dh: raw.keys.p256dh,
+      auth: raw.keys.auth
+    }, { onConflict: 'endpoint' });
+    btn?.classList.remove('error');
+  } catch (err) {
+    console.error('setupNotifications:', err);
+    btn?.classList.add('error');
+  }
 }
 
 async function disableNotifications() {
