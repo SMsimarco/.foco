@@ -999,7 +999,7 @@ html, body {
 .dash-stat-val {
   font-size: 22px;
   font-weight: 600;
-  color: var(--text1);
+  color: var(--text);
   letter-spacing: -0.5px;
   line-height: 1;
   margin-bottom: 5px;
@@ -2381,13 +2381,13 @@ body.ambient #app::before {
 .recur-modal-event {
   font-size: 14px;
   font-weight: 500;
-  color: var(--text1);
+  color: var(--text);
   font-family: 'Geist', sans-serif;
   margin-bottom: 4px;
 }
 .recur-modal-question {
   font-size: 12px;
-  color: var(--text4);
+  color: var(--text2);
   font-family: 'Geist', sans-serif;
 }
 .recur-modal-options {
@@ -2433,12 +2433,12 @@ body.ambient #app::before {
 .recur-opt-label {
   font-size: 13px;
   font-weight: 500;
-  color: var(--text1);
+  color: var(--text);
   font-family: 'Geist', sans-serif;
 }
 .recur-opt-desc {
   font-size: 11px;
-  color: var(--text4);
+  color: var(--text2);
   font-family: 'Geist', sans-serif;
 }
 
