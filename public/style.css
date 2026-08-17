@@ -961,7 +961,7 @@ html, body {
 }
 
 #view-semana .input-pill .icon { color: var(--ios-text2); }
-#view-semana #nl-input { color: var(--ios-text); font-family: inherit; }
+#view-semana #nl-input { color: var(--ios-text); font-family: inherit; font-size: 16px; }
 #view-semana #nl-input::placeholder { color: var(--ios-text2); }
 
 #view-semana #chips-bar { background: #000; }
