@@ -567,10 +567,19 @@ async function loadMonth() {
 // ── CRUD EVENTOS ────────────────────────────────────────────
 
 let _pendingEvent = null;
+let addAsFocus = false;
 
-function promptAndAddEvent(dateISO, title, startTime, endTime) {
+function toggleAddFocus(e) {
+  e.stopPropagation();
+  addAsFocus = !addAsFocus;
+  const btn = document.getElementById('input-focus-toggle');
+  btn.classList.toggle('active', addAsFocus);
+  btn.textContent = addAsFocus ? '★' : '☆';
+}
+
+function promptAndAddEvent(dateISO, title, startTime, endTime, isFocus = false) {
   if (!title.trim()) return;
-  _pendingEvent = { dateISO, title, startTime, endTime };
+  _pendingEvent = { dateISO, title, startTime, endTime, isFocus };
   document.getElementById('recur-modal-title').textContent = `"${title}"`;
   document.getElementById('recur-modal').classList.add('open');
   document.getElementById('recur-overlay').classList.add('open');
@@ -578,7 +587,7 @@ function promptAndAddEvent(dateISO, title, startTime, endTime) {
 
 async function confirmRecurrence(type) {
   if (!_pendingEvent) return;
-  const { dateISO, title, startTime, endTime } = _pendingEvent;
+  const { dateISO, title, startTime, endTime, isFocus } = _pendingEvent;
   _pendingEvent = null;
   closeRecurModal();
 
@@ -592,7 +601,7 @@ async function confirmRecurrence(type) {
     diaSemana = null;
   }
 
-  await addEvent(dateISO, title, startTime, endTime, recurrente, diaSemana);
+  await addEvent(dateISO, title, startTime, endTime, recurrente, diaSemana, isFocus);
 }
 
 function closeRecurModal() {
@@ -605,7 +614,7 @@ function cancelRecurModal() {
   closeRecurModal();
 }
 
-async function addEvent(dateISO, title, startTime, endTime, recurrente = false, diaSemana = null) {
+async function addEvent(dateISO, title, startTime, endTime, recurrente = false, diaSemana = null, isFocus = false) {
   if (!currentUser || !title.trim()) return;
 
   const { data, error } = await db.from('events').insert({
@@ -616,7 +625,8 @@ async function addEvent(dateISO, title, startTime, endTime, recurrente = false, 
     end_time: endTime,
     done: false,
     recurrente,
-    dia_semana: diaSemana
+    dia_semana: diaSemana,
+    is_focus: isFocus
   }).select().single();
 
   if (error) { console.error(error); return; }
@@ -830,7 +840,7 @@ const MONTHS_LOWER = MONTHS_FULL.map(m => m.toLowerCase());
 
 function checkIconSVG() {
   return `<svg width="10" height="10" viewBox="0 0 14 14" fill="none">
-    <polyline points="2,7 5.5,10.5 12,3" stroke="#000" stroke-width="2"
+    <polyline points="2,7 5.5,10.5 12,3" stroke="#fff" stroke-width="2"
               stroke-linecap="round" stroke-linejoin="round"/>
   </svg>`;
 }
@@ -855,15 +865,6 @@ function hoyRowHTML(ev, dateISO, mostrarHora) {
       <span class="hoy-row-title${ev.done ? ' done' : ''}">${ev.title}</span>
       ${horaHTML}
       <span class="hoy-row-chevron">›</span>
-    </div>
-  `;
-}
-
-function hoyPlaceholderRowHTML() {
-  return `
-    <div class="hoy-row hoy-row-placeholder" onclick="focusNlInput()">
-      <span class="hoy-placeholder-circle">+</span>
-      <span class="hoy-row-title">Agregar prioridad</span>
     </div>
   `;
 }
@@ -897,12 +898,10 @@ function renderHoy() {
     .sort((a, b) => timeToMin(a.start_time) - timeToMin(b.start_time));
   const sinHora = dayEvents.filter(e => !e.is_focus && !e.start_time);
 
+  const secFoco = document.getElementById('hoy-section-foco');
   const listFoco = document.getElementById('hoy-list-foco');
-  if (listFoco) {
-    listFoco.innerHTML = foco.length
-      ? foco.map(ev => hoyRowHTML(ev, dateISO, !!ev.start_time)).join('')
-      : hoyPlaceholderRowHTML();
-  }
+  if (listFoco) listFoco.innerHTML = foco.map(ev => hoyRowHTML(ev, dateISO, !!ev.start_time)).join('');
+  if (secFoco) secFoco.style.display = foco.length ? '' : 'none';
 
   const secHora = document.getElementById('hoy-section-hora');
   const listHora = document.getElementById('hoy-list-hora');
@@ -1759,10 +1758,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
       const startTime = h1 !== null ? fmtTime(h1, m1) : null;
       const endTime = h2 !== null ? fmtTime(h2, m2) : null;
-      promptAndAddEvent(dateISO, name, startTime, endTime);
+      promptAndAddEvent(dateISO, name, startTime, endTime, addAsFocus);
 
       nlInput.value = '';
       chipsBar.classList.remove('show');
+      if (addAsFocus) toggleAddFocus(e);
 
       if (currentView !== 'semana') {
         setView('semana');

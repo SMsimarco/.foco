@@ -187,7 +187,8 @@
         <!-- INPUT BAR — arriba y siempre a la vista, no hay que scrollear para agregar -->
         <div id="input-bar">
           <div class="input-pill" onclick="document.getElementById('nl-input').focus()">
-            <i class="icon">✦</i>
+            <button type="button" class="input-focus-toggle" id="input-focus-toggle"
+              onclick="toggleAddFocus(event)" title="Marcar como prioridad del día">☆</button>
             <input id="nl-input" type="text"
               placeholder='Agregar tarea... ej: "reunión mañana de 10 a 12"'/>
             <span class="enter-hint">Enter ↵</span>

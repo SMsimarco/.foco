@@ -626,16 +626,22 @@ html, body {
 }
 
 .input-pill:focus-within { border-bottom-color: rgba(var(--accent-rgb), 0.5); }
-.input-pill:focus-within .icon { color: var(--accent); }
 
-.input-pill .icon {
-  font-size: 12px;
-  color: var(--text4);
+.input-focus-toggle {
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  font-size: 15px;
+  color: var(--text3);
   flex-shrink: 0;
-  font-style: normal;
   line-height: 1;
-  transition: color 0.15s;
+  cursor: pointer;
+  transition: color 0.15s, transform 0.15s;
 }
+
+.input-focus-toggle:hover { color: var(--text2); }
+.input-focus-toggle.active { color: var(--warning); transform: scale(1.1); }
 
 #nl-input {
   flex: 1;
@@ -848,8 +854,8 @@ html, body {
 }
 
 .hoy-check.done {
-  background: var(--ios-text);
-  border-color: var(--ios-text);
+  background: #10B981;
+  border-color: #10B981;
 }
 
 .hoy-row-title {
@@ -887,25 +893,6 @@ html, body {
   margin-left: 2px;
 }
 
-/* Placeholder "Agregar prioridad" — CTA real, no texto muerto */
-.hoy-row-placeholder { cursor: pointer; }
-.hoy-row-placeholder:active { background: rgba(255,255,255,0.04); }
-.hoy-row-placeholder .hoy-row-title { color: var(--ios-text2); }
-
-.hoy-placeholder-circle {
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  border: 1.5px dashed var(--ios-circle);
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--ios-circle);
-  font-size: 13px;
-  line-height: 1;
-}
-
 /* Input de creación — search bar iOS, arriba de todo, siempre visible */
 #view-semana #input-bar {
   padding: 4px 0 14px;
@@ -919,7 +906,8 @@ html, body {
   padding: 13px 14px;
 }
 
-#view-semana .input-pill .icon { color: var(--ios-text2); font-size: 15px; }
+#view-semana .input-focus-toggle { color: var(--ios-text2); font-size: 17px; }
+#view-semana .input-focus-toggle.active { color: var(--warning); }
 #view-semana #nl-input { color: var(--ios-text); font-family: inherit; font-size: 17px; }
 #view-semana #nl-input::placeholder { color: var(--ios-text2); }
 
