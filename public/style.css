@@ -12,10 +12,10 @@
   --surface:   rgba(13, 13, 17, 0.75);
   --border:    rgba(255, 255, 255, 0.05);
   --border2:   rgba(255, 255, 255, 0.09);
-  --text:      #F4F4F7;
-  --text2:     #A1A1AA;
-  --text3:     #52525B;
-  --text4:     #27272A;
+  --text:      #FFFFFF;
+  --text2:     #C7C7CE;
+  --text3:     #86868F;
+  --text4:     #5C5C66;
   --accent:    #6366F1;
   --accent-rgb: 99, 102, 241;
   --success:   #10B981;
@@ -722,9 +722,9 @@ html, body {
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
   --ios-card: #1C1C1E;
   --ios-text: #FFFFFF;
-  --ios-text2: #8E8E93;
+  --ios-text2: #B4B4BA;
   --ios-sep: rgba(255,255,255,0.1);
-  --ios-circle: #5A5A5C;
+  --ios-circle: #86868F;
 }
 
 .hoy-scroll {
@@ -1479,7 +1479,7 @@ html, body {
   font-family: 'Geist', sans-serif;
   font-size: 11px;
   font-weight: 500;
-  color: rgba(255,255,255,0.3);
+  color: rgba(255,255,255,0.5);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -1492,7 +1492,7 @@ html, body {
   position: relative;
 }
 
-.nav-btn:hover { color: rgba(255,255,255,0.6); background: rgba(255,255,255,0.04); }
+.nav-btn:hover { color: rgba(255,255,255,0.75); background: rgba(255,255,255,0.04); }
 .nav-btn.active { color: #fff; background: rgba(255,255,255,0.07); }
 
 .nav-btn.active::after {
@@ -1593,7 +1593,7 @@ html, body {
 
 .panel-meta {
   font-size: 12px;
-  color: rgba(255,255,255,0.3);
+  color: rgba(255,255,255,0.55);
   display: flex;
   align-items: center;
   gap: 6px;
@@ -1631,7 +1631,7 @@ html, body {
 }
 
 .panel-details:focus { border-bottom-color: rgba(255,255,255,0.14); }
-.panel-details::placeholder { color: #52525B; }
+.panel-details::placeholder { color: var(--text3); }
 
 .panel-done-main {
   width: 100%;
@@ -1745,7 +1745,7 @@ html, body {
   border-radius: 11px;
   border: 1px solid rgba(255,255,255,0.06);
   background: transparent;
-  color: rgba(255,255,255,0.25);
+  color: rgba(255,255,255,0.45);
   font-size: 13px;
   font-family: 'Geist', sans-serif;
   cursor: pointer;
