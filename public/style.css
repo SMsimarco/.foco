@@ -13,9 +13,9 @@
   --border:    rgba(255, 255, 255, 0.05);
   --border2:   rgba(255, 255, 255, 0.09);
   --text:      #FFFFFF;
-  --text2:     #C7C7CE;
-  --text3:     #86868F;
-  --text4:     #5C5C66;
+  --text2:     #FFFFFF;
+  --text3:     #FFFFFF;
+  --text4:     #FFFFFF;
   --accent:    #6366F1;
   --accent-rgb: 99, 102, 241;
   --success:   #10B981;
@@ -722,7 +722,7 @@ html, body {
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
   --ios-card: #1C1C1E;
   --ios-text: #FFFFFF;
-  --ios-text2: #B4B4BA;
+  --ios-text2: #FFFFFF;
   --ios-sep: rgba(255,255,255,0.1);
   --ios-circle: #86868F;
 }
@@ -1370,7 +1370,7 @@ html, body {
 .sug-stat-n { font-size: 22px; font-weight: 500; color: var(--text); line-height: 1; }
 .sug-stat-l {
   font-size: 8px;
-  color: rgba(255,255,255,0.3);
+  color: #fff;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   margin-top: 4px;
@@ -1479,7 +1479,7 @@ html, body {
   font-family: 'Geist', sans-serif;
   font-size: 11px;
   font-weight: 500;
-  color: rgba(255,255,255,0.5);
+  color: rgba(255,255,255,0.85);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -1593,7 +1593,7 @@ html, body {
 
 .panel-meta {
   font-size: 12px;
-  color: rgba(255,255,255,0.55);
+  color: #fff;
   display: flex;
   align-items: center;
   gap: 6px;
@@ -1614,7 +1614,7 @@ html, body {
   background: transparent;
   border: none;
   border-bottom: 1px solid rgba(255,255,255,0.06);
-  color: rgba(255,255,255,0.7);
+  color: #fff;
   font-size: 13px;
   font-family: 'Geist', sans-serif;
   font-weight: 300;
@@ -1639,7 +1639,7 @@ html, body {
   border-radius: 13px;
   border: 1px solid rgba(255,255,255,0.08);
   background: rgba(255,255,255,0.05);
-  color: rgba(255,255,255,0.75);
+  color: #fff;
   font-size: 14px;
   font-weight: 500;
   font-family: 'Geist', sans-serif;
@@ -1702,7 +1702,7 @@ html, body {
 .panel-timer-pause {
   border: 1px solid rgba(255,255,255,0.09);
   background: rgba(255,255,255,0.04);
-  color: rgba(255,255,255,0.45);
+  color: #fff;
 }
 .panel-timer-pause:hover { background: rgba(255,255,255,0.09); color: #fff; }
 
@@ -1745,7 +1745,7 @@ html, body {
   border-radius: 11px;
   border: 1px solid rgba(255,255,255,0.06);
   background: transparent;
-  color: rgba(255,255,255,0.45);
+  color: #fff;
   font-size: 13px;
   font-family: 'Geist', sans-serif;
   cursor: pointer;
@@ -1985,7 +1985,7 @@ body.ambient #app::before {
 
 .evening-btn-label {
   font-size: 10px;
-  color: rgba(255,255,255,0.4);
+  color: #fff;
   font-family: 'Geist', sans-serif;
 }
 
