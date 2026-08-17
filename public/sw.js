@@ -1,4 +1,4 @@
-const CACHE = 'foco-v5';
+const CACHE = 'foco-v6';
 const STATIC = ['/', '/index.html', '/app.js', '/style.css', '/manifest.json'];
 
 self.addEventListener('install', e => {

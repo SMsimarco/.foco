@@ -136,12 +136,6 @@
     <span class="logo">foco.</span>
     <span id="live-clock" class="live-clock"></span>
 
-    <div class="week-nav" id="week-nav">
-      <button class="week-nav-btn" onclick="changeWeek(-1)">‹</button>
-      <span class="week-label" id="week-label">—</span>
-      <button class="week-nav-btn" onclick="changeWeek(1)">›</button>
-    </div>
-
     <div class="header-right">
       <button class="notif-btn" id="notif-btn" onclick="toggleNotif()" title="Notificaciones">
         <div class="notif-dot" id="notif-dot"></div>
@@ -159,26 +153,6 @@
     </div>
   </div>
 
-  <!-- INPUT BAR -->
-  <div id="input-bar">
-    <button class="add-activity-btn" onclick="document.getElementById('nl-input').focus()">
-      <span class="add-activity-plus">+</span>
-      Agregar actividad
-    </button>
-    <div class="input-pill" onclick="document.getElementById('nl-input').focus()">
-      <i class="icon">✦</i>
-      <input id="nl-input" type="text"
-        placeholder='ej: "reunión mañana de 10 a 12"'/>
-      <span class="enter-hint">Enter ↵</span>
-    </div>
-  </div>
-
-  <!-- CHIPS -->
-  <div id="chips-bar">
-    <span id="chips-content"></span>
-    <span class="chip-hint">Enter para agregar</span>
-  </div>
-
   <!-- GOAL BAR -->
   <div id="goal-bar" class="goal-bar" onclick="openGoalEdit()" style="display:none">
     <span class="goal-bar-label">foco semanal</span>
@@ -189,12 +163,60 @@
   <!-- MAIN -->
   <div id="main">
 
-    <!-- SEMANA -->
+    <!-- HOY -->
     <div id="view-semana">
-      <div id="day-headers"></div>
-      <div id="grid-wrap">
-        <div id="time-gutter"></div>
-        <div id="day-columns"></div>
+      <div class="hoy-scroll" id="hoy-scroll">
+
+        <div class="hoy-header">
+          <div class="hoy-header-top">
+            <div>
+              <div class="hoy-date" id="hoy-date">—</div>
+              <div class="hoy-title" id="hoy-title">Hoy</div>
+            </div>
+            <button class="hoy-add-btn" onclick="document.getElementById('nl-input').focus()">+</button>
+          </div>
+          <div class="hoy-day-nav">
+            <button class="hoy-day-nav-btn" onclick="changeDia(-1)">‹</button>
+            <button class="hoy-day-nav-btn" onclick="changeDia(1)">›</button>
+          </div>
+        </div>
+
+        <div class="hoy-progress-wrap">
+          <div class="hoy-progress-bar"><div class="hoy-progress-fill" id="hoy-progress-fill"></div></div>
+          <div class="hoy-progress-text" id="hoy-progress-text">0 de 0</div>
+        </div>
+
+        <div class="hoy-section" id="hoy-section-foco">
+          <div class="hoy-section-hd">Tu foco</div>
+          <div class="hoy-list" id="hoy-list-foco"></div>
+        </div>
+
+        <div class="hoy-section" id="hoy-section-hora">
+          <div class="hoy-section-hd">Durante el día</div>
+          <div class="hoy-list" id="hoy-list-hora"></div>
+        </div>
+
+        <div class="hoy-section" id="hoy-section-libre">
+          <div class="hoy-section-hd">Cuando puedas</div>
+          <div class="hoy-list" id="hoy-list-libre"></div>
+        </div>
+
+      </div>
+
+      <!-- INPUT BAR -->
+      <div id="input-bar">
+        <div class="input-pill" onclick="document.getElementById('nl-input').focus()">
+          <i class="icon">✦</i>
+          <input id="nl-input" type="text"
+            placeholder='ej: "reunión mañana de 10 a 12"'/>
+          <span class="enter-hint">Enter ↵</span>
+        </div>
+      </div>
+
+      <!-- CHIPS -->
+      <div id="chips-bar">
+        <span id="chips-content"></span>
+        <span class="chip-hint">Enter para agregar</span>
       </div>
     </div>
 
@@ -373,7 +395,7 @@
           <rect x="10" y="10" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.5"/>
         </svg>
       </span>
-      <span>Semana</span>
+      <span>Hoy</span>
     </button>
     <button class="nav-btn" id="nav-patrones" onclick="setView('patrones')">
       <span class="nav-icon">
@@ -670,6 +692,13 @@
         <button class="recur-pill active" id="recur-once" onclick="setPanelRecurrence(false)">Solo esta vez</button>
         <button class="recur-pill" id="recur-weekly" onclick="setPanelRecurrence(true)">Cada semana</button>
       </div>
+    </div>
+
+    <!-- Foco del día -->
+    <div class="panel-focus-wrap">
+      <button class="focus-toggle-pill" id="panel-focus-toggle" onclick="setPanelFocus()">
+        <span id="panel-focus-icon">☆</span> Foco del día
+      </button>
     </div>
 
     <!-- Acción principal: estado -->

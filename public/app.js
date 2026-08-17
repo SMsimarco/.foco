@@ -50,13 +50,12 @@ const PROJ_COLS = [
 
 let currentUser = null;
 let currentProfile = null;
-let weekOffset = 0;
+let weekOffset = 0; // semana de referencia para métricas globales (ring, Sugerencias) — no navega la vista Hoy
+let diaActual = new Date(); // día mostrado en la vista Hoy
+diaActual.setHours(0, 0, 0, 0);
 let monthOffset = 0;
 let currentView = 'semana';
 let eventsCache = {}; // { 'YYYY-MM-DD': [...events] }
-let ghost = null;
-let _lastTapTime = 0;
-let _lastTapDi = -1;
 let notifOn = true;
 let authMode = 'login';
 
@@ -105,9 +104,6 @@ let currentSession = {
   worthIt: null
 };
 
-// Drag state
-let dragEvent = null;
-
 // Ambient mode
 let ambientActive = false;
 
@@ -126,33 +122,8 @@ function getWeekDates(offset = 0) {
   });
 }
 
-function isMobile() { return window.innerWidth < 640; }
-
-function getVisibleDays() {
-  if (isMobile()) {
-    const base = new Date(); base.setHours(0,0,0,0);
-    base.setDate(base.getDate() + weekOffset * 3);
-    return [0, 1, 2].map(i => { const d = new Date(base); d.setDate(base.getDate() + i); return d; });
-  }
-  return getWeekDates(weekOffset);
-}
-
 function toISO(date) {
   return date.toISOString().split('T')[0];
-}
-
-function toY(h, m) {
-  return (h + m / 60) * SLOT_H;
-}
-
-function yToHM(y) {
-  const total = y / SLOT_H;
-  const h = Math.floor(total);
-  const m = Math.round((total % 1) * 2) * 30;
-  return {
-    h: Math.max(0, Math.min(23, h)),
-    m: m >= 60 ? 0 : m
-  };
 }
 
 function fmtTime(h, m) {
@@ -167,6 +138,16 @@ function isPast(date) {
   const now = new Date();
   now.setHours(0, 0, 0, 0);
   return date < now && !isToday(date);
+}
+
+function isTomorrow(date) {
+  const t = new Date(); t.setDate(t.getDate() + 1);
+  return date.toDateString() === t.toDateString();
+}
+
+function isYesterday(date) {
+  const y = new Date(); y.setDate(y.getDate() - 1);
+  return date.toDateString() === y.toDateString();
 }
 
 function eventColor(title, area) {
@@ -455,9 +436,9 @@ function showAuth() {
 async function showApp() {
   document.getElementById('auth-screen').style.display = 'none';
   document.getElementById('app').style.display = 'flex';
-  await loadWeek();
-  renderSemana();
-  setTimeout(scrollToCurrentTime, 80);
+  await loadWeek(); // datos semanales para el ring de commitment y Sugerencias
+  await loadDia();
+  renderHoy();
   setupNotifications();
 
   checkOnboarding();
@@ -516,6 +497,46 @@ async function loadWeek() {
           eventsCache[iso].push({ ...ev, date: iso });
         }
       }
+    });
+  });
+}
+
+// Carga los eventos del día mostrado en la vista Hoy (independiente de loadWeek,
+// que sigue existiendo solo para las métricas semanales del header/Sugerencias).
+async function loadDia() {
+  if (!currentUser) return;
+  const dateISO = toISO(diaActual);
+  const diaSemana = diaActual.getDay();
+
+  const { data, error } = await db
+    .from('events')
+    .select('*')
+    .eq('user_id', currentUser.id)
+    .eq('date', dateISO);
+
+  if (error) { console.error(error); return; }
+
+  eventsCache[dateISO] = (data || []).map(ev => {
+    ev.start_time = ev.start_time ? ev.start_time.slice(0, 5) : null;
+    ev.end_time   = ev.end_time   ? ev.end_time.slice(0, 5)   : null;
+    return ev;
+  });
+
+  // Inyectar eventos recurrentes que correspondan a este día de semana
+  const { data: recData } = await db
+    .from('events')
+    .select('*')
+    .eq('user_id', currentUser.id)
+    .eq('recurrente', true);
+
+  (recData || []).forEach(ev => {
+    if (ev.dia_semana !== null && ev.dia_semana !== diaSemana) return;
+    if (eventsCache[dateISO].find(e => e.id === ev.id)) return;
+    eventsCache[dateISO].push({
+      ...ev,
+      date: dateISO,
+      start_time: ev.start_time ? ev.start_time.slice(0, 5) : null,
+      end_time: ev.end_time ? ev.end_time.slice(0, 5) : null
     });
   });
 }
@@ -603,14 +624,7 @@ async function addEvent(dateISO, title, startTime, endTime, recurrente = false, 
   if (!eventsCache[dateISO]) eventsCache[dateISO] = [];
   eventsCache[dateISO].push(data);
 
-  ghost = null;
-  const weekForAdd = getWeekDates(weekOffset);
-  const dayIndex = weekForAdd.findIndex(d => toISO(d) === dateISO);
-  if (dayIndex >= 0) {
-    addEventToDOM(data, dateISO, dayIndex);
-  } else {
-    saveScroll(); renderSemana(); restoreScroll();
-  }
+  if (dateISO === toISO(diaActual)) renderHoy();
   showToast(`"${data.title}" agregado`, 'info');
 }
 
@@ -667,7 +681,6 @@ async function deleteEvent(id, dateISO) {
   if (error) { console.error(error); return; }
 
   eventsCache[dateISO] = (eventsCache[dateISO] || []).filter(e => e.id !== id);
-  ghost = null;
   removeEventFromDOM(id);
   if (ev) showToast(`"${ev.title}" eliminado`, 'error');
 }
@@ -769,6 +782,7 @@ function parseNL(raw) {
   }
 
   // Hora única
+  let horaFound = rangeFound;
   if (!rangeFound) {
     const sp = [
       /a\s+las?\s+(\d{1,2})(?::(\d{2}))?\s*h?s?/i,
@@ -783,6 +797,7 @@ function parseNL(raw) {
         h1 = parseInt(m[1]); m1 = parseInt(m[2] || 0);
         h2 = h1 + 1; m2 = m1;
         s = s.replace(m[0], ' ');
+        horaFound = true;
         break;
       }
     }
@@ -801,260 +816,126 @@ function parseNL(raw) {
   return {
     name: s ? s.charAt(0).toUpperCase() + s.slice(1) : 'Nuevo evento',
     date,
-    h1: Math.min(h1, 23),
-    m1,
-    h2: Math.min(h2, 23),
-    m2
+    // sin hora detectada → null (cae en "Cuando puedas" en vez de 9-10 default)
+    h1: horaFound ? Math.min(h1, 23) : null,
+    m1: horaFound ? m1 : null,
+    h2: horaFound ? Math.min(h2, 23) : null,
+    m2: horaFound ? m2 : null
   };
 }
 
-// ── RENDER SEMANA ───────────────────────────────────────────
+// ── RENDER HOY ──────────────────────────────────────────────
 
-function scrollToCurrentTime() {
-  const gridWrap = document.getElementById('grid-wrap');
-  if (!gridWrap) return;
-  const now = new Date();
-  const prefHour = getUserStartHour();
-  const targetHour = prefHour ?? Math.max(0, now.getHours() - 2);
-  gridWrap.scrollTop = Math.max(0, targetHour * SLOT_H);
+const MONTHS_LOWER = MONTHS_FULL.map(m => m.toLowerCase());
+
+function checkIconSVG() {
+  return `<svg width="10" height="10" viewBox="0 0 14 14" fill="none">
+    <polyline points="2,7 5.5,10.5 12,3" stroke="#000" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round"/>
+  </svg>`;
 }
 
-function renderSemana() {
-  const week = getVisibleDays();
+function hoyRowHTML(ev, dateISO, mostrarHora) {
+  const now = new Date();
+  const nowMin = now.getHours() * 60 + now.getMinutes();
+  let horaHTML = '';
+  if (mostrarHora) {
+    const startMin = timeToMin(ev.start_time);
+    const endMin = ev.end_time ? timeToMin(ev.end_time) : startMin + 60;
+    const esAhora = isToday(diaActual) && nowMin >= startMin && nowMin < endMin;
+    horaHTML = esAhora
+      ? `<span class="hoy-row-time"><span class="hoy-now-pill">ahora</span></span>`
+      : `<span class="hoy-row-time">${ev.start_time}</span>`;
+  }
+  return `
+    <div class="hoy-row" data-event-id="${ev.id}" onclick="openEventPanel(eventsCache['${dateISO}'].find(e=>e.id==='${ev.id}'), '${dateISO}')">
+      <button class="hoy-check${ev.done ? ' done' : ''}" onclick="event.stopPropagation();toggleDone('${ev.id}','${dateISO}')">
+        ${ev.done ? checkIconSVG() : ''}
+      </button>
+      <span class="hoy-row-title${ev.done ? ' done' : ''}">${ev.title}</span>
+      ${horaHTML}
+    </div>
+  `;
+}
 
-  const fmt = d => `${d.getDate()}/${d.getMonth() + 1}`;
-  document.getElementById('week-label').textContent =
-    `${fmt(week[0])} — ${fmt(week[week.length - 1])}`;
+function renderHoy() {
+  const dateISO = toISO(diaActual);
+  const dayEvents = eventsCache[dateISO] || [];
 
-  renderDayHeaders(week);
-  renderTimeGutter();
-  renderDayColumns(week);
+  // Header: título grande + fecha
+  const titleEl = document.getElementById('hoy-title');
+  const dateEl = document.getElementById('hoy-date');
+  if (titleEl) {
+    titleEl.textContent = isToday(diaActual) ? 'Hoy'
+      : isTomorrow(diaActual) ? 'Mañana'
+      : isYesterday(diaActual) ? 'Ayer'
+      : DAYS_FULL[diaActual.getDay()];
+  }
+  if (dateEl) dateEl.textContent = `${diaActual.getDate()} de ${MONTHS_LOWER[diaActual.getMonth()]}`;
+
+  // Progreso del día
+  const total = dayEvents.length;
+  const done = dayEvents.filter(e => e.done).length;
+  const fill = document.getElementById('hoy-progress-fill');
+  if (fill) fill.style.width = total ? `${Math.round(done / total * 100)}%` : '0%';
+  const progressText = document.getElementById('hoy-progress-text');
+  if (progressText) progressText.textContent = `${done} de ${total}`;
+
+  // Agrupar: foco (máx 3, no se repiten abajo) / con hora / sin hora
+  const foco = dayEvents.filter(e => e.is_focus).slice(0, 3);
+  const conHora = dayEvents.filter(e => !e.is_focus && e.start_time)
+    .sort((a, b) => timeToMin(a.start_time) - timeToMin(b.start_time));
+  const sinHora = dayEvents.filter(e => !e.is_focus && !e.start_time);
+
+  const listFoco = document.getElementById('hoy-list-foco');
+  if (listFoco) {
+    let html = foco.map(ev => hoyRowHTML(ev, dateISO, !!ev.start_time)).join('');
+    if (foco.length < 3) {
+      html += `<div class="hoy-row hoy-row-placeholder"><span class="hoy-placeholder-circle"></span>Elegí una tercera</div>`;
+    }
+    listFoco.innerHTML = html;
+  }
+
+  const secHora = document.getElementById('hoy-section-hora');
+  const listHora = document.getElementById('hoy-list-hora');
+  if (listHora) listHora.innerHTML = conHora.map(ev => hoyRowHTML(ev, dateISO, true)).join('');
+  if (secHora) secHora.style.display = conHora.length ? '' : 'none';
+
+  const secLibre = document.getElementById('hoy-section-libre');
+  const listLibre = document.getElementById('hoy-list-libre');
+  if (listLibre) listLibre.innerHTML = sinHora.map(ev => hoyRowHTML(ev, dateISO, false)).join('');
+  if (secLibre) secLibre.style.display = sinHora.length ? '' : 'none';
+
   updateMomentum();
 }
 
-function renderDayHeaders(week) {
-  const container = document.getElementById('day-headers');
-  container.innerHTML = '';
+async function changeDia(dir) {
+  const wrap = document.getElementById('hoy-scroll');
+  if (wrap) {
+    wrap.style.transition = 'transform 0.2s cubic-bezier(.4,0,.2,1), opacity 0.2s';
+    wrap.style.transform = `translateX(${dir < 0 ? '30px' : '-30px'})`;
+    wrap.style.opacity = '0';
+  }
 
-  week.forEach(d => {
-    const today = isToday(d);
-    const past = isPast(d);
-    const el = document.createElement('div');
-    el.className = 'day-header' + (today ? ' today' : '') + (past ? ' past' : '');
-    el.innerHTML = `
-      <span class="day-num">${d.getDate()}</span>
-      <span class="day-name">${DAYS[d.getDay()]}</span>
-      ${today ? '<div class="today-pip"></div>' : ''}
-    `;
-    container.appendChild(el);
-  });
-}
+  diaActual.setDate(diaActual.getDate() + dir);
+  await loadDia();
 
-function renderTimeGutter() {
-  const gutter = document.getElementById('time-gutter');
-  gutter.innerHTML = '';
-  for (let h = 0; h < 24; h++) {
-    const cell = document.createElement('div');
-    cell.className = 'time-cell';
-    cell.innerHTML = `<span class="time-label">${h}:00</span>`;
-    gutter.appendChild(cell);
+  if (wrap) {
+    wrap.style.transition = 'none';
+    wrap.style.transform = `translateX(${dir < 0 ? '-30px' : '30px'})`;
+    await new Promise(r => requestAnimationFrame(r));
+  }
+
+  renderHoy();
+
+  if (wrap) {
+    wrap.style.transition = 'transform 0.24s cubic-bezier(.4,0,.2,1), opacity 0.24s';
+    wrap.style.transform = 'translateX(0)';
+    wrap.style.opacity = '1';
+    setTimeout(() => { wrap.style.transition = ''; wrap.style.transform = ''; wrap.style.opacity = ''; }, 260);
   }
 }
 
-function renderDayColumns(week) {
-  const container = document.getElementById('day-columns');
-  container.innerHTML = '';
-
-  const now = new Date();
-
-  week.forEach((d, di) => {
-    const today = isToday(d);
-    const col = document.createElement('div');
-    col.className = 'day-col' + (today ? ' today-col' : '');
-
-    for (let h = 0; h < 24; h++) {
-      const line = document.createElement('div');
-      line.className = 'hour-line';
-      line.style.top = (h * SLOT_H) + 'px';
-      col.appendChild(line);
-    }
-
-    if (today) {
-      const y = toY(now.getHours(), now.getMinutes());
-      const nowLine = document.createElement('div');
-      nowLine.className = 'now-line';
-      nowLine.style.top = y + 'px';
-      nowLine.innerHTML = '<div class="now-dot"></div><div class="now-bar"></div>';
-      col.appendChild(nowLine);
-    }
-
-    const evs = eventsCache[toISO(d)] || [];
-    evs.sort((a, b) => timeToMin(a.start_time) - timeToMin(b.start_time));
-
-    evs.forEach(ev => {
-      const [sh, sm] = ev.start_time.split(':').map(Number);
-      const [eh, em] = ev.end_time.split(':').map(Number);
-      const y = toY(sh, sm);
-      const h = Math.max(toY(eh, em) - y, 18);
-      const color = eventColor(ev.title, ev.area);
-      const conflict = hasConflict(evs, ev);
-
-      const block = document.createElement('div');
-      block.className = 'event-block' + (ev.done ? ' done' : '') + (conflict ? ' conflict' : '') + (ev.recurrente ? ' recurring' : '');
-      block.style.cssText = `top:${y}px;height:${h}px`;
-      block.style.setProperty('--event-color', color);
-      block.style.setProperty('--event-color-30', color + '30');
-      block.style.setProperty('--event-color-15', color + '15');
-      block.setAttribute('data-event-id', ev.id);
-      block.setAttribute('draggable', 'true');
-      block.innerHTML = `
-        <div class="ev-title">${ev.title}${ev.recurrente ? '<span class="ev-recur">↻</span>' : ''}</div>
-        ${h > 24 ? `<div class="ev-time">${ev.start_time}–${ev.end_time}</div>` : ''}
-        <button class="ev-del" onclick="event.stopPropagation();deleteEvent('${ev.id}','${toISO(d)}')">×</button>
-      `;
-      block.addEventListener('click', (e) => { e.stopPropagation(); openEventPanel(ev, toISO(d)); });
-
-      // Drag start
-      block.addEventListener('dragstart', e => {
-        dragEvent = { ev: { ...ev }, fromDate: toISO(d) };
-        e.dataTransfer.effectAllowed = 'move';
-        e.dataTransfer.setData('text/plain', ev.id);
-        setTimeout(() => { block.style.opacity = '0.35'; }, 0);
-      });
-      block.addEventListener('dragend', () => {
-        block.style.opacity = '';
-        dragEvent = null;
-        document.querySelectorAll('.day-col.drag-over').forEach(c => c.classList.remove('drag-over'));
-      });
-
-      col.appendChild(block);
-    });
-
-    if (ghost && ghost.di === di) {
-      const gy = toY(ghost.h, ghost.m);
-      const gey = toY(ghost.eh, ghost.em);
-      const gh = Math.max(gey - gy, 60);
-
-      const gBlock = document.createElement('div');
-      gBlock.className = 'ghost-block';
-      gBlock.style.cssText = `top:${gy}px;height:${gh}px`;
-      gBlock.innerHTML = `
-        <input class="ghost-name-inp" id="ghost-inp" type="text" placeholder="nombre del evento..." value="${ghost.pre || ''}"/>
-        <div class="ghost-times">
-          <input class="ghost-time-inp" id="ghost-start" type="text" value="${fmtTime(ghost.h, ghost.m)}" placeholder="09:00"/>
-          <span class="ghost-sep">→</span>
-          <input class="ghost-time-inp" id="ghost-end" type="text" value="${fmtTime(ghost.eh, ghost.em)}" placeholder="10:00"/>
-          <button class="ghost-ok" onclick="commitGhost('${toISO(d)}')">✓ ok</button>
-        </div>
-      `;
-      gBlock.addEventListener('click', e => e.stopPropagation());
-      col.appendChild(gBlock);
-
-      setTimeout(() => {
-        const inp = document.getElementById('ghost-inp');
-        if (inp) {
-          inp.focus();
-          if (ghost.pre) inp.select();
-        }
-      }, 20);
-
-      setTimeout(() => {
-        const inp = document.getElementById('ghost-inp');
-        if (inp) {
-          inp.addEventListener('keydown', e => {
-            if (e.key === 'Enter') commitGhost(toISO(d));
-            if (e.key === 'Escape') { ghost = null; renderSemana(); }
-            e.stopPropagation();
-          });
-        }
-      }, 25);
-    }
-
-    // Drag & drop — recibir eventos de otros días
-    col.addEventListener('dragover', e => {
-      if (!dragEvent) return;
-      e.preventDefault();
-      e.dataTransfer.dropEffect = 'move';
-      col.classList.add('drag-over');
-    });
-    col.addEventListener('dragleave', e => {
-      if (!e.relatedTarget || !col.contains(e.relatedTarget)) {
-        col.classList.remove('drag-over');
-      }
-    });
-    col.addEventListener('drop', async e => {
-      e.preventDefault();
-      col.classList.remove('drag-over');
-      if (!dragEvent) return;
-      const rect = col.getBoundingClientRect();
-      const gridWrap = document.getElementById('grid-wrap');
-      const relY = e.clientY - rect.top + gridWrap.scrollTop;
-      const { h: newH, m: newM } = yToHM(relY);
-      const [sh, sm] = dragEvent.ev.start_time.split(':').map(Number);
-      const [eh, em] = dragEvent.ev.end_time.split(':').map(Number);
-      const durationMin = Math.max((eh * 60 + em) - (sh * 60 + sm), 30);
-      const newStartMin = newH * 60 + newM;
-      const newEndMin = newStartMin + durationMin;
-      const newEndH = Math.min(Math.floor(newEndMin / 60), 23);
-      const newEndM = newEndMin % 60;
-      const newStart = fmtTime(newH, newM);
-      const newEnd = fmtTime(newEndH, newEndM);
-      const newDateISO = toISO(d);
-      if (newStart === dragEvent.ev.start_time && newDateISO === dragEvent.fromDate) { dragEvent = null; return; }
-      const { error } = await db.from('events').update({ date: newDateISO, start_time: newStart, end_time: newEnd }).eq('id', dragEvent.ev.id);
-      if (error) { showToast('Error al mover evento', 'error'); dragEvent = null; return; }
-      eventsCache[dragEvent.fromDate] = (eventsCache[dragEvent.fromDate] || []).filter(ev => ev.id !== dragEvent.ev.id);
-      if (!eventsCache[newDateISO]) eventsCache[newDateISO] = [];
-      const moved = { ...dragEvent.ev, date: newDateISO, start_time: newStart, end_time: newEnd };
-      eventsCache[newDateISO].push(moved);
-      dragEvent = null;
-      renderSemana();
-      showToast('Evento movido', 'success');
-    });
-
-    col.addEventListener('click', (e) => {
-      if (ghost) { ghost = null; renderSemana(); return; }
-
-      const now = Date.now();
-      if (now - _lastTapTime < 350 && _lastTapDi === di) {
-        _lastTapTime = 0;
-        const rect = col.getBoundingClientRect();
-        const gridWrap = document.getElementById('grid-wrap');
-        const relY = e.clientY - rect.top + gridWrap.scrollTop;
-        const { h, m } = yToHM(relY);
-        const em2 = (m + 30) % 60;
-        const eh2 = m + 30 >= 60 ? h + 1 : h;
-        ghost = { di, h, m, eh: Math.min(eh2, 23), em: em2, pre: '' };
-        renderSemana();
-      } else {
-        _lastTapTime = now;
-        _lastTapDi = di;
-      }
-    });
-
-    container.appendChild(col);
-  });
-
-}
-
-function commitGhost(dateISO) {
-  const nameInp = document.getElementById('ghost-inp');
-  const startInp = document.getElementById('ghost-start');
-  const endInp = document.getElementById('ghost-end');
-
-  const name = nameInp?.value?.trim() || '';
-  if (!name) { ghost = null; renderSemana(); return; }
-
-  const parseT = s => {
-    const parts = (s || '').split(':');
-    return { h: parseInt(parts[0]) || 9, m: parseInt(parts[1]) || 0 };
-  };
-
-  const start = parseT(startInp?.value);
-  const end = parseT(endInp?.value);
-
-  promptAndAddEvent(dateISO, name, fmtTime(start.h, start.m), fmtTime(end.h, end.m));
-}
 
 function updateMomentum() {
   const { pct: commitPct, counted } = calcCommitmentScore();
@@ -1126,13 +1007,8 @@ async function renderMes() {
     `;
 
     el.addEventListener('click', () => {
-      const now2 = new Date();
-      now2.setHours(0, 0, 0, 0);
-      const mon = new Date(now2);
-      mon.setDate(now2.getDate() - ((now2.getDay() || 7) - 1));
-      const tgt = new Date(date);
-      tgt.setHours(0, 0, 0, 0);
-      weekOffset = Math.round((tgt - mon) / (7 * 86400000));
+      diaActual = new Date(date);
+      diaActual.setHours(0, 0, 0, 0);
       setView('semana');
     });
 
@@ -1751,19 +1627,9 @@ async function setView(view) {
     viewEl.style.animation = 'viewEnter 0.28s cubic-bezier(.4,0,.2,1)';
   }
 
-  const weekNav = document.getElementById('week-nav');
-  if (weekNav) weekNav.style.visibility = view === 'semana' ? 'visible' : 'hidden';
-
-  const inputBar = document.getElementById('input-bar');
-  const chipsBar = document.getElementById('chips-bar');
-  if (inputBar) inputBar.style.display = view === 'semana' ? '' : 'none';
-  if (chipsBar) chipsBar.style.display = view === 'semana' ? '' : 'none';
-
   if (view === 'semana') {
-    ghost = null;
-    await loadWeek();
-    renderSemana();
-    setTimeout(scrollToCurrentTime, 80);
+    await loadDia();
+    renderHoy();
   } else if (view === 'mes') {
     await renderMes();
   } else if (view === 'patrones') {
@@ -1774,36 +1640,6 @@ async function setView(view) {
   } else if (view === 'equipo') {
     renderEquipo();
   }
-}
-
-async function changeWeek(dir) {
-  const semana = document.getElementById('view-semana');
-  semana.style.transition = 'transform 0.2s cubic-bezier(.4,0,.2,1), opacity 0.2s';
-  semana.style.transform = `translateX(${dir < 0 ? '30px' : '-30px'})`;
-  semana.style.opacity = '0';
-
-  weekOffset += dir;
-  ghost = null;
-  showSkeleton();
-  await loadWeek();
-
-  semana.style.transition = 'none';
-  semana.style.transform = `translateX(${dir < 0 ? '-30px' : '30px'})`;
-  semana.style.opacity = '0';
-
-  await new Promise(r => requestAnimationFrame(r));
-  renderSemana();
-
-  semana.style.transition = 'transform 0.24s cubic-bezier(.4,0,.2,1), opacity 0.24s';
-  semana.style.transform = 'translateX(0)';
-  semana.style.opacity = '1';
-
-  setTimeout(() => {
-    semana.style.transition = '';
-    semana.style.transform = '';
-    semana.style.opacity = '';
-    scrollToCurrentTime();
-  }, 260);
 }
 
 // ── NOTIFICACIONES PUSH ─────────────────────────────────────
@@ -1873,7 +1709,9 @@ document.addEventListener('DOMContentLoaded', () => {
     if (date) {
       chips.push(`<span class="chip chip-date">📅 ${DAYS[date.getDay()]} ${date.getDate()}/${date.getMonth() + 1}</span>`);
     }
-    chips.push(`<span class="chip chip-time">⏱ ${fmtTime(h1, m1)}–${fmtTime(h2, m2)}</span>`);
+    chips.push(h1 !== null
+      ? `<span class="chip chip-time">⏱ ${fmtTime(h1, m1)}–${fmtTime(h2, m2)}</span>`
+      : `<span class="chip chip-time">◌ sin hora</span>`);
     if (name && name !== 'Nuevo evento') {
       chips.push(`<span class="chip chip-name">✓ ${name}</span>`);
     }
@@ -1892,18 +1730,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
       const dateISO = toISO(date);
 
-      const week = getWeekDates(weekOffset);
-      if (!week.some(d => toISO(d) === dateISO)) {
-        const now = new Date();
-        now.setHours(0, 0, 0, 0);
-        const mon = new Date(now);
-        mon.setDate(now.getDate() - ((now.getDay() || 7) - 1));
-        const tgt = new Date(date);
-        tgt.setHours(0, 0, 0, 0);
-        weekOffset = Math.round((tgt - mon) / (7 * 86400000));
+      if (dateISO !== toISO(diaActual)) {
+        diaActual = new Date(date);
+        diaActual.setHours(0, 0, 0, 0);
       }
 
-      promptAndAddEvent(dateISO, name, fmtTime(h1, m1), fmtTime(h2, m2));
+      const startTime = h1 !== null ? fmtTime(h1, m1) : null;
+      const endTime = h2 !== null ? fmtTime(h2, m2) : null;
+      promptAndAddEvent(dateISO, name, startTime, endTime);
 
       nlInput.value = '';
       chipsBar.classList.remove('show');
@@ -1911,23 +1745,14 @@ document.addEventListener('DOMContentLoaded', () => {
       if (currentView !== 'semana') {
         setView('semana');
       } else {
-        await loadWeek();
-        renderSemana();
+        await loadDia();
+        renderHoy();
       }
     }
 
     if (e.key === 'Escape') {
       nlInput.value = '';
       chipsBar.classList.remove('show');
-    }
-  });
-
-  document.addEventListener('click', (e) => {
-    if (ghost &&
-        !e.target.closest('.ghost-block') &&
-        !e.target.closest('.day-col')) {
-      ghost = null;
-      if (currentView === 'semana') renderSemana();
     }
   });
 
@@ -1954,15 +1779,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     switch (e.key) {
       case 't': case 'T':
-        weekOffset = 0;
-        if (currentView === 'semana') { loadWeek().then(renderSemana); }
+        diaActual = new Date(); diaActual.setHours(0, 0, 0, 0);
+        if (currentView === 'semana') { loadDia().then(renderHoy); }
         else setView('semana');
         break;
       case 'ArrowLeft':
-        if (currentView === 'semana') changeWeek(-1);
+        if (currentView === 'semana') changeDia(-1);
         break;
       case 'ArrowRight':
-        if (currentView === 'semana') changeWeek(1);
+        if (currentView === 'semana') changeDia(1);
         break;
       case 'n': case 'N':
         document.getElementById('nl-input')?.focus();
@@ -1997,7 +1822,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 
-// swipe horizontal para navegar días en mobile
+// swipe horizontal para navegar entre días en mobile
 (function() {
   let tx = 0, ty = 0;
   document.addEventListener('touchstart', e => {
@@ -2010,22 +1835,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const dx = e.changedTouches[0].clientX - tx;
     const dy = e.changedTouches[0].clientY - ty;
     if (Math.abs(dx) > 55 && Math.abs(dx) > Math.abs(dy) * 1.5) {
-      changeWeek(dx < 0 ? 1 : -1);
+      changeDia(dx < 0 ? 1 : -1);
     }
   }, { passive: true });
 })();
-
-// re-render semana si cambia orientación del dispositivo
-let _prevMobile = isMobile();
-window.addEventListener('resize', () => {
-  const nowMobile = isMobile();
-  if (nowMobile !== _prevMobile) {
-    _prevMobile = nowMobile;
-    if (document.getElementById('view-semana')?.style.display !== 'none') {
-      loadWeek().then(() => { saveScroll(); renderSemana(); restoreScroll(); });
-    }
-  }
-});
 
 // ── ONBOARDING ──────────────────────────────────────────────
 
@@ -2341,8 +2154,8 @@ function openEventPanel(ev, dateISO) {
 
   const d = new Date(dateISO + 'T12:00:00');
   const dayStr = DAYS_FULL[d.getDay()];
-  document.getElementById('panel-meta').textContent =
-    `${ev.start_time} – ${ev.end_time} · ${dayStr}`;
+  const horaStr = ev.start_time && ev.end_time ? `${ev.start_time} – ${ev.end_time}` : 'Sin hora';
+  document.getElementById('panel-meta').textContent = `${horaStr} · ${dayStr}`;
 
   const color = eventColor(ev.title, ev.area);
   document.getElementById('event-panel').style.setProperty('--event-color', color);
@@ -2364,6 +2177,7 @@ function openEventPanel(ev, dateISO) {
     recOnce.classList.toggle('active', !ev.recurrente);
     recWeekly.classList.toggle('active', !!ev.recurrente);
   }
+  updateFocusButton(!!ev.is_focus);
 
   document.getElementById('event-panel').classList.add('open');
   document.getElementById('panel-overlay').classList.add('open');
@@ -2439,8 +2253,39 @@ async function setPanelRecurrence(recurrente) {
   document.getElementById('recur-once').classList.toggle('active', !recurrente);
   document.getElementById('recur-weekly').classList.toggle('active', recurrente);
 
-  saveScroll(); renderSemana(); restoreScroll();
+  renderHoy();
   showToast(recurrente ? 'Se repite cada semana' : 'Solo esta vez', 'success');
+}
+
+// "Foco del día" — máx 3 tareas prioritarias por día
+async function setPanelFocus() {
+  if (!panelEvent) return;
+  const newVal = !panelEvent.is_focus;
+
+  if (newVal) {
+    const dayEvs = eventsCache[panelDateISO] || [];
+    const focusCount = dayEvs.filter(e => e.is_focus && e.id !== panelEvent.id).length;
+    if (focusCount >= 3) { showToast('Ya tenés 3 tareas en Tu foco', 'error'); return; }
+  }
+
+  const { error } = await db.from('events').update({ is_focus: newVal }).eq('id', panelEvent.id);
+  if (error) { console.error(error); return; }
+
+  panelEvent.is_focus = newVal;
+  const cached = (eventsCache[panelDateISO] || []).find(e => e.id === panelEvent.id);
+  if (cached) cached.is_focus = newVal;
+
+  updateFocusButton(newVal);
+  renderHoy();
+  showToast(newVal ? 'Agregado a Tu foco' : 'Sacado de Tu foco', 'success');
+}
+
+function updateFocusButton(active) {
+  const btn = document.getElementById('panel-focus-toggle');
+  const icon = document.getElementById('panel-focus-icon');
+  if (!btn) return;
+  btn.classList.toggle('active', active);
+  if (icon) icon.textContent = active ? '★' : '☆';
 }
 
 // ── FOCUS TIMER — panel compacto ────────────────────────────
@@ -2563,35 +2408,6 @@ async function saveFocusSession(completed) {
   });
 }
 
-// ── SKELETON LOADING ────────────────────────────────────────
-
-function showSkeleton() {
-  const container = document.getElementById('day-columns');
-  if (!container) return;
-  container.innerHTML = '';
-  const slotPatterns = [
-    [{ top: 120, h: 96 }, { top: 288, h: 144 }, { top: 528, h: 72 }],
-    [{ top: 96, h: 72 }, { top: 336, h: 96 }],
-    [{ top: 192, h: 120 }, { top: 432, h: 96 }, { top: 672, h: 72 }],
-    [{ top: 144, h: 144 }],
-    [{ top: 240, h: 96 }, { top: 480, h: 72 }],
-    [{ top: 168, h: 120 }, { top: 384, h: 96 }],
-    [{ top: 96, h: 96 }],
-  ];
-  for (let d = 0; d < 7; d++) {
-    const col = document.createElement('div');
-    col.className = 'day-col';
-    col.style.height = '1152px';
-    (slotPatterns[d] || []).forEach(({ top, h }) => {
-      const block = document.createElement('div');
-      block.className = 'skeleton-block';
-      block.style.cssText = `top:${top}px;height:${h}px`;
-      col.appendChild(block);
-    });
-    container.appendChild(col);
-  }
-}
-
 // ── PARTÍCULAS & CONFETTI ────────────────────────────────────
 
 function fireParticles(x, y) {
@@ -2674,10 +2490,10 @@ function fireConfetti() {
 // ── COMMAND PALETTE ──────────────────────────────────────────
 
 const CMD_ACTIONS = [
-  { label: 'Ir a hoy',          icon: '📅', hint: 'T', fn: () => { weekOffset = 0; setView('semana'); } },
-  { label: 'Semana anterior',   icon: '‹',  hint: '←', fn: () => changeWeek(-1) },
-  { label: 'Semana siguiente',  icon: '›',  hint: '→', fn: () => changeWeek(1) },
-  { label: 'Vista Semana',      icon: '▦',  hint: '',  fn: () => setView('semana') },
+  { label: 'Ir a hoy',          icon: '📅', hint: 'T', fn: () => { diaActual = new Date(); diaActual.setHours(0,0,0,0); setView('semana'); } },
+  { label: 'Día anterior',      icon: '‹',  hint: '←', fn: () => changeDia(-1) },
+  { label: 'Día siguiente',     icon: '›',  hint: '→', fn: () => changeDia(1) },
+  { label: 'Vista Hoy',         icon: '▦',  hint: '',  fn: () => setView('semana') },
   { label: 'Vista Mes',         icon: '◉',  hint: '',  fn: () => setView('mes') },
   { label: 'Vista Proyectos',   icon: '◈',  hint: '',  fn: () => setView('patrones') },
   { label: 'Vista Sugerencias', icon: '✦',  hint: '',  fn: () => setView('sugerencias') },
@@ -2746,77 +2562,16 @@ function toggleAmbientMode() {
   showToast(ambientActive ? 'Modo foco activo' : 'Modo foco desactivado', 'info');
 }
 
-// ── RENDERIZADO SELECTIVO ────────────────────────────────────
-
-let _savedScroll = 0;
-function saveScroll() {
-  const gw = document.getElementById('grid-wrap');
-  _savedScroll = gw ? gw.scrollTop : 0;
-}
-function restoreScroll() {
-  const gw = document.getElementById('grid-wrap');
-  if (gw) gw.scrollTop = _savedScroll;
-}
+// ── RE-RENDER TRAS CAMBIOS ───────────────────────────────────
+// La vista Hoy es una lista agrupada (no bloques posicionados
+// absolutamente), así que un re-render completo es simple y barato.
 
 function updateEventDoneInDOM(id, done) {
-  const block = document.querySelector(`[data-event-id="${id}"]`);
-  if (!block) { saveScroll(); renderSemana(); restoreScroll(); return; }
-  block.classList.remove('completing');
-  block.classList.toggle('done', done);
+  renderHoy();
 }
 
 function removeEventFromDOM(id) {
-  const block = document.querySelector(`[data-event-id="${id}"]`);
-  if (!block) { saveScroll(); renderSemana(); restoreScroll(); return; }
-  block.style.transition = 'all 0.22s cubic-bezier(.4,0,.2,1)';
-  block.style.opacity = '0';
-  block.style.transform = 'scale(0.92) translateX(6px)';
-  block.style.filter = 'blur(2px)';
-  setTimeout(() => { block.remove(); updateMomentum(); }, 230);
-}
-
-function addEventToDOM(ev, dateISO, dayIndex) {
-  const cols = document.querySelectorAll('.day-col');
-  const col = cols[dayIndex];
-  if (!col) { saveScroll(); renderSemana(); restoreScroll(); return; }
-
-  document.querySelector('.ghost-block')?.remove();
-
-  const [sh, sm] = ev.start_time.split(':').map(Number);
-  const [eh, em] = ev.end_time.split(':').map(Number);
-  const y = toY(sh, sm);
-  const h = Math.max(toY(eh, em) - y, 18);
-  const color = eventColor(ev.title, ev.area);
-  const conflict = hasConflict(eventsCache[dateISO] || [], ev);
-
-  const block = document.createElement('div');
-  block.className = 'event-block' + (conflict ? ' conflict' : '');
-  block.style.cssText = `top:${y}px;height:${h}px`;
-  block.style.setProperty('--event-color', color);
-  block.style.setProperty('--event-color-30', color + '30');
-  block.style.setProperty('--event-color-15', color + '15');
-  block.setAttribute('data-event-id', ev.id);
-  block.setAttribute('draggable', 'true');
-  block.innerHTML = `
-    <div class="ev-title">${ev.title}</div>
-    ${h > 24 ? `<div class="ev-time">${ev.start_time}–${ev.end_time}</div>` : ''}
-    <button class="ev-del" onclick="event.stopPropagation();deleteEvent('${ev.id}','${dateISO}')">×</button>
-  `;
-  block.addEventListener('click', () => openEventPanel(ev, dateISO));
-  block.addEventListener('dragstart', e => {
-    dragEvent = { ev: { ...ev }, fromDate: dateISO };
-    e.dataTransfer.effectAllowed = 'move';
-    e.dataTransfer.setData('text/plain', ev.id);
-    setTimeout(() => { block.style.opacity = '0.35'; }, 0);
-  });
-  block.addEventListener('dragend', () => {
-    block.style.opacity = '';
-    dragEvent = null;
-    document.querySelectorAll('.day-col.drag-over').forEach(c => c.classList.remove('drag-over'));
-  });
-
-  col.appendChild(block);
-  updateMomentum();
+  renderHoy();
 }
 
 // ── EVENING CHECK-IN ─────────────────────────────────────────
