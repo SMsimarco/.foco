@@ -659,8 +659,23 @@ async function toggleDone(id, dateISO) {
     if (dayEvs.length > 0 && dayEvs.every(e => e.done)) {
       setTimeout(fireConfetti, 120);
       showToast('¡Día completado!', 'success');
+      if (_foqCelebratedDate !== dateISO) {
+        _foqCelebratedDate = dateISO;
+        setFoquitoState('happy');
+        addFoqBubble(pickFoquitoCelebration(), 'foq');
+        setTimeout(() => setFoquitoState(null), 4000);
+      }
     }
   }
+}
+
+function pickFoquitoCelebration() {
+  const frases = [
+    'Cerraste el día entero. Con toda la razón del mundo, orgullo total.',
+    'Todo hecho. Así se hace, día redondo.',
+    'Ahí está, terminaste todo lo de hoy. Te la bancaste.'
+  ];
+  return frases[Math.floor(Math.random() * frases.length)];
 }
 
 async function updatePattern(ev) {
@@ -1638,6 +1653,34 @@ let _foqGreeted = false;
 let _foqRecognition = null;
 let _foqRecording = false;
 let _foqOpen = false;
+let _foqCelebratedDate = null;
+
+// Cara de Foquito reacciona al momento: idle (default), happy (festejo), thinking (procesando voz)
+function setFoquitoState(state) {
+  const fab = document.getElementById('foq-fab');
+  if (!fab) return;
+  fab.classList.remove('state-happy', 'state-thinking');
+  if (state) fab.classList.add('state-' + state);
+}
+
+// Saludo cambia según cómo viene el día — no es siempre el mismo texto
+function getFoquitoGreeting() {
+  const dateISO = toISO(new Date());
+  const dayEvs = eventsCache[dateISO] || [];
+  if (!dayEvs.length) {
+    return 'Hola, soy Foquito. Contame qué tenés que hacer, por texto o por audio, y te lo anoto.';
+  }
+  const done = dayEvs.filter(e => e.done).length;
+  const total = dayEvs.length;
+  if (done === total) {
+    return 'Ya cerraste todo por hoy. ¿Sumamos algo para mañana?';
+  }
+  const hour = new Date().getHours();
+  if (hour >= 18 && done === 0) {
+    return 'Vamos que todavía se puede. ¿Con cuál arrancamos?';
+  }
+  return `Vas ${done} de ${total} hoy. Contame qué más anotamos.`;
+}
 
 function toggleFoquitoWidget() {
   _foqOpen = !_foqOpen;
@@ -1647,7 +1690,7 @@ function toggleFoquitoWidget() {
   if (_foqOpen) {
     if (!_foqGreeted) {
       _foqGreeted = true;
-      addFoqBubble('Hola, soy Foquito. Contame qué tenés que hacer, por texto o por audio, y te lo anoto.', 'foq');
+      addFoqBubble(getFoquitoGreeting(), 'foq');
     }
     document.getElementById('foq-input')?.focus();
   }
@@ -1672,7 +1715,7 @@ async function sendFoquitoMessage(rawText) {
 
   const { name, date, h1, m1, h2, m2 } = parseNL(text);
   if (!name) {
-    addFoqBubble('No entendí bien qué querés anotar. ¿Podés contarme de nuevo?', 'foq');
+    addFoqBubble('No te entendí bien. ¿Me lo contás de otra forma?', 'foq');
     return;
   }
 
@@ -1716,6 +1759,7 @@ function toggleFoquitoMic() {
   _foqRecognition.onstart = () => {
     _foqRecording = true;
     btn.classList.add('recording');
+    setFoquitoState('thinking');
   };
 
   _foqRecognition.onresult = (e) => {
@@ -1725,11 +1769,13 @@ function toggleFoquitoMic() {
 
   _foqRecognition.onerror = () => {
     showToast('No se pudo escuchar el audio', 'error');
+    setFoquitoState(null);
   };
 
   _foqRecognition.onend = () => {
     _foqRecording = false;
     btn.classList.remove('recording');
+    setFoquitoState(null);
   };
 
   _foqRecognition.start();

@@ -1410,6 +1410,14 @@ html, body {
 #foq-fab:hover { transform: scale(1.06); }
 #foq-fab.open { opacity: 0; pointer-events: none; transform: scale(0.7); }
 
+/* Estados de Foquito — idle por defecto, happy/thinking se activan por JS */
+#foq-fab .foq-face-happy,
+#foq-fab .foq-face-thinking { display: none; }
+#foq-fab.state-happy .foq-face-idle,
+#foq-fab.state-thinking .foq-face-idle { display: none; }
+#foq-fab.state-happy .foq-face-happy { display: block; }
+#foq-fab.state-thinking .foq-face-thinking { display: block; }
+
 #foq-panel {
   position: fixed;
   right: 12px;
