@@ -1735,6 +1735,22 @@ function toggleFoquitoMic() {
   _foqRecognition.start();
 }
 
+// Mantiene el FAB/panel de Foquito pegados arriba del teclado en mobile
+// (position:fixed con bottom fijo queda tapado por el teclado en iOS/Android)
+if (window.visualViewport) {
+  const vv = window.visualViewport;
+  const adjustFoquitoForKeyboard = () => {
+    const keyboardInset = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
+    const bottom = keyboardInset > 60 ? keyboardInset + 12 : 68;
+    const fab = document.getElementById('foq-fab');
+    const panel = document.getElementById('foq-panel');
+    if (fab) fab.style.bottom = bottom + 'px';
+    if (panel) panel.style.bottom = bottom + 'px';
+  };
+  vv.addEventListener('resize', adjustFoquitoForKeyboard);
+  vv.addEventListener('scroll', adjustFoquitoForKeyboard);
+}
+
 // ── NOTIFICACIONES PUSH ─────────────────────────────────────
 // Suscripción real vía Push API + Service Worker: llegan aunque
 // la app esté cerrada. El disparo (15min antes del evento) lo

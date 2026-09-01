@@ -65,6 +65,7 @@ html, body {
 /* ── AUTH ── */
 .auth-screen {
   height: 100vh;
+  height: 100dvh;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -180,6 +181,7 @@ html, body {
 /* ── APP LAYOUT ── */
 #app {
   height: 100vh;
+  height: 100dvh;
   display: flex;
   flex-direction: column;
   overflow: hidden;
