@@ -627,41 +627,19 @@ async function addEvent(dateISO, title, startTime, endTime, recurrente = false, 
   if (!eventsCache[dateISO]) eventsCache[dateISO] = [];
   eventsCache[dateISO].push(data);
 
-  if (dateISO === toISO(diaActual)) {
-    // Foco del día tiene lógica de máx-3/slice propia — ahí sí conviene el re-render completo.
-    // El resto (con hora / sin hora) se inserta puntual, sin tocar la lista entera.
-    if (isFocus) renderHoy();
-    else insertHoyRowLive(data, dateISO);
-  }
+  refreshDiaOSemanaGrid(dateISO);
   showToast(`"${data.title}" agregado`, 'info');
 }
 
-// Inserta la tarjeta de una tarea nueva en su lugar (orden cronológico si tiene hora,
-// al final de "Cuando puedas" si no) sin re-renderizar el resto de la vista Hoy.
-function insertHoyRowLive(ev, dateISO) {
-  const dayEvents = eventsCache[dateISO] || [];
-  const conHora = !!ev.start_time;
-  const list = document.getElementById(conHora ? 'hoy-list-hora' : 'hoy-list-libre');
-  const sec = document.getElementById(conHora ? 'hoy-section-hora' : 'hoy-section-libre');
-  if (!list) return;
-
-  const wrap = document.createElement('div');
-  wrap.innerHTML = hoyRowHTML(ev, dateISO, conHora).trim();
-  const row = wrap.firstElementChild;
-  row.classList.add('hoy-row-enter');
-
-  if (conHora) {
-    const ordenados = dayEvents.filter(e => !e.is_focus && e.start_time)
-      .sort((a, b) => timeToMin(a.start_time) - timeToMin(b.start_time));
-    const idx = ordenados.findIndex(e => e.id === ev.id);
-    list.insertBefore(row, list.children[idx] || null);
-  } else {
-    list.appendChild(row);
+// Re-renderiza la vista temporal activa (Día o Semana) si el cambio le pega —
+// ambas son grillas con bloques posicionados, no hace falta tocar un nodo puntual:
+// reconstruyen solo su propio subárbol, no la vista entera ni el resto de la página.
+function refreshDiaOSemanaGrid(dateISO) {
+  if (currentView === 'semana' && dateISO === toISO(diaActual)) {
+    renderHoy();
+  } else if (currentView === 'semana-grid') {
+    renderSemanaGrid();
   }
-
-  if (sec) sec.style.display = '';
-  updateMomentum();
-  setTimeout(() => row.classList.remove('hoy-row-enter'), 280);
 }
 
 async function toggleDone(id, dateISO) {
@@ -684,7 +662,7 @@ async function toggleDone(id, dateISO) {
   if (error) { console.error(error); return; }
 
   ev.done = newDone;
-  updateEventDoneInDOM(id, newDone);
+  updateEventDoneInDOM(id, newDone, dateISO);
   updateMomentum();
   if (currentView === 'sugerencias') updateSugStats();
   updatePattern(ev);
@@ -732,7 +710,7 @@ async function deleteEvent(id, dateISO) {
   if (error) { console.error(error); return; }
 
   eventsCache[dateISO] = (eventsCache[dateISO] || []).filter(e => e.id !== id);
-  removeEventFromDOM(id);
+  removeEventFromDOM(id, dateISO);
   if (ev) showToast(`"${ev.title}" eliminado`, 'error');
 }
 
@@ -925,28 +903,51 @@ function renderHoy() {
   }
   if (dateEl) dateEl.textContent = `${diaActual.getDate()} de ${MONTHS_LOWER[diaActual.getMonth()]}`;
 
-  // Agrupar: foco (máx 3, no se repiten abajo) / con hora / sin hora
+  // "Tu foco" sigue siendo una lista chica arriba — no compite con el calendario de abajo
   const foco = dayEvents.filter(e => e.is_focus).slice(0, 3);
-  const conHora = dayEvents.filter(e => !e.is_focus && e.start_time)
-    .sort((a, b) => timeToMin(a.start_time) - timeToMin(b.start_time));
-  const sinHora = dayEvents.filter(e => !e.is_focus && !e.start_time);
-
   const secFoco = document.getElementById('hoy-section-foco');
   const listFoco = document.getElementById('hoy-list-foco');
   if (listFoco) listFoco.innerHTML = foco.map(ev => hoyRowHTML(ev, dateISO, !!ev.start_time)).join('');
   if (secFoco) secFoco.style.display = foco.length ? '' : 'none';
 
-  const secHora = document.getElementById('hoy-section-hora');
-  const listHora = document.getElementById('hoy-list-hora');
-  if (listHora) listHora.innerHTML = conHora.map(ev => hoyRowHTML(ev, dateISO, true)).join('');
-  if (secHora) secHora.style.display = conHora.length ? '' : 'none';
-
-  const secLibre = document.getElementById('hoy-section-libre');
-  const listLibre = document.getElementById('hoy-list-libre');
-  if (listLibre) listLibre.innerHTML = sinHora.map(ev => hoyRowHTML(ev, dateISO, false)).join('');
-  if (secLibre) secLibre.style.display = sinHora.length ? '' : 'none';
-
+  renderDiaGrid(dateISO, dayEvents);
   updateMomentum();
+}
+
+// Grilla horaria de un solo día — reemplaza lo que antes eran las listas
+// "Durante el día" / "Cuando puedas". Comparte la lógica de bloques con la
+// vista Semana vía renderGridColumnHTML/buildGridBlockHTML (ver más abajo).
+function renderDiaGrid(dateISO, dayEvents) {
+  const { horaBase, horaTope } = computeGridHourRange([diaActual]);
+  const alturaTotal = (horaTope - horaBase) * ALTO_HORA;
+
+  const sinHora = dayEvents.filter(e => !e.is_focus && !e.start_time);
+  const alldayWrap = document.getElementById('dg-allday');
+  if (alldayWrap) alldayWrap.style.display = sinHora.length ? 'flex' : 'none';
+
+  const alldayListEl = document.getElementById('dg-allday-list');
+  if (alldayListEl) {
+    alldayListEl.innerHTML = sinHora.map(ev => {
+      const color = eventColor(ev.title, ev.area);
+      return `<div class="sg-chip" style="background:${color}29;border-left-color:${color};color:${color}"
+        onclick="openEventPanel(eventsCache['${dateISO}'].find(e=>e.id==='${ev.id}'), '${dateISO}')">${ev.title}</div>`;
+    }).join('');
+  }
+
+  const hoursEl = document.getElementById('dg-hours');
+  if (hoursEl) {
+    let html = '';
+    for (let h = horaBase; h < horaTope; h++) {
+      html += `<div class="sg-hour-label" style="height:${ALTO_HORA}px">${String(h).padStart(2, '0')}:00</div>`;
+    }
+    hoursEl.innerHTML = html;
+  }
+
+  const colEl = document.getElementById('dg-day-col');
+  if (colEl) {
+    colEl.style.height = alturaTotal + 'px';
+    colEl.innerHTML = renderGridColumnHTML(dateISO, horaBase, horaTope, isToday(diaActual));
+  }
 }
 
 async function changeDia(dir) {
@@ -1122,31 +1123,76 @@ function renderSemanaGrid() {
   if (daysEl) {
     daysEl.innerHTML = week.map(d => {
       const dateISO = toISO(d);
-      const conHora = (eventsCache[dateISO] || []).filter(e => !e.is_focus && e.start_time)
-        .sort((a, b) => timeToMin(a.start_time) - timeToMin(b.start_time));
-
-      const grupos = agruparSolapados(conHora);
-      const bloques = grupos.map(grupo => grupo.map((ev, col) => {
-        const startMin = timeToMin(ev.start_time) - horaBase * 60;
-        const endMin = (ev.end_time ? timeToMin(ev.end_time) : timeToMin(ev.start_time) + 60) - horaBase * 60;
-        const top = (startMin / 60) * ALTO_HORA;
-        const alto = Math.max(18, ((endMin - startMin) / 60) * ALTO_HORA);
-        const color = eventColor(ev.title, ev.area);
-        const ancho = 100 / grupo.length;
-        const izq = ancho * col;
-        return `
-          <div class="sg-block${ev.done ? ' done' : ''}" style="top:${top}px;height:${alto}px;left:${izq}%;width:calc(${ancho}% - 2px);background:${color}29;border-left-color:${color};color:${color}"
-            onclick="openEventPanel(eventsCache['${dateISO}'].find(e=>e.id==='${ev.id}'), '${dateISO}')">
-            <span class="sg-block-title">${ev.title}</span>
-            ${alto >= 34 ? `<span class="sg-block-time">${ev.start_time}${ev.end_time ? '–' + ev.end_time : ''}</span>` : ''}
-          </div>
-        `;
-      }).join('')).join('');
-
-      return `<div class="sg-day-col" style="height:${alturaTotal}px">${bloques}${isToday(d) ? renderNowLine(horaBase, horaTope) : ''}</div>`;
+      return `<div class="sg-day-col" style="height:${alturaTotal}px">${renderGridColumnHTML(dateISO, horaBase, horaTope, isToday(d))}</div>`;
     }).join('');
   }
 }
+
+// Arma el contenido de una columna de día (bloques posicionados + línea de "ahora")
+// — la usan tanto la grilla Semana (7 columnas) como la grilla Día (1 columna).
+function renderGridColumnHTML(dateISO, horaBase, horaTope, esHoy) {
+  const conHora = (eventsCache[dateISO] || []).filter(e => !e.is_focus && e.start_time)
+    .sort((a, b) => timeToMin(a.start_time) - timeToMin(b.start_time));
+
+  const grupos = agruparSolapados(conHora);
+  const bloques = grupos.map(grupo => grupo.map((ev, col) => {
+    const startMin = timeToMin(ev.start_time) - horaBase * 60;
+    const endMin = (ev.end_time ? timeToMin(ev.end_time) : timeToMin(ev.start_time) + 60) - horaBase * 60;
+    const top = (startMin / 60) * ALTO_HORA;
+    const alto = Math.max(18, ((endMin - startMin) / 60) * ALTO_HORA);
+    const color = eventColor(ev.title, ev.area);
+    const ancho = 100 / grupo.length;
+    const izq = ancho * col;
+    return buildGridBlockHTML(ev, dateISO, top, alto, izq, ancho, color);
+  }).join('')).join('');
+
+  return bloques + (esHoy ? renderNowLine(horaBase, horaTope) : '');
+}
+
+// Bloque de evento de la grilla — × visible (bloques altos) + franja roja al
+// deslizar (swipe, ver listeners touchstart/touchmove más abajo).
+function buildGridBlockHTML(ev, dateISO, top, alto, izq, ancho, color) {
+  const abrir = `openEventPanel(eventsCache['${dateISO}'].find(e=>e.id==='${ev.id}'), '${dateISO}')`;
+  const cerrarSwipe = `this.closest('.sg-block').classList.remove('swiped')`;
+  const delBtn = alto >= 34
+    ? `<button class="sg-block-del" onclick="event.stopPropagation();deleteEvent('${ev.id}','${dateISO}')">×</button>`
+    : '';
+  return `
+    <div class="sg-block${ev.done ? ' done' : ''}" data-event-id="${ev.id}"
+      style="top:${top}px;height:${alto}px;left:${izq}%;width:calc(${ancho}% - 2px);background:${color}29;border-left-color:${color};color:${color}">
+      <div class="sg-block-content" onclick="if(this.closest('.sg-block').classList.contains('swiped')){${cerrarSwipe};event.stopPropagation();}else{${abrir}}">
+        <span class="sg-block-title">${ev.title}</span>
+        ${alto >= 34 ? `<span class="sg-block-time">${ev.start_time}${ev.end_time ? '–' + ev.end_time : ''}</span>` : ''}
+      </div>
+      ${delBtn}
+      <div class="sg-block-swipe-del" onclick="event.stopPropagation();deleteEvent('${ev.id}','${dateISO}')">Eliminar</div>
+    </div>
+  `;
+}
+
+// Swipe para eliminar en los bloques de la grilla (Día/Semana) — solo touch.
+let _sgSwipeStartX = null;
+let _sgSwipeEl = null;
+
+document.addEventListener('touchstart', (e) => {
+  const block = e.target.closest('.sg-block');
+  document.querySelectorAll('.sg-block.swiped').forEach(b => { if (b !== block) b.classList.remove('swiped'); });
+  if (!block) return;
+  _sgSwipeEl = block;
+  _sgSwipeStartX = e.touches[0].clientX;
+}, { passive: true });
+
+document.addEventListener('touchmove', (e) => {
+  if (!_sgSwipeEl || _sgSwipeStartX === null) return;
+  const dx = e.touches[0].clientX - _sgSwipeStartX;
+  if (dx < -24) _sgSwipeEl.classList.add('swiped');
+  else if (dx > 12) _sgSwipeEl.classList.remove('swiped');
+}, { passive: true });
+
+document.addEventListener('touchend', () => {
+  _sgSwipeEl = null;
+  _sgSwipeStartX = null;
+});
 
 // ── RENDER MES ──────────────────────────────────────────────
 
@@ -2645,12 +2691,6 @@ async function panelToggleDone() {
   updateDoneButton(!!panelEvent.done);
 }
 
-async function panelDeleteEvent() {
-  if (!panelEvent) return;
-  await deleteEvent(panelEvent.id, panelDateISO);
-  closeEventPanel();
-}
-
 async function setPanelRecurrence(recurrente) {
   if (!panelEvent) return;
   const diaSemana = new Date(panelDateISO + 'T12:00:00').getDay();
@@ -2984,15 +3024,13 @@ function toggleAmbientMode() {
 }
 
 // ── RE-RENDER TRAS CAMBIOS ───────────────────────────────────
-// La vista Hoy es una lista agrupada (no bloques posicionados
-// absolutamente), así que un re-render completo es simple y barato.
 
-function updateEventDoneInDOM(id, done) {
-  renderHoy();
+function updateEventDoneInDOM(id, done, dateISO) {
+  refreshDiaOSemanaGrid(dateISO);
 }
 
-function removeEventFromDOM(id) {
-  renderHoy();
+function removeEventFromDOM(id, dateISO) {
+  refreshDiaOSemanaGrid(dateISO);
 }
 
 // ── EVENING CHECK-IN ─────────────────────────────────────────

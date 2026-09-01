@@ -199,14 +199,15 @@
           <div class="hoy-list" id="hoy-list-foco"></div>
         </div>
 
-        <div class="hoy-section" id="hoy-section-hora">
-          <div class="hoy-section-hd">Durante el día</div>
-          <div class="hoy-list" id="hoy-list-hora"></div>
+        <!-- Grilla del día (reemplaza las listas "Durante el día" / "Cuando puedas") -->
+        <div class="sg-allday" id="dg-allday" style="display:none">
+          <div class="dg-allday-list" id="dg-allday-list"></div>
         </div>
-
-        <div class="hoy-section" id="hoy-section-libre">
-          <div class="hoy-section-hd">Cuando puedas</div>
-          <div class="hoy-list" id="hoy-list-libre"></div>
+        <div class="sg-body">
+          <div class="sg-hours" id="dg-hours"></div>
+          <div class="sg-days">
+            <div class="sg-day-col" id="dg-day-col"></div>
+          </div>
         </div>
 
       </div>
@@ -802,7 +803,6 @@
         </svg>
         Iniciar foco
       </button>
-      <button class="panel-del-btn" onclick="panelDeleteEvent()">Eliminar</button>
     </div>
   </div>
 </div>
