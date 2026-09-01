@@ -176,28 +176,12 @@
               <div class="hoy-date" id="hoy-date">—</div>
               <div class="hoy-title" id="hoy-title">Hoy</div>
             </div>
-            <button class="hoy-add-btn" onclick="focusNlInput()">+</button>
+            <button class="hoy-add-btn" onclick="toggleFoquitoWidget()">+</button>
           </div>
           <div class="hoy-day-nav">
             <button class="hoy-day-nav-btn" onclick="changeDia(-1)">‹</button>
             <button class="hoy-day-nav-btn" onclick="changeDia(1)">›</button>
           </div>
-        </div>
-
-        <!-- INPUT BAR — arriba y siempre a la vista, no hay que scrollear para agregar -->
-        <div id="input-bar">
-          <div class="input-pill" onclick="document.getElementById('nl-input').focus()">
-            <button type="button" class="input-focus-toggle" id="input-focus-toggle"
-              onclick="toggleAddFocus(event)" title="Marcar como prioridad del día">☆</button>
-            <input id="nl-input" type="text"
-              placeholder='Agregar tarea... ej: "reunión mañana de 10 a 12"'/>
-            <span class="enter-hint">Enter ↵</span>
-          </div>
-        </div>
-
-        <!-- CHIPS -->
-        <div id="chips-bar">
-          <span id="chips-content"></span>
         </div>
 
         <div class="hoy-section" id="hoy-section-foco">
@@ -286,27 +270,6 @@
 
     <!-- EQUIPO / TU AÑO -->
     <div id="view-equipo" style="display:none"></div>
-
-    <!-- FOQUITO -->
-    <div id="view-foquito" style="display:none">
-      <div class="foq-scroll" id="foq-messages"></div>
-      <div class="foq-input-bar">
-        <button type="button" class="foq-mic-btn" id="foq-mic-btn" onclick="toggleFoquitoMic()" title="Hablar">
-          <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-            <rect x="6.5" y="1.5" width="5" height="9" rx="2.5" stroke="currentColor" stroke-width="1.5"/>
-            <path d="M3.5 8.5c0 3.04 2.46 5.5 5.5 5.5s5.5-2.46 5.5-5.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-            <path d="M9 14v2.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-          </svg>
-        </button>
-        <input id="foq-input" type="text" placeholder="Escribile a Foquito..."
-          onkeydown="if(event.key==='Enter')sendFoquitoMessage()"/>
-        <button type="button" class="foq-send-btn" id="foq-send-btn" onclick="sendFoquitoMessage()" title="Enviar">
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-            <path d="M2 8h11M8 2.5 13.5 8 8 13.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-        </button>
-      </div>
-    </div>
 
     <!-- SUGERENCIAS -->
     <div id="view-sugerencias" style="display:none">
@@ -445,17 +408,40 @@
       </span>
       <span>Progreso</span>
     </button>
-    <button class="nav-btn" id="nav-foquito" onclick="setView('foquito')">
-      <span class="nav-icon">
-        <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-          <path d="M9 1.5c-4.14 0-7.5 2.9-7.5 6.5 0 1.83.87 3.48 2.28 4.66-.1.98-.5 1.86-1.13 2.6 1.28.13 2.54-.2 3.6-.86.86.26 1.79.4 2.75.4 4.14 0 7.5-2.9 7.5-6.5s-3.36-6.5-7.5-6.5Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
-          <circle cx="6.2" cy="8" r="1" fill="currentColor"/>
-          <circle cx="9" cy="8" r="1" fill="currentColor"/>
-          <circle cx="11.8" cy="8" r="1" fill="currentColor"/>
-        </svg>
-      </span>
+  </div>
+
+  <!-- FOQUITO — burbuja flotante + panel de chat -->
+  <button id="foq-fab" onclick="toggleFoquitoWidget()" title="Hablar con Foquito">
+    <svg width="22" height="22" viewBox="0 0 18 18" fill="none">
+      <path d="M9 1.5c-4.14 0-7.5 2.9-7.5 6.5 0 1.83.87 3.48 2.28 4.66-.1.98-.5 1.86-1.13 2.6 1.28.13 2.54-.2 3.6-.86.86.26 1.79.4 2.75.4 4.14 0 7.5-2.9 7.5-6.5s-3.36-6.5-7.5-6.5Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+      <circle cx="6.2" cy="8" r="1" fill="currentColor"/>
+      <circle cx="9" cy="8" r="1" fill="currentColor"/>
+      <circle cx="11.8" cy="8" r="1" fill="currentColor"/>
+    </svg>
+  </button>
+
+  <div id="foq-panel">
+    <div class="foq-panel-hd">
       <span>Foquito</span>
-    </button>
+      <button class="foq-panel-close" onclick="toggleFoquitoWidget()">×</button>
+    </div>
+    <div class="foq-scroll" id="foq-messages"></div>
+    <div class="foq-input-bar">
+      <button type="button" class="foq-mic-btn" id="foq-mic-btn" onclick="toggleFoquitoMic()" title="Hablar">
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+          <rect x="6.5" y="1.5" width="5" height="9" rx="2.5" stroke="currentColor" stroke-width="1.5"/>
+          <path d="M3.5 8.5c0 3.04 2.46 5.5 5.5 5.5s5.5-2.46 5.5-5.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          <path d="M9 14v2.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+      </button>
+      <input id="foq-input" type="text" placeholder="Escribile a Foquito..."
+        onkeydown="if(event.key==='Enter')sendFoquitoMessage()"/>
+      <button type="button" class="foq-send-btn" id="foq-send-btn" onclick="sendFoquitoMessage()" title="Enviar">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <path d="M2 8h11M8 2.5 13.5 8 8 13.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+    </div>
   </div>
 
 

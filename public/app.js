@@ -567,15 +567,6 @@ async function loadMonth() {
 // ── CRUD EVENTOS ────────────────────────────────────────────
 
 let _pendingEvent = null;
-let addAsFocus = false;
-
-function toggleAddFocus(e) {
-  e.stopPropagation();
-  addAsFocus = !addAsFocus;
-  const btn = document.getElementById('input-focus-toggle');
-  btn.classList.toggle('active', addAsFocus);
-  btn.textContent = addAsFocus ? '★' : '☆';
-}
 
 function promptAndAddEvent(dateISO, title, startTime, endTime, isFocus = false) {
   if (!title.trim()) return;
@@ -867,14 +858,6 @@ function hoyRowHTML(ev, dateISO, mostrarHora) {
       <span class="hoy-row-chevron">›</span>
     </div>
   `;
-}
-
-// Enfoca el input de agregar y lo trae a la vista (arriba, siempre visible)
-function focusNlInput() {
-  const inp = document.getElementById('nl-input');
-  if (!inp) return;
-  inp.scrollIntoView({ behavior: 'smooth', block: 'center' });
-  inp.focus();
 }
 
 function renderHoy() {
@@ -1619,7 +1602,7 @@ async function handleAI() {
 async function setView(view) {
   currentView = view;
 
-  ['semana', 'mes', 'patrones', 'sugerencias', 'equipo', 'foquito'].forEach(v => {
+  ['semana', 'mes', 'patrones', 'sugerencias', 'equipo'].forEach(v => {
     const el = document.getElementById('view-' + v);
     if (el) el.style.display = v === view ? 'flex' : 'none';
 
@@ -1646,8 +1629,6 @@ async function setView(view) {
     await renderSugerencias();
   } else if (view === 'equipo') {
     renderEquipo();
-  } else if (view === 'foquito') {
-    renderFoquito();
   }
 }
 
@@ -1656,11 +1637,20 @@ async function setView(view) {
 let _foqGreeted = false;
 let _foqRecognition = null;
 let _foqRecording = false;
+let _foqOpen = false;
 
-function renderFoquito() {
-  if (_foqGreeted) return;
-  _foqGreeted = true;
-  addFoqBubble('Hola, soy Foquito. Contame qué tenés que hacer, por texto o por audio, y te lo anoto.', 'foq');
+function toggleFoquitoWidget() {
+  _foqOpen = !_foqOpen;
+  document.getElementById('foq-panel').classList.toggle('open', _foqOpen);
+  document.getElementById('foq-fab').classList.toggle('open', _foqOpen);
+
+  if (_foqOpen) {
+    if (!_foqGreeted) {
+      _foqGreeted = true;
+      addFoqBubble('Hola, soy Foquito. Contame qué tenés que hacer, por texto o por audio, y te lo anoto.', 'foq');
+    }
+    document.getElementById('foq-input')?.focus();
+  }
 }
 
 function addFoqBubble(text, who) {
@@ -1806,74 +1796,7 @@ async function disableNotifications() {
   }
 }
 
-// ── INPUT NL LIVE ───────────────────────────────────────────
-
 document.addEventListener('DOMContentLoaded', () => {
-  const nlInput = document.getElementById('nl-input');
-  const chipsBar = document.getElementById('chips-bar');
-  const chipsContent = document.getElementById('chips-content');
-
-  nlInput.addEventListener('input', () => {
-    const v = nlInput.value.trim();
-    if (!v) {
-      chipsBar.classList.remove('show');
-      return;
-    }
-
-    const { name, date, h1, m1, h2, m2 } = parseNL(v);
-    const chips = [];
-
-    if (date) {
-      chips.push(`<span class="chip chip-date">📅 ${DAYS[date.getDay()]} ${date.getDate()}/${date.getMonth() + 1}</span>`);
-    }
-    chips.push(h1 !== null
-      ? `<span class="chip chip-time">⏱ ${fmtTime(h1, m1)}–${fmtTime(h2, m2)}</span>`
-      : `<span class="chip chip-time">◌ sin hora</span>`);
-    if (name && name !== 'Nuevo evento') {
-      chips.push(`<span class="chip chip-name">✓ ${name}</span>`);
-    }
-    if (!date && v.length > 3) {
-      chips.push(`<span class="chip chip-warn">¿cuándo?</span>`);
-    }
-
-    chipsContent.innerHTML = chips.join('');
-    chipsBar.classList.add('show');
-  });
-
-  nlInput.addEventListener('keydown', async (e) => {
-    if (e.key === 'Enter' && nlInput.value.trim()) {
-      const { name, date, h1, m1, h2, m2 } = parseNL(nlInput.value);
-      if (!name) return;
-
-      const dateISO = toISO(date);
-
-      if (dateISO !== toISO(diaActual)) {
-        diaActual = new Date(date);
-        diaActual.setHours(0, 0, 0, 0);
-      }
-
-      const startTime = h1 !== null ? fmtTime(h1, m1) : null;
-      const endTime = h2 !== null ? fmtTime(h2, m2) : null;
-      promptAndAddEvent(dateISO, name, startTime, endTime, addAsFocus);
-
-      nlInput.value = '';
-      chipsBar.classList.remove('show');
-      if (addAsFocus) toggleAddFocus(e);
-
-      if (currentView !== 'semana') {
-        setView('semana');
-      } else {
-        await loadDia();
-        renderHoy();
-      }
-    }
-
-    if (e.key === 'Escape') {
-      nlInput.value = '';
-      chipsBar.classList.remove('show');
-    }
-  });
-
   // Atajos de teclado globales
   document.addEventListener('keydown', e => {
     const tag = document.activeElement?.tagName;
@@ -1908,7 +1831,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (currentView === 'semana') changeDia(1);
         break;
       case 'n': case 'N':
-        document.getElementById('nl-input')?.focus();
+        toggleFoquitoWidget();
         break;
     }
   });
@@ -2620,7 +2543,7 @@ const CMD_ACTIONS = [
   { label: 'Objetivo semanal',  icon: '◈',  hint: '',  fn: () => { closeCmd(); openGoalEdit(); } },
   { label: 'Pulso del día',     icon: '◉',  hint: '',  fn: () => { closeCmd(); showEstadoDia(); } },
   { label: 'Palabra de semana', icon: '❋',  hint: '',  fn: () => { closeCmd(); showPalabra(); } },
-  { label: 'Nuevo evento',      icon: '+',  hint: 'N', fn: () => { closeCmd(); document.getElementById('nl-input').focus(); } },
+  { label: 'Nuevo evento',      icon: '+',  hint: 'N', fn: () => { closeCmd(); toggleFoquitoWidget(); } },
   { label: 'Modo foco ambiente',icon: '✿',  hint: '',  fn: () => { closeCmd(); toggleAmbientMode(); } },
   { label: 'Cerrar sesión',     icon: '↪',  hint: '',  fn: () => logout() },
 ];
