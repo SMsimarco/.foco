@@ -18,14 +18,21 @@ module.exports = async function handler(req, res) {
     return res.status(400).json({ type: 'error', error: { message: 'Body inválido.' } })
   }
 
+  const headers = {
+    'Content-Type': 'application/json',
+    'x-api-key': apiKey,
+    'anthropic-version': '2023-06-01'
+  }
+  // Keys "identity-linked" (ligadas al usuario, no a un workspace fijo) necesitan
+  // decirle a la API en qué workspace operan, si no tiran 400.
+  if (process.env.ANTHROPIC_WORKSPACE_ID) {
+    headers['anthropic-workspace-id'] = process.env.ANTHROPIC_WORKSPACE_ID
+  }
+
   try {
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01'
-      },
+      headers,
       body: JSON.stringify({ model, max_tokens, system, messages })
     })
 
