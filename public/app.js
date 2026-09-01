@@ -1705,6 +1705,54 @@ function addFoqBubble(text, who) {
   wrap.scrollTop = wrap.scrollHeight;
 }
 
+// Le pregunta a Claude si el mensaje es "anotar algo" o charla normal.
+// Devuelve null si la IA no responde (sin internet, endpoint caído, etc.) — ahí se usa el fallback local.
+async function interpretFoquitoMessage(text) {
+  const dateISO = toISO(new Date());
+  const dayEvs = eventsCache[dateISO] || [];
+  const eventsText = dayEvs.map(ev =>
+    `${ev.start_time || 'sin hora'}: ${ev.title}${ev.done ? ' (hecho)' : ''}`
+  ).join('\n');
+
+  try {
+    const response = await fetch('/api/claude', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 250,
+        system: `Sos Foquito, el asistente de agenda de la app .foco. Hablás en español rioplatense, de vos, cálido y breve (máximo 2 frases, sin emojis).
+Hoy es ${DAYS_FULL[new Date().getDay()]} ${dateISO}.
+
+Agenda de hoy:
+${eventsText || 'sin tareas anotadas'}
+
+Analizá el mensaje del usuario y respondé SOLO con JSON válido, sin markdown ni texto extra.
+
+Si el usuario pide anotar, agendar o recordar algo (una tarea, evento, pendiente):
+{"accion":"crear_evento","nombre":"texto corto del evento sin palabras de tiempo","fecha":"YYYY-MM-DD","hora_inicio":"HH:MM o null","hora_fin":"HH:MM o null","respuesta":"frase breve y cálida confirmando"}
+
+Si el usuario solo está charlando, pregunta algo, pide un resumen, o cualquier cosa que NO sea pedir anotar algo:
+{"accion":"conversar","respuesta":"tu respuesta breve y cálida, en base al contexto de la agenda si aplica"}
+
+Si no da fecha explícita para crear evento, usá hoy (${dateISO}).`,
+        messages: [{ role: 'user', content: text }]
+      })
+    });
+
+    const data = await response.json();
+    const raw = (data.content?.[0]?.text || '').trim();
+    try {
+      return JSON.parse(raw);
+    } catch {
+      const m = raw.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
+      try { return JSON.parse(m?.[1] || ''); } catch { return null; }
+    }
+  } catch {
+    return null;
+  }
+}
+
 async function sendFoquitoMessage(rawText) {
   const inp = document.getElementById('foq-input');
   const text = (rawText !== undefined ? rawText : inp.value).trim();
@@ -1712,7 +1760,28 @@ async function sendFoquitoMessage(rawText) {
 
   addFoqBubble(text, 'user');
   inp.value = '';
+  setFoquitoState('thinking');
 
+  const result = await interpretFoquitoMessage(text);
+  setFoquitoState(null);
+
+  if (result?.accion === 'crear_evento' && result.nombre) {
+    const dateISO = result.fecha || toISO(new Date());
+    await addEvent(dateISO, result.nombre, result.hora_inicio || null, result.hora_fin || null, false, null, false);
+    addFoqBubble(result.respuesta || `Anotado: "${result.nombre}".`, 'foq');
+    if (currentView === 'semana') {
+      await loadDia();
+      renderHoy();
+    }
+    return;
+  }
+
+  if (result?.accion === 'conversar' && result.respuesta) {
+    addFoqBubble(result.respuesta, 'foq');
+    return;
+  }
+
+  // Fallback local: la IA no respondió (sin internet, endpoint caído) o devolvió algo inesperado.
   const { name, date, h1, m1, h2, m2 } = parseNL(text);
   if (!name) {
     addFoqBubble('No te entendí bien. ¿Me lo contás de otra forma?', 'foq');
