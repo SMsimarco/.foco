@@ -450,6 +450,7 @@ async function showApp() {
   checkMonthlyInsight();
   initGoalBar();
   startLiveClock();
+  initFoquitoDesktop();
 }
 
 // ── CARGA DE DATOS ──────────────────────────────────────────
@@ -625,8 +626,41 @@ async function addEvent(dateISO, title, startTime, endTime, recurrente = false, 
   if (!eventsCache[dateISO]) eventsCache[dateISO] = [];
   eventsCache[dateISO].push(data);
 
-  if (dateISO === toISO(diaActual)) renderHoy();
+  if (dateISO === toISO(diaActual)) {
+    // Foco del día tiene lógica de máx-3/slice propia — ahí sí conviene el re-render completo.
+    // El resto (con hora / sin hora) se inserta puntual, sin tocar la lista entera.
+    if (isFocus) renderHoy();
+    else insertHoyRowLive(data, dateISO);
+  }
   showToast(`"${data.title}" agregado`, 'info');
+}
+
+// Inserta la tarjeta de una tarea nueva en su lugar (orden cronológico si tiene hora,
+// al final de "Cuando puedas" si no) sin re-renderizar el resto de la vista Hoy.
+function insertHoyRowLive(ev, dateISO) {
+  const dayEvents = eventsCache[dateISO] || [];
+  const conHora = !!ev.start_time;
+  const list = document.getElementById(conHora ? 'hoy-list-hora' : 'hoy-list-libre');
+  const sec = document.getElementById(conHora ? 'hoy-section-hora' : 'hoy-section-libre');
+  if (!list) return;
+
+  const wrap = document.createElement('div');
+  wrap.innerHTML = hoyRowHTML(ev, dateISO, conHora).trim();
+  const row = wrap.firstElementChild;
+  row.classList.add('hoy-row-enter');
+
+  if (conHora) {
+    const ordenados = dayEvents.filter(e => !e.is_focus && e.start_time)
+      .sort((a, b) => timeToMin(a.start_time) - timeToMin(b.start_time));
+    const idx = ordenados.findIndex(e => e.id === ev.id);
+    list.insertBefore(row, list.children[idx] || null);
+  } else {
+    list.appendChild(row);
+  }
+
+  if (sec) sec.style.display = '';
+  updateMomentum();
+  setTimeout(() => row.classList.remove('hoy-row-enter'), 280);
 }
 
 async function toggleDone(id, dateISO) {
@@ -1682,6 +1716,15 @@ function getFoquitoGreeting() {
   return `Vas ${done} de ${total} hoy. Contame qué más anotamos.`;
 }
 
+// En desktop (>=1024px) el panel de Foquito queda fijo y siempre visible por CSS
+// (ver style.css), sin pasar por toggleFoquitoWidget — solo falta el saludo inicial.
+function initFoquitoDesktop() {
+  if (!_foqGreeted && window.matchMedia('(min-width: 1024px)').matches) {
+    _foqGreeted = true;
+    addFoqBubble(getFoquitoGreeting(), 'foq');
+  }
+}
+
 function toggleFoquitoWidget() {
   _foqOpen = !_foqOpen;
   document.getElementById('foq-panel').classList.toggle('open', _foqOpen);
@@ -1798,10 +1841,6 @@ async function sendFoquitoMessage(rawText) {
     const respuesta = result.respuesta || `Anotado: "${result.nombre}".`;
     addFoqBubble(respuesta, 'foq');
     pushFoqHistory(text, respuesta);
-    if (currentView === 'semana') {
-      await loadDia();
-      renderHoy();
-    }
     return;
   }
 
@@ -1845,11 +1884,6 @@ async function sendFoquitoMessage(rawText) {
   const fallbackRespuesta = `Anotado: "${name}" ${dayLabel}${timeLabel}.`;
   addFoqBubble(fallbackRespuesta, 'foq');
   pushFoqHistory(text, fallbackRespuesta);
-
-  if (currentView === 'semana') {
-    await loadDia();
-    renderHoy();
-  }
 }
 
 function toggleFoquitoMic() {

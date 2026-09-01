@@ -3698,3 +3698,45 @@ body.ambient #app::before {
     max-height: none;
   }
 }
+
+/* ── DESKTOP: Foquito fijo al costado, siempre visible (>=1024px) ── */
+/* Mobile (default): wrapper transparente, no cambia nada del layout actual */
+#app-left { display: contents; }
+
+/* Entrada de una tarjeta nueva insertada en vivo por Foquito */
+@keyframes hoyRowEnter {
+  from { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.hoy-row-enter { animation: hoyRowEnter 0.26s cubic-bezier(.4,0,.2,1); }
+
+@media (min-width: 1024px) {
+  #app { flex-direction: row; }
+
+  #app-left {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+  }
+
+  #foq-fab { display: none; }
+
+  #foq-panel {
+    position: static;
+    flex-shrink: 0;
+    width: 380px;
+    height: 100%;
+    margin-left: 0;
+    border-radius: 0;
+    border: none;
+    border-left: 1px solid var(--border2);
+    box-shadow: none;
+    opacity: 1;
+    transform: none;
+    pointer-events: auto;
+  }
+
+  .foq-panel-close { display: none; }
+}
