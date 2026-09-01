@@ -1619,7 +1619,7 @@ async function handleAI() {
 async function setView(view) {
   currentView = view;
 
-  ['semana', 'mes', 'patrones', 'sugerencias', 'equipo'].forEach(v => {
+  ['semana', 'mes', 'patrones', 'sugerencias', 'equipo', 'foquito'].forEach(v => {
     const el = document.getElementById('view-' + v);
     if (el) el.style.display = v === view ? 'flex' : 'none';
 
@@ -1646,7 +1646,103 @@ async function setView(view) {
     await renderSugerencias();
   } else if (view === 'equipo') {
     renderEquipo();
+  } else if (view === 'foquito') {
+    renderFoquito();
   }
+}
+
+// ── FOQUITO (chat) ──────────────────────────────────────────
+
+let _foqGreeted = false;
+let _foqRecognition = null;
+let _foqRecording = false;
+
+function renderFoquito() {
+  if (_foqGreeted) return;
+  _foqGreeted = true;
+  addFoqBubble('Hola, soy Foquito. Contame qué tenés que hacer, por texto o por audio, y te lo anoto.', 'foq');
+}
+
+function addFoqBubble(text, who) {
+  const wrap = document.getElementById('foq-messages');
+  const bubble = document.createElement('div');
+  bubble.className = 'foq-bubble foq-bubble-' + who;
+  bubble.textContent = text;
+  wrap.appendChild(bubble);
+  wrap.scrollTop = wrap.scrollHeight;
+}
+
+async function sendFoquitoMessage(rawText) {
+  const inp = document.getElementById('foq-input');
+  const text = (rawText !== undefined ? rawText : inp.value).trim();
+  if (!text) return;
+
+  addFoqBubble(text, 'user');
+  inp.value = '';
+
+  const { name, date, h1, m1, h2, m2 } = parseNL(text);
+  if (!name) {
+    addFoqBubble('No entendí bien qué querés anotar. ¿Podés contarme de nuevo?', 'foq');
+    return;
+  }
+
+  const dateISO = toISO(date);
+  const startTime = h1 !== null ? fmtTime(h1, m1) : null;
+  const endTime = h2 !== null ? fmtTime(h2, m2) : null;
+
+  await addEvent(dateISO, name, startTime, endTime, false, null, false);
+
+  const dayLabel = dateISO === toISO(new Date())
+    ? 'hoy'
+    : `el ${DAYS[date.getDay()]} ${date.getDate()}/${date.getMonth() + 1}`;
+  const timeLabel = startTime ? ` a las ${startTime}` : '';
+  addFoqBubble(`Anotado: "${name}" ${dayLabel}${timeLabel}.`, 'foq');
+
+  if (currentView === 'semana') {
+    await loadDia();
+    renderHoy();
+  }
+}
+
+function toggleFoquitoMic() {
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SpeechRecognition) {
+    showToast('Tu navegador no soporta dictado por voz', 'error');
+    return;
+  }
+
+  const btn = document.getElementById('foq-mic-btn');
+
+  if (_foqRecording) {
+    _foqRecognition?.stop();
+    return;
+  }
+
+  _foqRecognition = new SpeechRecognition();
+  _foqRecognition.lang = 'es-AR';
+  _foqRecognition.interimResults = false;
+  _foqRecognition.maxAlternatives = 1;
+
+  _foqRecognition.onstart = () => {
+    _foqRecording = true;
+    btn.classList.add('recording');
+  };
+
+  _foqRecognition.onresult = (e) => {
+    const transcript = e.results[0][0].transcript;
+    sendFoquitoMessage(transcript);
+  };
+
+  _foqRecognition.onerror = () => {
+    showToast('No se pudo escuchar el audio', 'error');
+  };
+
+  _foqRecognition.onend = () => {
+    _foqRecording = false;
+    btn.classList.remove('recording');
+  };
+
+  _foqRecognition.start();
 }
 
 // ── NOTIFICACIONES PUSH ─────────────────────────────────────

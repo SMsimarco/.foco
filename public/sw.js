@@ -1,4 +1,4 @@
-const CACHE = 'foco-v9';
+const CACHE = 'foco-v10';
 const STATIC = ['/', '/index.html', '/app.js', '/style.css', '/manifest.json', '/icon-192.png', '/icon-512.png', '/apple-touch-icon.png'];
 
 self.addEventListener('install', e => {
