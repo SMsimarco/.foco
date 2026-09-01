@@ -1705,8 +1705,27 @@ function addFoqBubble(text, who) {
   wrap.scrollTop = wrap.scrollHeight;
 }
 
-// Le pregunta a Claude si el mensaje es "anotar algo" o charla normal.
-// Devuelve null si la IA no responde (sin internet, endpoint caído, etc.) — ahí se usa el fallback local.
+// Historial corto de la charla — necesario para que Foquito entienda respuestas
+// de seguimiento ("¿para qué día lo pongo?" → "el jueves").
+let _foqHistory = [];
+function pushFoqHistory(userText, foqText) {
+  _foqHistory.push({ role: 'user', content: userText }, { role: 'assistant', content: foqText });
+  if (_foqHistory.length > 12) _foqHistory = _foqHistory.slice(-12);
+}
+
+// Busca una tarea de hoy por nombre (sin tildes, case-insensitive, match parcial)
+// para poder marcarla hecha cuando el usuario la menciona charlando.
+function findFoqEventByName(nombre) {
+  const norm = s => (s || '').toLowerCase().normalize('NFD').replace(new RegExp('[\\u0300-\\u036f]', 'g'), '');
+  const target = norm(nombre);
+  if (!target) return null;
+  const dateISO = toISO(new Date());
+  const dayEvs = eventsCache[dateISO] || [];
+  return dayEvs.find(e => !e.done && (norm(e.title).includes(target) || target.includes(norm(e.title))));
+}
+
+// Le pregunta a Claude qué hacer con el mensaje: anotar, marcar hecho, pedir un dato
+// que falta, o charlar. Devuelve null si la IA no responde — ahí se usa el fallback local.
 async function interpretFoquitoMessage(text) {
   const dateISO = toISO(new Date());
   const dayEvs = eventsCache[dateISO] || [];
@@ -1721,22 +1740,30 @@ async function interpretFoquitoMessage(text) {
       body: JSON.stringify({
         model: 'claude-haiku-4-5-20251001',
         max_tokens: 250,
-        system: `Sos Foquito, el asistente de agenda de la app .foco. Hablás en español rioplatense, de vos, cálido y breve (máximo 2 frases, sin emojis).
+        system: `Sos Foquito, el asistente de agenda de la app .foco. Hablás en español rioplatense, de vos, cálido y breve (1-2 frases, sin emojis). Nunca reprochás ni hacés sentir mal a la persona.
 Hoy es ${DAYS_FULL[new Date().getDay()]} ${dateISO}.
 
 Agenda de hoy:
 ${eventsText || 'sin tareas anotadas'}
 
-Analizá el mensaje del usuario y respondé SOLO con JSON válido, sin markdown ni texto extra.
+Analizá el mensaje del usuario (y la charla previa si la hay) y respondé SOLO con JSON válido, sin markdown ni texto extra. Una de estas 4 formas exactas:
 
-Si el usuario pide anotar, agendar o recordar algo (una tarea, evento, pendiente):
-{"accion":"crear_evento","nombre":"texto corto del evento sin palabras de tiempo","fecha":"YYYY-MM-DD","hora_inicio":"HH:MM o null","hora_fin":"HH:MM o null","respuesta":"frase breve y cálida confirmando"}
+1. Pide anotar/agendar algo y la fecha está clara o no hace falta precisarla:
+{"accion":"crear_evento","nombre":"texto corto sin palabras de tiempo","fecha":"YYYY-MM-DD","hora_inicio":"HH:MM o null","hora_fin":"HH:MM o null","respuesta":"confirmación breve y cálida"}
 
-Si el usuario solo está charlando, pregunta algo, pide un resumen, o cualquier cosa que NO sea pedir anotar algo:
-{"accion":"conversar","respuesta":"tu respuesta breve y cálida, en base al contexto de la agenda si aplica"}
+2. Pide anotar algo pero falta un dato importante (sobre todo la fecha, si no es evidente que es hoy):
+{"accion":"preguntar","respuesta":"pregunta corta pidiendo justo lo que falta"}
+No inventes la fecha en este caso, preguntá.
 
-Si no da fecha explícita para crear evento, usá hoy (${dateISO}).`,
-        messages: [{ role: 'user', content: text }]
+3. Dice que ya hizo, terminó o completó algo que está en la agenda de hoy (usá el nombre tal cual aparece ahí):
+{"accion":"marcar_hecho","nombre":"nombre exacto de la tarea en la agenda","respuesta":"festejo breve y genuino"}
+
+4. Cualquier otra cosa — pregunta cómo viene el día, charla, pide un resumen, dice que no hizo nada, o se traba y no sabe por dónde arrancar:
+{"accion":"conversar","respuesta":"tu respuesta, usando la agenda de hoy si aplica"}
+Si viene flojo o no hizo nada, nunca lo retés — ofrecé pasar algo para mañana. Si está trabado con muchas cosas, sugerí UNA para arrancar (la más corta), no un discurso.
+
+Si no da fecha para crear evento y es evidente que es hoy, usá ${dateISO}.`,
+        messages: [..._foqHistory, { role: 'user', content: text }]
       })
     });
 
@@ -1768,7 +1795,9 @@ async function sendFoquitoMessage(rawText) {
   if (result?.accion === 'crear_evento' && result.nombre) {
     const dateISO = result.fecha || toISO(new Date());
     await addEvent(dateISO, result.nombre, result.hora_inicio || null, result.hora_fin || null, false, null, false);
-    addFoqBubble(result.respuesta || `Anotado: "${result.nombre}".`, 'foq');
+    const respuesta = result.respuesta || `Anotado: "${result.nombre}".`;
+    addFoqBubble(respuesta, 'foq');
+    pushFoqHistory(text, respuesta);
     if (currentView === 'semana') {
       await loadDia();
       renderHoy();
@@ -1776,8 +1805,23 @@ async function sendFoquitoMessage(rawText) {
     return;
   }
 
-  if (result?.accion === 'conversar' && result.respuesta) {
+  if (result?.accion === 'marcar_hecho' && result.nombre) {
+    const ev = findFoqEventByName(result.nombre);
+    let respuesta;
+    if (ev) {
+      await toggleDone(ev.id, toISO(new Date()));
+      respuesta = result.respuesta || `Marcado: "${ev.title}".`;
+    } else {
+      respuesta = 'No encontré esa tarea en tu agenda de hoy. ¿Cómo se llama exacto?';
+    }
+    addFoqBubble(respuesta, 'foq');
+    pushFoqHistory(text, respuesta);
+    return;
+  }
+
+  if ((result?.accion === 'conversar' || result?.accion === 'preguntar') && result.respuesta) {
     addFoqBubble(result.respuesta, 'foq');
+    pushFoqHistory(text, result.respuesta);
     return;
   }
 
@@ -1798,7 +1842,9 @@ async function sendFoquitoMessage(rawText) {
     ? 'hoy'
     : `el ${DAYS[date.getDay()]} ${date.getDate()}/${date.getMonth() + 1}`;
   const timeLabel = startTime ? ` a las ${startTime}` : '';
-  addFoqBubble(`Anotado: "${name}" ${dayLabel}${timeLabel}.`, 'foq');
+  const fallbackRespuesta = `Anotado: "${name}" ${dayLabel}${timeLabel}.`;
+  addFoqBubble(fallbackRespuesta, 'foq');
+  pushFoqHistory(text, fallbackRespuesta);
 
   if (currentView === 'semana') {
     await loadDia();
