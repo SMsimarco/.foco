@@ -3740,3 +3740,259 @@ body.ambient #app::before {
 
   .foq-panel-close { display: none; }
 }
+
+/* ── SELECTOR DÍA / SEMANA / MES ── */
+.view-pills {
+  display: flex;
+  gap: 6px;
+  padding: 10px 16px 0;
+  flex-shrink: 0;
+  background: #000;
+}
+
+.view-pill {
+  background: transparent;
+  border: none;
+  color: var(--ios-text2, rgba(255,255,255,0.6));
+  font-size: 13px;
+  font-weight: 500;
+  padding: 6px 14px;
+  border-radius: 999px;
+  cursor: pointer;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
+  transition: background 0.15s, color 0.15s;
+}
+
+.view-pill.active {
+  background: rgba(255,255,255,0.12);
+  color: #fff;
+}
+
+/* ── VISTA SEMANA (grilla horaria) — estética tipo Notion Calendar / Cron ── */
+#view-semana-grid {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background: #000;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
+  color: #fff;
+}
+
+.sg-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  flex-shrink: 0;
+}
+
+.sg-toolbar-nav {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.sg-nav-btn {
+  background: none;
+  border: none;
+  color: #8E8E93;
+  font-size: 18px;
+  cursor: pointer;
+  padding: 2px 6px;
+}
+
+.sg-nav-btn:hover { color: #fff; }
+
+.sg-week-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: #fff;
+  min-width: 110px;
+  text-align: center;
+}
+
+.sg-today-btn {
+  background: rgba(255,255,255,0.08);
+  border: none;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 6px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.sg-today-btn:hover { background: rgba(255,255,255,0.14); }
+
+.sg-scrollx {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  min-height: 0;
+}
+
+.sg-hours-spacer { width: 44px; flex-shrink: 0; }
+
+.sg-daylabels {
+  display: flex;
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: #000;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+
+.sg-daylabels-days {
+  flex: 1;
+  display: flex;
+}
+
+.sg-daylabel {
+  flex: 1;
+  min-width: 0;
+  text-align: center;
+  padding: 6px 0 10px;
+}
+
+.sg-daylabel-dow {
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #8E8E93;
+  margin-bottom: 4px;
+}
+
+.sg-daylabel-num {
+  font-size: 14px;
+  color: #fff;
+  width: 26px;
+  height: 26px;
+  line-height: 26px;
+  border-radius: 50%;
+  margin: 0 auto;
+}
+
+.sg-daylabel-num.today {
+  background: #fff;
+  color: #000;
+  font-weight: 600;
+}
+
+.sg-allday {
+  display: flex;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  padding: 6px 0;
+}
+
+.sg-allday-days {
+  flex: 1;
+  display: flex;
+  gap: 4px;
+  padding: 0 4px;
+}
+
+.sg-allday-col {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.sg-chip {
+  font-size: 11px;
+  padding: 3px 7px;
+  border-radius: 5px;
+  border-left: 2.5px solid;
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sg-body {
+  display: flex;
+}
+
+.sg-hours {
+  width: 44px;
+  flex-shrink: 0;
+}
+
+.sg-hour-label {
+  font-size: 10px;
+  color: #8E8E93;
+  text-align: right;
+  padding-right: 6px;
+  transform: translateY(-6px);
+}
+
+.sg-days {
+  flex: 1;
+  display: flex;
+}
+
+.sg-day-col {
+  flex: 1;
+  min-width: 0;
+  position: relative;
+  border-left: 1px solid rgba(255,255,255,0.05);
+  background-image: linear-gradient(to bottom, rgba(255,255,255,0.05) 1px, transparent 1px);
+  background-size: 100% 44px; /* debe coincidir con ALTO_HORA en app.js */
+}
+
+.sg-block {
+  position: absolute;
+  border-left: 2.5px solid;
+  border-radius: 5px;
+  padding: 3px 6px;
+  font-size: 11px;
+  line-height: 1.3;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.sg-block-title {
+  display: block;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sg-block-time {
+  display: block;
+  font-size: 10px;
+  opacity: 0.75;
+}
+
+.sg-block.done {
+  opacity: 0.45;
+  text-decoration: line-through;
+}
+
+.sg-now-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: #F87171;
+  z-index: 1;
+}
+
+.sg-now-dot {
+  position: absolute;
+  left: -3px;
+  top: -3px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #F87171;
+}
+
+@media (max-width: 1023px) {
+  .sg-scrollx { overflow-x: auto; }
+  .sg-daylabels, .sg-allday, .sg-body { min-width: 620px; }
+}

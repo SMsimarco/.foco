@@ -451,13 +451,14 @@ async function showApp() {
   initGoalBar();
   startLiveClock();
   initFoquitoDesktop();
+  updateViewPills(); // arranca en Día — sincroniza el pill activo
 }
 
 // ── CARGA DE DATOS ──────────────────────────────────────────
 
-async function loadWeek() {
+async function loadWeek(offset = weekOffset) {
   if (!currentUser) return;
-  const week = getWeekDates(weekOffset);
+  const week = getWeekDates(offset);
   const start = toISO(week[0]);
   const end = toISO(week[week.length - 1]);
 
@@ -994,6 +995,157 @@ function updateMomentum() {
 
   const numEl = document.getElementById('commitment-num');
   if (numEl) numEl.textContent = pct;
+}
+
+// ── VISTA SEMANA (grilla horaria) ────────────────────────────
+// Convive con la vista Hoy (lista) — no la reemplaza. Reusa loadWeek() (misma
+// inyección de recurrentes que ya existía) y eventColor()/openEventPanel() de siempre.
+
+const ALTO_HORA = 44; // px por hora — debe coincidir con background-size de .sg-day-col en style.css
+let gridWeekOffset = 0; // semana mostrada acá, independiente de weekOffset (que es para el ring/Sugerencias)
+
+async function changeGridWeek(dir) {
+  gridWeekOffset += dir;
+  await loadWeek(gridWeekOffset);
+  renderSemanaGrid();
+}
+
+async function goToCurrentGridWeek() {
+  gridWeekOffset = 0;
+  await loadWeek(gridWeekOffset);
+  renderSemanaGrid();
+}
+
+// Rango de horas a mostrar: piso 08:00-20:00, se expande si hay eventos afuera de ese rango
+function computeGridHourRange(week) {
+  let minH = 8, maxH = 20;
+  week.forEach(d => {
+    (eventsCache[toISO(d)] || []).forEach(ev => {
+      if (!ev.start_time) return;
+      const startH = Math.floor(timeToMin(ev.start_time) / 60);
+      const endMin = ev.end_time ? timeToMin(ev.end_time) : timeToMin(ev.start_time) + 60;
+      const endH = Math.ceil(endMin / 60);
+      minH = Math.min(minH, startH);
+      maxH = Math.max(maxH, endH);
+    });
+  });
+  return { horaBase: Math.max(0, minH - 1), horaTope: Math.min(24, maxH + 1) };
+}
+
+// Agrupa eventos que se solapan en horario (transitivamente) para repartir el
+// ancho de la columna entre ellos en vez de superponerlos.
+function agruparSolapados(evsOrdenados) {
+  const grupos = [];
+  let actual = [];
+  let finActual = -1;
+  evsOrdenados.forEach(ev => {
+    const inicio = timeToMin(ev.start_time);
+    const fin = ev.end_time ? timeToMin(ev.end_time) : inicio + 60;
+    if (actual.length && inicio < finActual) {
+      actual.push(ev);
+      finActual = Math.max(finActual, fin);
+    } else {
+      if (actual.length) grupos.push(actual);
+      actual = [ev];
+      finActual = fin;
+    }
+  });
+  if (actual.length) grupos.push(actual);
+  return grupos;
+}
+
+function renderNowLine(horaBase, horaTope) {
+  const now = new Date();
+  const nowMin = now.getHours() * 60 + now.getMinutes();
+  const rangoMin = (horaTope - horaBase) * 60;
+  const posMin = nowMin - horaBase * 60;
+  if (posMin < 0 || posMin > rangoMin) return '';
+  const top = (posMin / 60) * ALTO_HORA;
+  return `<div class="sg-now-line" style="top:${top}px"><span class="sg-now-dot"></span></div>`;
+}
+
+function renderSemanaGrid() {
+  const week = getWeekDates(gridWeekOffset);
+  const { horaBase, horaTope } = computeGridHourRange(week);
+  const alturaTotal = (horaTope - horaBase) * ALTO_HORA;
+
+  const label = document.getElementById('sg-week-label');
+  if (label) {
+    if (gridWeekOffset === 0) {
+      label.textContent = 'Esta semana';
+    } else {
+      const ini = week[0], fin = week[6];
+      const mesIni = MONTHS_FULL[ini.getMonth()].slice(0, 3).toLowerCase();
+      const mesFin = MONTHS_FULL[fin.getMonth()].slice(0, 3).toLowerCase();
+      label.textContent = `${ini.getDate()} ${mesIni} – ${fin.getDate()} ${mesFin}`;
+    }
+  }
+
+  const headersEl = document.getElementById('sg-daylabels-days');
+  if (headersEl) {
+    headersEl.innerHTML = week.map(d => `
+      <div class="sg-daylabel">
+        <div class="sg-daylabel-dow">${DAYS[d.getDay()]}</div>
+        <div class="sg-daylabel-num${isToday(d) ? ' today' : ''}">${d.getDate()}</div>
+      </div>
+    `).join('');
+  }
+
+  // Banda "Sin horario" — no se pierden los eventos sin hora, se muestran como chips
+  const sinHoraPorDia = week.map(d => (eventsCache[toISO(d)] || []).filter(e => !e.is_focus && !e.start_time));
+  const alldayWrap = document.getElementById('sg-allday');
+  if (alldayWrap) alldayWrap.style.display = sinHoraPorDia.some(evs => evs.length) ? 'flex' : 'none';
+
+  const alldayDaysEl = document.getElementById('sg-allday-days');
+  if (alldayDaysEl) {
+    alldayDaysEl.innerHTML = week.map((d, i) => {
+      const dateISO = toISO(d);
+      const chips = sinHoraPorDia[i].map(ev => {
+        const color = eventColor(ev.title, ev.area);
+        return `<div class="sg-chip" style="background:${color}29;border-left-color:${color};color:${color}"
+          onclick="openEventPanel(eventsCache['${dateISO}'].find(e=>e.id==='${ev.id}'), '${dateISO}')">${ev.title}</div>`;
+      }).join('');
+      return `<div class="sg-allday-col">${chips}</div>`;
+    }).join('');
+  }
+
+  const hoursEl = document.getElementById('sg-hours');
+  if (hoursEl) {
+    let html = '';
+    for (let h = horaBase; h < horaTope; h++) {
+      html += `<div class="sg-hour-label" style="height:${ALTO_HORA}px">${String(h).padStart(2, '0')}:00</div>`;
+    }
+    hoursEl.innerHTML = html;
+  }
+
+  const daysEl = document.getElementById('sg-days');
+  if (daysEl) {
+    daysEl.innerHTML = week.map(d => {
+      const dateISO = toISO(d);
+      const conHora = (eventsCache[dateISO] || []).filter(e => !e.is_focus && e.start_time)
+        .sort((a, b) => timeToMin(a.start_time) - timeToMin(b.start_time));
+
+      const grupos = agruparSolapados(conHora);
+      const bloques = grupos.map(grupo => grupo.map((ev, col) => {
+        const startMin = timeToMin(ev.start_time) - horaBase * 60;
+        const endMin = (ev.end_time ? timeToMin(ev.end_time) : timeToMin(ev.start_time) + 60) - horaBase * 60;
+        const top = (startMin / 60) * ALTO_HORA;
+        const alto = Math.max(18, ((endMin - startMin) / 60) * ALTO_HORA);
+        const color = eventColor(ev.title, ev.area);
+        const ancho = 100 / grupo.length;
+        const izq = ancho * col;
+        return `
+          <div class="sg-block${ev.done ? ' done' : ''}" style="top:${top}px;height:${alto}px;left:${izq}%;width:calc(${ancho}% - 2px);background:${color}29;border-left-color:${color};color:${color}"
+            onclick="openEventPanel(eventsCache['${dateISO}'].find(e=>e.id==='${ev.id}'), '${dateISO}')">
+            <span class="sg-block-title">${ev.title}</span>
+            ${alto >= 34 ? `<span class="sg-block-time">${ev.start_time}${ev.end_time ? '–' + ev.end_time : ''}</span>` : ''}
+          </div>
+        `;
+      }).join('')).join('');
+
+      return `<div class="sg-day-col" style="height:${alturaTotal}px">${bloques}${isToday(d) ? renderNowLine(horaBase, horaTope) : ''}</div>`;
+    }).join('');
+  }
 }
 
 // ── RENDER MES ──────────────────────────────────────────────
@@ -1651,7 +1803,7 @@ async function handleAI() {
 async function setView(view) {
   currentView = view;
 
-  ['semana', 'mes', 'patrones', 'sugerencias', 'equipo'].forEach(v => {
+  ['semana', 'semana-grid', 'mes', 'patrones', 'sugerencias', 'equipo'].forEach(v => {
     const el = document.getElementById('view-' + v);
     if (el) el.style.display = v === view ? 'flex' : 'none';
 
@@ -1669,6 +1821,9 @@ async function setView(view) {
   if (view === 'semana') {
     await loadDia();
     renderHoy();
+  } else if (view === 'semana-grid') {
+    await loadWeek(gridWeekOffset);
+    renderSemanaGrid();
   } else if (view === 'mes') {
     await renderMes();
   } else if (view === 'patrones') {
@@ -1679,6 +1834,20 @@ async function setView(view) {
   } else if (view === 'equipo') {
     renderEquipo();
   }
+
+  updateViewPills();
+}
+
+// Sincroniza el selector Día/Semana/Mes con la vista activa y lo oculta
+// en Proyectos/Sugerencias/Progreso (no son parte de ese trío).
+function updateViewPills() {
+  const pillsBar = document.getElementById('view-pills');
+  const enTemporal = currentView === 'semana' || currentView === 'semana-grid' || currentView === 'mes';
+  if (pillsBar) pillsBar.style.display = enTemporal ? 'flex' : 'none';
+
+  document.getElementById('pill-dia')?.classList.toggle('active', currentView === 'semana');
+  document.getElementById('pill-semana')?.classList.toggle('active', currentView === 'semana-grid');
+  document.getElementById('pill-mes')?.classList.toggle('active', currentView === 'mes');
 }
 
 // ── FOQUITO (chat) ──────────────────────────────────────────

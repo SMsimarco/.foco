@@ -169,6 +169,13 @@
   <!-- MAIN -->
   <div id="main">
 
+    <!-- Selector Día / Semana / Mes — vive fuera de las 3 vistas para poder saltar entre ellas -->
+    <div id="view-pills" class="view-pills">
+      <button class="view-pill active" id="pill-dia" onclick="setView('semana')">Día</button>
+      <button class="view-pill" id="pill-semana" onclick="setView('semana-grid')">Semana</button>
+      <button class="view-pill" id="pill-mes" onclick="setView('mes')">Mes</button>
+    </div>
+
     <!-- HOY -->
     <div id="view-semana">
       <div class="hoy-scroll" id="hoy-scroll">
@@ -202,6 +209,35 @@
           <div class="hoy-list" id="hoy-list-libre"></div>
         </div>
 
+      </div>
+    </div>
+
+    <!-- SEMANA (grilla horaria) -->
+    <div id="view-semana-grid" style="display:none">
+      <div class="sg-toolbar">
+        <div class="sg-toolbar-nav">
+          <button class="sg-nav-btn" onclick="changeGridWeek(-1)">‹</button>
+          <span class="sg-week-label" id="sg-week-label">—</span>
+          <button class="sg-nav-btn" onclick="changeGridWeek(1)">›</button>
+        </div>
+        <button class="sg-today-btn" onclick="goToCurrentGridWeek()">Hoy</button>
+      </div>
+
+      <div class="sg-scrollx">
+        <div class="sg-daylabels">
+          <div class="sg-hours-spacer"></div>
+          <div class="sg-daylabels-days" id="sg-daylabels-days"></div>
+        </div>
+
+        <div class="sg-allday" id="sg-allday" style="display:none">
+          <div class="sg-hours-spacer"></div>
+          <div class="sg-allday-days" id="sg-allday-days"></div>
+        </div>
+
+        <div class="sg-body">
+          <div class="sg-hours" id="sg-hours"></div>
+          <div class="sg-days" id="sg-days"></div>
+        </div>
       </div>
     </div>
 
