@@ -1620,20 +1620,43 @@ html, body {
 }
 
 .panel-content {
-  padding: 20px 22px 38px;
+  padding: 16px 18px 26px;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 14px;
 }
 
-.panel-info { display: flex; flex-direction: column; gap: 5px; }
+.panel-header-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.panel-close-btn {
+  background: rgba(255,255,255,0.06);
+  border: none;
+  border-radius: 50%;
+  width: 26px;
+  height: 26px;
+  flex-shrink: 0;
+  color: var(--text3);
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.panel-close-btn:hover { color: #fff; background: rgba(255,255,255,0.1); }
+
+.panel-info { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
 
 .panel-title {
-  font-family: 'Instrument Serif', serif;
-  font-size: 22px;
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Geist', sans-serif;
+  font-weight: 600;
+  font-size: 16px;
   color: #fff;
-  letter-spacing: -0.3px;
-  line-height: 1.2;
+  letter-spacing: -0.2px;
+  line-height: 1.25;
 }
 
 .panel-meta {
@@ -1679,37 +1702,33 @@ html, body {
 .panel-details::placeholder { color: var(--text3); }
 
 .panel-done-main {
-  width: 100%;
-  height: 52px;
-  border-radius: 13px;
-  border: 1px solid rgba(255,255,255,0.08);
-  background: rgba(255,255,255,0.05);
-  color: #fff;
-  font-size: 14px;
-  font-weight: 500;
+  flex: 1;
+  height: 46px;
+  border-radius: 12px;
+  border: none;
+  background: #fff;
+  color: #000;
+  font-size: 13px;
+  font-weight: 600;
   font-family: 'Geist', sans-serif;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: 6px;
   transition: all 0.2s ease;
   letter-spacing: 0.01em;
 }
 
-.panel-done-main:hover {
-  background: rgba(255,255,255,0.09);
-  color: #fff;
-}
+.panel-done-main:hover { opacity: 0.9; }
 
 .panel-done-main.done {
-  background: rgba(16,185,129,0.1);
-  border-color: rgba(16,185,129,0.22);
+  background: rgba(16,185,129,0.15);
   color: #34D399;
 }
 
 .panel-done-main.done:hover {
-  background: rgba(16,185,129,0.16);
+  background: rgba(16,185,129,0.22);
 }
 
 .panel-timer-row {
@@ -1765,7 +1784,7 @@ html, body {
 
 .panel-focus-btn {
   flex: 1;
-  height: 44px;
+  height: 46px;
   border: 1px solid var(--border2);
   border-radius: 12px;
   background: var(--bg3);
@@ -1783,25 +1802,6 @@ html, body {
 
 .panel-focus-btn:hover { border-color: var(--accent); color: var(--text); }
 .panel-focus-btn:active { transform: scale(0.98); }
-
-.panel-del-btn {
-  height: 44px;
-  padding: 0 18px;
-  border-radius: 11px;
-  border: 1px solid rgba(255,255,255,0.06);
-  background: transparent;
-  color: #fff;
-  font-size: 13px;
-  font-family: 'Geist', sans-serif;
-  cursor: pointer;
-  transition: all 0.15s;
-}
-
-.panel-del-btn:hover {
-  border-color: rgba(244,63,94,0.28);
-  color: #F87171;
-  background: rgba(244,63,94,0.06);
-}
 
 /* ── ANIMACIONES ── */
 @keyframes viewEnter {
@@ -2304,38 +2304,99 @@ body.ambient #app::before {
   color: var(--text4);
 }
 
-/* ── TARJETA DE PROPIEDADES (Área + Repetición + Foco del día) ── */
-.panel-meta-card {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  background: rgba(255,255,255,0.025);
-  border: 1px solid rgba(255,255,255,0.06);
-  border-radius: 12px;
-  padding: 14px;
+/* ── FILAS DE PROPIEDAD (event panel, estilo Recordatorios) ── */
+.panel-rows {
+  background: #141416;
+  border-radius: 10px;
+  overflow: hidden;
 }
 
-.panel-meta-divider {
-  height: 1px;
-  background: rgba(255,255,255,0.06);
+.panel-rows > *:last-child { border-bottom: none; }
+
+.panel-row {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 12px;
+  background: transparent;
+  border: none;
+  border-bottom: 0.5px solid rgba(255,255,255,0.08);
+  color: var(--text);
+  font-size: 13px;
+  font-family: 'Geist', sans-serif;
+  cursor: pointer;
+  text-align: left;
 }
+
+.panel-row:hover { background: rgba(255,255,255,0.03); }
+.panel-row-static { cursor: default; }
+.panel-row-static:hover { background: transparent; }
+
+.panel-row-icon {
+  width: 18px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--text3);
+  flex-shrink: 0;
+}
+
+.panel-row-label { flex: 1; color: var(--text); }
+
+.panel-row-value {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text3);
+  font-size: 12px;
+}
+
+.panel-row-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.panel-row-chevron { color: var(--text3); font-size: 13px; }
+
+.panel-row-expand {
+  padding: 6px 12px 12px 38px;
+  background: rgba(0,0,0,0.15);
+  border-bottom: 0.5px solid rgba(255,255,255,0.08);
+}
+
+/* Toggle iOS — reemplaza el botón-pill de "Foco del día" */
+.ios-switch {
+  position: relative;
+  width: 42px;
+  height: 25px;
+  border-radius: 13px;
+  background: rgba(255,255,255,0.14);
+  border: none;
+  cursor: pointer;
+  flex-shrink: 0;
+  padding: 0;
+  transition: background 0.2s;
+}
+
+.ios-switch::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 21px;
+  height: 21px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+  transition: transform 0.2s;
+}
+
+.ios-switch.active { background: var(--warning); }
+.ios-switch.active::after { transform: translateX(17px); }
 
 /* ── ÁREA PILLS (event panel) ── */
-.panel-area-wrap {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.panel-field-label {
-  font-size: 10px;
-  color: var(--text3);
-  font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  font-family: 'Geist', sans-serif;
-}
-
 .panel-area-pills {
   display: flex;
   flex-wrap: wrap;
@@ -2458,11 +2519,6 @@ body.ambient #app::before {
 }
 
 /* ── REPETICIÓN (event panel) ── */
-.panel-recur-wrap {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
 .panel-recur-pills {
   display: flex;
   gap: 6px;
@@ -2483,27 +2539,6 @@ body.ambient #app::before {
   background: rgba(var(--accent-rgb), 0.12);
   border-color: var(--accent);
   color: var(--accent);
-}
-
-.focus-toggle-pill {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  background: transparent;
-  border: 1px solid var(--border2);
-  border-radius: 20px;
-  padding: 5px 12px;
-  font-size: 11px;
-  color: var(--text3);
-  cursor: pointer;
-  font-family: 'Geist', sans-serif;
-  transition: all 0.15s;
-}
-.focus-toggle-pill:hover { border-color: var(--text3); color: var(--text2); }
-.focus-toggle-pill.active {
-  background: rgba(245, 158, 11, 0.12);
-  border-color: var(--warning);
-  color: var(--warning);
 }
 
 /* Indicador ↻ en eventos recurrentes */
@@ -4063,4 +4098,32 @@ body.ambient #app::before {
   flex-wrap: wrap;
   gap: 5px;
   padding: 0 12px;
+}
+
+/* ── PANEL DE EVENTO EN DESKTOP — popover centrado, no bottom sheet ── */
+@media (min-width: 1024px) {
+  .panel-drag-wrap { display: none; }
+
+  .event-panel {
+    left: 50%;
+    right: auto;
+    bottom: auto;
+    top: 50%;
+    width: 380px;
+    max-width: calc(100vw - 40px);
+    max-height: 80vh;
+    overflow-y: auto;
+    border-radius: 16px;
+    border: 1px solid var(--border2);
+    transform: translate(-50%, calc(-50% + 10px)) scale(0.97);
+    opacity: 0;
+    pointer-events: none;
+    transition: transform 0.2s cubic-bezier(.4,0,.2,1), opacity 0.18s ease;
+  }
+
+  .event-panel.open {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+    pointer-events: auto;
+  }
 }

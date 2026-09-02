@@ -737,53 +737,56 @@
   <div class="panel-color-bar" id="panel-color-bar"></div>
 
   <div class="panel-content">
-    <!-- Info del evento -->
-    <div class="panel-info">
-      <div class="panel-title" id="panel-title">—</div>
-      <div class="panel-meta" id="panel-meta">—</div>
+    <!-- Header compacto: título + meta + cerrar -->
+    <div class="panel-header-row">
+      <div class="panel-info">
+        <div class="panel-title" id="panel-title">—</div>
+        <div class="panel-meta" id="panel-meta">—</div>
+      </div>
+      <button class="panel-close-btn" onclick="closeEventPanel()">×</button>
     </div>
 
-    <!-- Detalles -->
+    <!-- Nota -->
     <textarea class="panel-details" id="panel-details"
-              placeholder="Agregar detalles..."
-              rows="2"
+              placeholder="Agregar nota…"
+              rows="1"
               oninput="autoresizeDetails(this)"
               onblur="savePanelDetails()"></textarea>
 
-    <!-- Propiedades del evento — agrupadas en una sola tarjeta -->
-    <div class="panel-meta-card">
-      <div class="panel-area-wrap" id="panel-area-wrap">
-        <div class="panel-field-label">Área</div>
+    <!-- Filas de propiedad, estilo Recordatorios -->
+    <div class="panel-rows">
+      <button class="panel-row" onclick="togglePanelRow('area')">
+        <span class="panel-row-icon">◐</span>
+        <span class="panel-row-label">Área</span>
+        <span class="panel-row-value">
+          <span class="panel-row-dot" id="panel-row-area-dot"></span>
+          <span id="panel-row-area-text">Trabajo</span>
+        </span>
+        <span class="panel-row-chevron">›</span>
+      </button>
+      <div class="panel-row-expand" id="panel-area-wrap" style="display:none">
         <div class="panel-area-pills" id="panel-area-pills"></div>
       </div>
 
-      <div class="panel-meta-divider"></div>
-
-      <div class="panel-recur-wrap">
-        <div class="panel-field-label">Repetición</div>
+      <button class="panel-row" onclick="togglePanelRow('recur')">
+        <span class="panel-row-icon">↻</span>
+        <span class="panel-row-label">Repetir</span>
+        <span class="panel-row-value" id="panel-row-recur-value">Solo esta vez</span>
+        <span class="panel-row-chevron">›</span>
+      </button>
+      <div class="panel-row-expand" id="panel-recur-wrap" style="display:none">
         <div class="panel-recur-pills">
           <button class="recur-pill active" id="recur-once" onclick="setPanelRecurrence(false)">Solo esta vez</button>
           <button class="recur-pill" id="recur-weekly" onclick="setPanelRecurrence(true)">Cada semana</button>
         </div>
       </div>
 
-      <div class="panel-meta-divider"></div>
-
-      <div class="panel-focus-wrap">
-        <button class="focus-toggle-pill" id="panel-focus-toggle" onclick="setPanelFocus()">
-          <span id="panel-focus-icon">☆</span> Foco del día
-        </button>
+      <div class="panel-row panel-row-static">
+        <span class="panel-row-icon">☆</span>
+        <span class="panel-row-label">Foco del día</span>
+        <button class="ios-switch" id="panel-focus-toggle" onclick="setPanelFocus()"></button>
       </div>
     </div>
-
-    <!-- Acción principal: estado -->
-    <button class="panel-done-main" id="panel-done-main" onclick="panelToggleDone()">
-      <svg id="panel-done-icon" width="14" height="14" viewBox="0 0 14 14" fill="none">
-        <polyline points="2,7 5.5,10.5 12,3" stroke="currentColor" stroke-width="1.8"
-                  stroke-linecap="round" stroke-linejoin="round"/>
-      </svg>
-      <span id="panel-done-label">Marcar como completada</span>
-    </button>
 
     <!-- Timer (oculto hasta iniciar) -->
     <div class="panel-timer-row" id="panel-timer-row" style="display:none">
@@ -799,8 +802,15 @@
       <button class="panel-timer-stop" onclick="stopPanelTimer()">Terminar</button>
     </div>
 
-    <!-- Acciones secundarias -->
+    <!-- Acciones: lado a lado -->
     <div class="panel-actions-row" id="panel-actions-row">
+      <button class="panel-done-main" id="panel-done-main" onclick="panelToggleDone()">
+        <svg id="panel-done-icon" width="14" height="14" viewBox="0 0 14 14" fill="none">
+          <polyline points="2,7 5.5,10.5 12,3" stroke="currentColor" stroke-width="1.8"
+                    stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <span id="panel-done-label">Completar</span>
+      </button>
       <button class="panel-focus-btn" id="focus-start-btn" onclick="startSession()">
         <svg width="10" height="12" viewBox="0 0 10 12" fill="none" style="margin-right:6px;flex-shrink:0">
           <path d="M1 1l8 5-8 5V1z" fill="currentColor"/>

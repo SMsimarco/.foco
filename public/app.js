@@ -2644,17 +2644,36 @@ function openEventPanel(ev, dateISO) {
     recOnce.classList.toggle('active', !ev.recurrente);
     recWeekly.classList.toggle('active', !!ev.recurrente);
   }
+  const recurValueEl = document.getElementById('panel-row-recur-value');
+  if (recurValueEl) recurValueEl.textContent = ev.recurrente ? 'Cada semana' : 'Solo esta vez';
+
   updateFocusButton(!!ev.is_focus);
+
+  // Las filas Área/Repetir arrancan colapsadas — se abren tocándolas
+  const areaWrap = document.getElementById('panel-area-wrap');
+  const recurWrap = document.getElementById('panel-recur-wrap');
+  if (areaWrap) areaWrap.style.display = 'none';
+  if (recurWrap) recurWrap.style.display = 'none';
 
   document.getElementById('event-panel').classList.add('open');
   document.getElementById('panel-overlay').classList.add('open');
+}
+
+// Abre/cierra una fila de propiedad (Área o Repetir) — colapsa la otra si estaba abierta
+function togglePanelRow(name) {
+  const ids = { area: 'panel-area-wrap', recur: 'panel-recur-wrap' };
+  Object.entries(ids).forEach(([key, id]) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.style.display = (key === name && el.style.display === 'none') ? '' : 'none';
+  });
 }
 
 function updateDoneButton(done) {
   const btn   = document.getElementById('panel-done-main');
   const label = document.getElementById('panel-done-label');
   if (!btn || !label) return;
-  label.textContent = done ? 'Completada' : 'Marcar como completada';
+  label.textContent = done ? 'Completada' : 'Completar';
   btn.classList.toggle('done', done);
 }
 
@@ -2713,6 +2732,8 @@ async function setPanelRecurrence(recurrente) {
 
   document.getElementById('recur-once').classList.toggle('active', !recurrente);
   document.getElementById('recur-weekly').classList.toggle('active', recurrente);
+  const recurValueEl = document.getElementById('panel-row-recur-value');
+  if (recurValueEl) recurValueEl.textContent = recurrente ? 'Cada semana' : 'Solo esta vez';
 
   renderHoy();
   showToast(recurrente ? 'Se repite cada semana' : 'Solo esta vez', 'success');
@@ -3348,14 +3369,22 @@ let panelCurrentArea = 'trabajo';
 function renderAreaPills(selectedArea) {
   panelCurrentArea = selectedArea || 'trabajo';
   const container = document.getElementById('panel-area-pills');
-  if (!container) return;
-  container.innerHTML = Object.entries(AREAS).map(([key, a]) => `
-    <button class="area-pill${panelCurrentArea === key ? ' selected' : ''}"
-            style="--area-color:${a.color}"
-            onclick="selectPanelArea('${key}')">
-      ${a.label}
-    </button>
-  `).join('');
+  if (container) {
+    container.innerHTML = Object.entries(AREAS).map(([key, a]) => `
+      <button class="area-pill${panelCurrentArea === key ? ' selected' : ''}"
+              style="--area-color:${a.color}"
+              onclick="selectPanelArea('${key}')">
+        ${a.label}
+      </button>
+    `).join('');
+  }
+
+  // Sincroniza el dot+texto de la fila "Área" (colapsada) con la selección actual
+  const areaInfo = AREAS[panelCurrentArea];
+  const dotEl = document.getElementById('panel-row-area-dot');
+  const textEl = document.getElementById('panel-row-area-text');
+  if (dotEl) dotEl.style.background = areaInfo ? areaInfo.color : 'var(--text3)';
+  if (textEl) textEl.textContent = areaInfo ? areaInfo.label : 'Trabajo';
 }
 
 async function selectPanelArea(areaKey) {
