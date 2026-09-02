@@ -1773,16 +1773,17 @@ async function renderSugerencias() {
   updateSugStats();
   renderConflicts();
   generateAISummary();
-  renderAreasBreakdown();
-  renderPalabrasHistoria();
   updateEstadoCard();
 }
 
+// Bloque "Pulso" — solo hechas/total + barra. Se sacaron momentum y total
+// como métricas separadas (momentum no tenía significado claro, total es
+// redundante con el X/10).
 function updateSugStats() {
   const { done, total, pct } = calcMomentum();
   document.getElementById('sug-done').textContent = `${done}/${total}`;
-  document.getElementById('sug-momentum').textContent = pct;
-  document.getElementById('sug-total').textContent = total;
+  const bar = document.getElementById('pulso-bar-fill');
+  if (bar) bar.style.width = `${pct}%`;
 }
 
 function renderConflicts() {
@@ -1822,10 +1823,19 @@ function renderConflicts() {
   });
 }
 
+// Bloque "Insight de la IA" — misma llamada a /api/claude y mismo parseo de
+// siempre (no tocado), solo cambia DÓNDE se pinta: título+narrativa en el
+// header de la card protagonista, una sola sugerencia (tip) integrada abajo
+// en un bloque interno. "Mejor día" se saca como línea aparte — ya lo dice
+// la narrativa.
 async function generateAISummary() {
   const week = getWeekDates(weekOffset);
-  const resumenEl = document.getElementById('sug-resumen-text');
-  resumenEl.innerHTML = `<span style="color:var(--text4)">Analizando tu semana...</span>`;
+  const titleEl = document.getElementById('sug-insight-title');
+  const textEl = document.getElementById('sug-insight-text');
+  const tipEl = document.getElementById('sug-insight-tip');
+  titleEl.textContent = 'Analizando tu semana...';
+  textEl.textContent = '';
+  tipEl.style.display = 'none';
 
   const allEvs = week.flatMap(d => eventsCache[toISO(d)] || []);
   const done = allEvs.filter(e => e.done).length;
@@ -1873,54 +1883,15 @@ Respondé SOLO con JSON válido, sin markdown ni texto extra:
       };
     }
 
-    resumenEl.innerHTML = `
-      ${parsed.headline ? `<div style="font-size:15px;font-weight:500;color:var(--text);margin-bottom:8px;line-height:1.3">${parsed.headline}</div>` : ''}
-      ${parsed.insight ? `<div style="font-size:12px;color:var(--text2);line-height:1.6;margin-bottom:10px">${parsed.insight}</div>` : ''}
-      ${parsed.tip ? `<div style="font-size:11px;color:var(--accent);background:rgba(129,140,248,.08);border:1px solid rgba(129,140,248,.15);border-radius:7px;padding:8px 10px;line-height:1.5;margin-bottom:6px">${parsed.tip}</div>` : ''}
-      ${parsed.best_day ? `<div style="font-size:10px;color:var(--text4);margin-top:4px">Mejor día: <span style="color:var(--text3)">${parsed.best_day}</span></div>` : ''}
-    `;
+    titleEl.textContent = parsed.headline || 'Tu semana';
+    textEl.textContent = parsed.insight || '';
+    if (parsed.tip) {
+      tipEl.textContent = parsed.tip;
+      tipEl.style.display = 'block';
+    }
   } catch {
-    resumenEl.textContent = 'No se pudo conectar con la IA.';
-  }
-}
-
-async function handleAI() {
-  const inp = document.getElementById('ai-inp');
-  const resp = document.getElementById('ai-response');
-  const v = inp.value.trim();
-  if (!v) return;
-
-  resp.style.display = 'block';
-  resp.textContent = 'Analizando...';
-  resp.style.color = '#3F3F46';
-  inp.value = '';
-
-  const week = getWeekDates(weekOffset);
-  const eventsText = week.flatMap(d =>
-    (eventsCache[toISO(d)] || []).map(ev =>
-      `${DAYS_FULL[d.getDay()]} ${ev.start_time}-${ev.end_time}: ${ev.title}${ev.done ? ' (hecho)' : ''}`
-    )
-  ).join('\n');
-
-  try {
-    const response = await fetch('/api/claude', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'claude-haiku-4-5-20251001',
-        max_tokens: 300,
-        system: `Sos un asistente de agenda personal. Respondé en español rioplatense,
-                 directo y conciso (máx 80 palabras). Si piden reorganizar,
-                 sugerí cambios concretos con días y horarios. Sin saludos.`,
-        messages: [{ role: 'user', content: `Mi agenda:\n${eventsText}\n\nMi consulta: ${v}` }]
-      })
-    });
-    const data = await response.json();
-    resp.style.color = '#71717A';
-    resp.textContent = data.content?.[0]?.text || 'No se pudo procesar.';
-  } catch (e) {
-    resp.style.color = '#71717A';
-    resp.textContent = 'Error al conectar con la IA.';
+    titleEl.textContent = 'Tu semana';
+    textEl.textContent = 'No se pudo conectar con la IA.';
   }
 }
 
@@ -3831,41 +3802,6 @@ async function renderAreasTimeline() {
           <div class="area-row-fill" style="width:${pct}%;background:${area.color}"></div>
         </div>
         <span class="area-row-pct">${pct}%</span>
-      </div>
-    `;
-  }).filter(Boolean).join('');
-}
-
-async function renderAreasBreakdown() {
-  const el = document.getElementById('areas-breakdown');
-  if (!el || !currentUser) return;
-
-  const week = getWeekDates(weekOffset);
-  const allEvs = week.flatMap(d => eventsCache[toISO(d)] || []);
-
-  if (!allEvs.length) {
-    el.innerHTML = '<div style="font-size:11px;color:var(--text4)">Sin eventos esta semana.</div>';
-    return;
-  }
-
-  const counts = {};
-  allEvs.forEach(ev => {
-    if (!ev.area) return;
-    counts[ev.area] = (counts[ev.area] || 0) + 1;
-  });
-  const total = allEvs.length;
-
-  el.innerHTML = Object.entries(AREAS).map(([key, area]) => {
-    const n = counts[key] || 0;
-    if (!n) return '';
-    const pct = Math.round(n / total * 100);
-    return `
-      <div class="area-row">
-        <span class="area-row-label">${area.label}</span>
-        <div class="area-row-bar">
-          <div class="area-row-fill" style="width:${pct}%;background:${area.color}"></div>
-        </div>
-        <span class="area-row-pct">${n}</span>
       </div>
     `;
   }).filter(Boolean).join('');

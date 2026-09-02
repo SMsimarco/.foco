@@ -314,27 +314,9 @@
     <!-- SUGERENCIAS -->
     <div id="view-sugerencias" style="display:none">
 
-      <!-- HERO: Resumen semanal -->
-      <div class="sug-hero" id="sug-resumen">
-        <div class="sug-hero-eyebrow">Esta semana</div>
-        <div class="sug-stats">
-          <div class="sug-stat">
-            <div class="sug-stat-n" id="sug-done">—</div>
-            <div class="sug-stat-l">hechas</div>
-          </div>
-          <div class="sug-stat">
-            <div class="sug-stat-n" id="sug-momentum" style="color:#818CF8">—</div>
-            <div class="sug-stat-l">momentum</div>
-          </div>
-          <div class="sug-stat">
-            <div class="sug-stat-n" id="sug-total">—</div>
-            <div class="sug-stat-l">total</div>
-          </div>
-        </div>
-        <div class="sug-desc" id="sug-resumen-text">Cargando análisis...</div>
-      </div>
-
-      <!-- SECTION: Hoy -->
+      <!-- "¿Cómo estás hoy?" es diario, no semanal — en rigor no va en esta
+           vista. Moverlo a la vista Hoy queda fuera de este cambio (tocaría
+           otra vista); se deja acá por ahora, sin duplicar. -->
       <div class="sug-section sug-section--cyan">Hoy</div>
 
       <div class="sug-card sug-card--cyan" id="sug-estado-card">
@@ -350,25 +332,30 @@
       <!-- Conflictos -->
       <div id="sug-conflicts"></div>
 
-      <!-- SECTION: Tu semana -->
-      <div class="sug-section sug-section--green">Tu semana</div>
+      <!-- BLOQUE 1: PULSO -->
+      <div class="sug-section">Pulso</div>
 
-      <div class="sug-card sug-card--green" id="sug-areas-card">
-        <div class="sug-card-label" style="color:#34D399">Áreas de vida</div>
-        <div class="areas-breakdown" id="areas-breakdown"></div>
+      <div class="sug-hero" id="sug-resumen">
+        <div class="sug-hero-eyebrow">Esta semana</div>
+        <div class="pulso-num" id="sug-done">—</div>
+        <div class="pulso-label">completadas esta semana</div>
+        <div class="proj-progress"><div class="proj-progress-fill" id="pulso-bar-fill" style="width:0%;background:#34D399"></div></div>
       </div>
 
-      <div class="sug-card sug-card--green" id="sug-ia-card">
-        <div class="sug-card-label" style="color:#34D399">Sugerencia IA</div>
-        <div class="sug-title" id="sug-ia-title">El jueves está vacío</div>
-        <div class="sug-desc" id="sug-ia-desc">
-          Si tenés tareas pendientes, los jueves a la mañana son un buen momento
-          para planificar o avanzar con trabajo de foco.
+      <!-- BLOQUE 2: INSIGHT DE LA IA (protagonista) -->
+      <div class="sug-section">Insight de tu semana</div>
+
+      <div class="sug-card sug-insight-card" id="sug-insight-card">
+        <div class="sug-insight-hd">
+          <img src="/foquito-avatar.png" alt="" class="foq-avatar-img foq-avatar-sm"/>
+          <div class="sug-insight-title" id="sug-insight-title">Analizando tu semana...</div>
         </div>
+        <div class="sug-desc" id="sug-insight-text"></div>
+        <div class="sug-insight-tip" id="sug-insight-tip" style="display:none"></div>
       </div>
 
-      <!-- SECTION: Reflexionar -->
-      <div class="sug-section sug-section--purple">Reflexionar</div>
+      <!-- BLOQUE 3: CERRAR LA SEMANA -->
+      <div class="sug-section sug-section--purple">Cerrar la semana</div>
 
       <div class="sug-card sug-card--purple" id="sug-review">
         <div class="sug-card-top">
@@ -380,28 +367,9 @@
         </div>
       </div>
 
-      <div class="sug-card sug-card--purple" id="sug-palabra-card">
-        <div class="sug-card-top">
-          <div>
-            <div class="sug-title">Una palabra</div>
-            <div class="sug-desc">¿Cómo definís esta semana?</div>
-            <div class="palabras-historia" id="palabras-historia"></div>
-          </div>
-          <button class="sug-inline-btn sug-inline-btn--purple" onclick="showPalabra()">Agregar →</button>
-        </div>
-      </div>
-
-      <!-- SECTION: Asistente -->
-      <div class="sug-section sug-section--indigo">Preguntale a tu semana</div>
-
-      <div class="sug-card">
-        <div class="ai-input-wrap">
-          <input class="ai-inp" id="ai-inp" type="text"
-            placeholder='"reorganizame la semana, tengo mucho el martes"'/>
-          <button class="ai-send" onclick="handleAI()">↑</button>
-        </div>
-        <div class="ai-response" id="ai-response"></div>
-      </div>
+      <!-- Pie — reemplaza el input "Preguntale a tu semana": Foquito flotante
+           ya es el canal de chat, no hace falta un segundo input acá. -->
+      <div class="sug-foot-hint">¿Reorganizar algo? Pedíselo a Foquito.</div>
 
     </div>
   </div>
