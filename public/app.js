@@ -775,7 +775,8 @@ function parseNL(raw) {
           date = new Date(now);
           date.setDate(now.getDate() + diff);
         }
-        s = s.replace(new RegExp('\\b' + key + '\\b', 'i'), ' ');
+        // Saca también el artículo pegado antes ("el sábado" → no debe quedar "el" suelto)
+        s = s.replace(new RegExp('\\b(el|la|los|las)\\s+' + key + '\\b|\\b' + key + '\\b', 'i'), ' ');
         break;
       }
     }
@@ -924,7 +925,7 @@ function renderDiaGrid(dateISO, dayEvents) {
   if (alldayListEl) {
     alldayListEl.innerHTML = sinHora.map(ev => {
       const color = eventColor(ev.title, ev.area);
-      return `<div class="sg-chip" style="background:${color}29;border-left-color:${color};color:${color}"
+      return `<div class="sg-chip" style="background:${color}4D;border-left-color:${color}"
         onclick="openEventPanel(eventsCache['${dateISO}'].find(e=>e.id==='${ev.id}'), '${dateISO}')">${ev.title}</div>`;
     }).join('');
   }
@@ -954,22 +955,18 @@ async function changeDia(dir) {
   _changingDia = true;
 
   try {
+    // Fade simple (sin slide) — menos piezas moviéndose a la vez, más
+    // confiable en mobile que el FLIP de transform que tenía antes.
     const wrap = document.getElementById('hoy-scroll');
     if (wrap) {
-      wrap.style.transition = 'transform 0.16s cubic-bezier(.4,0,.2,1), opacity 0.16s';
-      wrap.style.transform = `translateX(${dir < 0 ? '24px' : '-24px'})`;
+      wrap.style.transition = 'opacity 0.12s ease';
       wrap.style.opacity = '0';
-      await new Promise(r => setTimeout(r, 160));
+      await new Promise(r => setTimeout(r, 120));
     }
 
     diaActual.setDate(diaActual.getDate() + dir);
     const dateISO = toISO(diaActual);
     const yaEnCache = !!eventsCache[dateISO];
-
-    if (wrap) {
-      wrap.style.transition = 'none';
-      wrap.style.transform = `translateX(${dir < 0 ? '-24px' : '24px'})`;
-    }
 
     // Si el día ya está en cache (caso común: loadWeek trajo la semana actual
     // al entrar) pintamos ya, sin esperar a Supabase. Si NO está en cache,
@@ -979,11 +976,8 @@ async function changeDia(dir) {
     renderHoy();
 
     if (wrap) {
-      await new Promise(r => requestAnimationFrame(r));
-      wrap.style.transition = 'transform 0.2s cubic-bezier(.4,0,.2,1), opacity 0.2s';
-      wrap.style.transform = 'translateX(0)';
+      wrap.style.transition = 'opacity 0.18s ease';
       wrap.style.opacity = '1';
-      setTimeout(() => { wrap.style.transition = ''; wrap.style.transform = ''; wrap.style.opacity = ''; }, 220);
     }
 
     if (yaEnCache) {
@@ -1121,7 +1115,7 @@ function renderSemanaGrid() {
       const dateISO = toISO(d);
       const chips = sinHoraPorDia[i].map(ev => {
         const color = eventColor(ev.title, ev.area);
-        return `<div class="sg-chip" style="background:${color}29;border-left-color:${color};color:${color}"
+        return `<div class="sg-chip" style="background:${color}4D;border-left-color:${color}"
           onclick="openEventPanel(eventsCache['${dateISO}'].find(e=>e.id==='${ev.id}'), '${dateISO}')">${ev.title}</div>`;
       }).join('');
       return `<div class="sg-allday-col">${chips}</div>`;
@@ -1177,7 +1171,7 @@ function buildGridBlockHTML(ev, dateISO, top, alto, izq, ancho, color) {
     : '';
   return `
     <div class="sg-block${ev.done ? ' done' : ''}" data-event-id="${ev.id}"
-      style="top:${top}px;height:${alto}px;left:${izq}%;width:calc(${ancho}% - 2px);background:${color}29;border-left-color:${color};color:${color}">
+      style="top:${top}px;height:${alto}px;left:${izq}%;width:calc(${ancho}% - 2px);background:${color}4D;border-left-color:${color}">
       <div class="sg-block-content" onclick="if(this.closest('.sg-block').classList.contains('swiped')){${cerrarSwipe};event.stopPropagation();}else{${abrir}}">
         <span class="sg-block-title">${ev.title}</span>
         ${alto >= 34 ? `<span class="sg-block-time">${ev.start_time}${ev.end_time ? '–' + ev.end_time : ''}</span>` : ''}
