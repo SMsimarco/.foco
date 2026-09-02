@@ -178,6 +178,7 @@ function calcCommitmentScore() {
 
   week.forEach(d => {
     (eventsCache[toISO(d)] || []).forEach(ev => {
+      if (!ev.end_time) return; // tareas sin hora de fin no cuentan para el score
       const [eh, em] = ev.end_time.split(':').map(Number);
       const evEnd = new Date(`${toISO(d)}T${String(eh).padStart(2,'0')}:${String(em).padStart(2,'0')}:00`);
       if (evEnd >= now) return; // eventos futuros no cuentan aún
@@ -687,7 +688,7 @@ function pickFoquitoCelebration() {
 }
 
 async function updatePattern(ev) {
-  if (!currentUser) return;
+  if (!currentUser || !ev.start_time) return;
   const date = new Date((ev.date || '') + 'T12:00:00');
   const dayOfWeek = date.getDay();
   const [hour] = ev.start_time.split(':').map(Number);
@@ -954,10 +955,10 @@ async function changeDia(dir) {
   if (_changingDia) return;
   _changingDia = true;
 
+  // Fade simple (sin slide) — menos piezas moviéndose a la vez, más
+  // confiable en mobile que el FLIP de transform que tenía antes.
+  const wrap = document.getElementById('hoy-scroll');
   try {
-    // Fade simple (sin slide) — menos piezas moviéndose a la vez, más
-    // confiable en mobile que el FLIP de transform que tenía antes.
-    const wrap = document.getElementById('hoy-scroll');
     if (wrap) {
       wrap.style.transition = 'opacity 0.12s ease';
       wrap.style.opacity = '0';
@@ -975,16 +976,18 @@ async function changeDia(dir) {
     if (!yaEnCache) await loadDia();
     renderHoy();
 
-    if (wrap) {
-      wrap.style.transition = 'opacity 0.18s ease';
-      wrap.style.opacity = '1';
-    }
-
     if (yaEnCache) {
       await loadDia();
       renderHoy(); // repinta en silencio si Supabase trajo algo distinto de lo cacheado
     }
   } finally {
+    // Pase lo que pase arriba (error de red, bug de render), la vista nunca
+    // se queda trabada en opacity:0 — antes el restore vivía en medio del
+    // try y un throw a mitad de camino dejaba la pantalla invisible.
+    if (wrap) {
+      wrap.style.transition = 'opacity 0.18s ease';
+      wrap.style.opacity = '1';
+    }
     _changingDia = false;
   }
 }
