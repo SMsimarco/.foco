@@ -440,6 +440,7 @@ async function showApp() {
   await loadWeek(); // datos semanales para el ring de commitment y Sugerencias
   await loadDia();
   renderHoy();
+  scrollHoyToFirstEvent(toISO(diaActual));
   setupNotifications();
 
   checkOnboarding();
@@ -911,6 +912,31 @@ function renderHoy() {
   updateMomentum();
 }
 
+// Arranca el scroll de la vista Día justo antes de la primera actividad con
+// hora, para no dejar horas vacías (6-9am, digamos) ocupando la pantalla al
+// entrar. Se llama solo al ENTRAR al día (carga inicial / cambiar de día /
+// abrir la vista) — nunca desde renderHoy/renderDiaGrid en sí, porque esas
+// corren también en cada toggle/add/delete y reubicar el scroll ahí sería
+// molesto en medio de una interacción.
+function scrollHoyToFirstEvent(dateISO) {
+  const wrap = document.getElementById('hoy-scroll');
+  const colEl = document.getElementById('dg-day-col');
+  if (!wrap || !colEl) return;
+
+  const conHora = (eventsCache[dateISO] || []).filter(e => !e.is_focus && e.start_time);
+  if (!conHora.length) { wrap.scrollTop = 0; return; }
+
+  const earliestMin = Math.min(...conHora.map(e => timeToMin(e.start_time)));
+  const { horaBase } = computeGridHourRange([diaActual]);
+  const topWithinGrid = ((earliestMin - horaBase * 60) / 60) * ALTO_HORA;
+
+  const wrapRect = wrap.getBoundingClientRect();
+  const colRect = colEl.getBoundingClientRect();
+  const MARGEN_ARRIBA = 60; // deja algo de aire / la hora anterior visible, no pega el bloque al borde
+  const target = wrap.scrollTop + (colRect.top - wrapRect.top) + topWithinGrid - MARGEN_ARRIBA;
+  wrap.scrollTop = Math.max(0, target);
+}
+
 // Grilla horaria de un solo día — reemplaza lo que antes eran las listas
 // "Durante el día" / "Cuando puedas". Comparte la lógica de bloques con la
 // vista Semana vía renderGridColumnHTML/buildGridBlockHTML (ver más abajo).
@@ -975,6 +1001,7 @@ async function changeDia(dir) {
     // por un instante y después el contenido real, un parpadeo feo.
     if (!yaEnCache) await loadDia();
     renderHoy();
+    scrollHoyToFirstEvent(dateISO); // mientras sigue en opacity:0, no se ve el salto
 
     if (yaEnCache) {
       await loadDia();
@@ -1882,6 +1909,7 @@ async function setView(view) {
   if (view === 'semana') {
     await loadDia();
     renderHoy();
+    scrollHoyToFirstEvent(toISO(diaActual));
   } else if (view === 'semana-grid') {
     await loadWeek(gridWeekOffset);
     renderSemanaGrid();
