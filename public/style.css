@@ -3597,7 +3597,7 @@ body.ambient #app::before {
 .tuana-legend-dot  { width: 8px; height: 8px; border-radius: 2px; }
 .tuana-highlights {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(2, 1fr);
   gap: 8px;
 }
 .tuana-hl {
@@ -3710,23 +3710,21 @@ body.ambient #app::before {
   color: var(--text);
   font-family: 'Geist', sans-serif;
 }
-.tuana-energy-dots {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 5px;
-}
-.tuana-energy-dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  cursor: default;
-}
 .tuana-empty {
   font-size: 11px;
   color: var(--text4);
   font-family: 'Geist', sans-serif;
   line-height: 1.5;
 }
+.tuana-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 22px 20px 14px;
+  text-align: center;
+}
+.tuana-empty-state .tuana-empty { max-width: 230px; }
 
 @media (max-width: 639px) {
   /* header */

@@ -3989,7 +3989,7 @@ async function renderEquipo() {
         <div class="tuana-heatmap-legend">
           <span>Menos</span>
           <div class="tuana-legend-dots">
-            <div class="tuana-legend-dot" style="background:#1C1C1F"></div>
+            <div class="tuana-legend-dot" style="background:#12141F"></div>
             <div class="tuana-legend-dot" style="background:#1C2045"></div>
             <div class="tuana-legend-dot" style="background:#3B4280"></div>
             <div class="tuana-legend-dot" style="background:#818CF8"></div>
@@ -4005,57 +4005,24 @@ async function renderEquipo() {
           <div class="tuana-hl-lbl">completadas</div>
         </div>
         <div class="tuana-hl">
-          <div class="tuana-hl-val" id="tu-best-week">—</div>
-          <div class="tuana-hl-lbl">mejor semana</div>
-        </div>
-        <div class="tuana-hl">
           <div class="tuana-hl-val" id="tu-racha">—</div>
           <div class="tuana-hl-lbl">racha actual</div>
         </div>
       </div>
 
-      <div class="tuana-card">
-        <div class="tuana-card-top">
-          <div>
-            <div class="tuana-section-label">Tareas completadas</div>
-            <div class="tuana-chart-stat">
-              <span class="tuana-chart-big" id="tu-chart-big">—</span>
-              <span class="tuana-chart-sub" id="tu-chart-sub"></span>
-            </div>
-          </div>
-          <div class="tuana-period-toggle">
-            <button class="tuana-period-btn${tuanaChartPeriod==='semana'?' active':''}" data-p="semana" onclick="setTuanaChartPeriod('semana')">Sem</button>
-            <button class="tuana-period-btn${tuanaChartPeriod==='mes'?' active':''}" data-p="mes" onclick="setTuanaChartPeriod('mes')">Mes</button>
-            <button class="tuana-period-btn${tuanaChartPeriod==='año'?' active':''}" data-p="año" onclick="setTuanaChartPeriod('año')">Año</button>
-          </div>
-        </div>
-        <div class="tuana-chart-wrap">
-          <div class="tuana-chart-tip" id="tu-chart-tip"></div>
-          <svg class="tuana-chart" id="tu-chart" viewBox="0 0 300 72" preserveAspectRatio="none"></svg>
-        </div>
-        <div class="tuana-chart-labels" id="tu-chart-labels"></div>
-      </div>
-
-      <div class="tuana-card">
-        <div class="tuana-section-label">Energía — últimos 30 días</div>
-        <div class="tuana-energy-dots" id="tu-energy"></div>
-      </div>
+      <div id="tu-tendencia-card"></div>
     </div>
   `;
 
-  const since6m  = toISO(new Date(Date.now() - 182 * 86400000));
-  const since30d = toISO(new Date(Date.now() - 30  * 86400000));
   const since60d = toISO(new Date(Date.now() - 60  * 86400000));
   const since1y  = toISO(new Date(Date.now() - 365 * 86400000));
 
-  const [evRes, checkinRes, streakRes] = await Promise.all([
+  const [evRes, streakRes] = await Promise.all([
     db.from('events').select('date, done').eq('user_id', uid).gte('date', since1y),
-    db.from('daily_checkins').select('date, energy').eq('user_id', uid).gte('date', since30d).order('date', { ascending: true }),
     db.from('daily_checkins').select('date').eq('user_id', uid).gte('date', since60d).order('date', { ascending: false })
   ]);
 
   const events     = evRes.data      || [];
-  const checkins   = checkinRes.data || [];
   const streakData = streakRes.data  || [];
   tuanaEventsCache = events;
 
@@ -4093,42 +4060,81 @@ async function renderEquipo() {
   }
 
   // ── Highlights ───────────────────────────────────────────────
+  // "Mejor semana" se sacó: dependía de una variable `digests` que nunca se
+  // declaraba en esta función — tiraba ReferenceError acá mismo y cortaba
+  // en seco el resto de renderEquipo(). Por eso racha/tendencia/energía
+  // aparecían siempre vacías: no era falta de datos, el código ni llegaba
+  // a ejecutarse. Sacar esta métrica de paso arregla el crash.
   const elDone = document.getElementById('tu-total-done');
-  if (elDone) elDone.textContent = events.filter(e => e.done && e.date >= since6m).length;
-
-  const elBest = document.getElementById('tu-best-week');
-  if (elBest && digests.length) {
-    const best = digests.reduce((m, d) => (d.commitment_score || 0) > (m.commitment_score || 0) ? d : m, digests[0]);
-    elBest.textContent = (best.commitment_score || 0) + '%';
-  }
+  if (elDone) elDone.textContent = events.filter(e => e.done).length;
 
   const elRacha = document.getElementById('tu-racha');
+  let streak = 0;
   if (elRacha) {
     const checkinSet = new Set(streakData.map(c => c.date));
-    let streak = 0;
     const cursor = new Date(); cursor.setHours(0,0,0,0);
     if (!checkinSet.has(toISO(cursor))) cursor.setDate(cursor.getDate() - 1);
     while (checkinSet.has(toISO(cursor))) { streak++; cursor.setDate(cursor.getDate() - 1); }
-    elRacha.textContent = streak > 0 ? streak + (streak === 1 ? ' día' : ' días') : '—';
+    // Antes mostraba "—" en 0 — se confundía con "no se pudo calcular".
+    elRacha.textContent = streak + (streak === 1 ? ' día' : ' días');
   }
 
-  // ── Chart ────────────────────────────────────────────────────
+  // ── Tendencia ────────────────────────────────────────────────
+  // Antes el gráfico quedaba en blanco sin avisar si no había completadas
+  // en el período. Ahora, si el usuario tiene poco recorrido en general
+  // (menos de ~2 semanas de días con algo completado), se muestra un
+  // estado vacío explícito en vez del gráfico — no hace falta ni mostrar
+  // el selector Sem/Mes/Año si no hay con qué compararlo todavía.
+  const diasConCompletadas = new Set(events.filter(e => e.done).map(e => e.date)).size;
+  renderTendenciaCard(diasConCompletadas >= 14);
+}
+
+// Card "Tendencia" — gráfico real si hay suficiente recorrido, si no un
+// estado vacío sobrio (nunca un SVG en blanco sin explicación).
+function renderTendenciaCard(hayDatos) {
+  const el = document.getElementById('tu-tendencia-card');
+  if (!el) return;
+
+  if (!hayDatos) {
+    el.innerHTML = `
+      <div class="tuana-card">
+        <div class="tuana-section-label">Tendencia</div>
+        <div class="tuana-empty-state">
+          <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
+            <polyline points="4,30 14,20 20,25 36,8" stroke="#3A3A3C" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <circle cx="36" cy="8" r="2.5" fill="#3A3A3C"/>
+          </svg>
+          <div class="tuana-empty">Tu tendencia de tareas aparece acá cuando tengas un par de semanas registradas. Seguí un poco más.</div>
+        </div>
+      </div>
+    `;
+    return;
+  }
+
+  el.innerHTML = `
+    <div class="tuana-card">
+      <div class="tuana-card-top">
+        <div>
+          <div class="tuana-section-label">Tendencia</div>
+          <div class="tuana-chart-stat">
+            <span class="tuana-chart-big" id="tu-chart-big">—</span>
+            <span class="tuana-chart-sub" id="tu-chart-sub"></span>
+          </div>
+        </div>
+        <div class="tuana-period-toggle">
+          <button class="tuana-period-btn${tuanaChartPeriod==='semana'?' active':''}" data-p="semana" onclick="setTuanaChartPeriod('semana')">Sem</button>
+          <button class="tuana-period-btn${tuanaChartPeriod==='mes'?' active':''}" data-p="mes" onclick="setTuanaChartPeriod('mes')">Mes</button>
+          <button class="tuana-period-btn${tuanaChartPeriod==='año'?' active':''}" data-p="año" onclick="setTuanaChartPeriod('año')">Año</button>
+        </div>
+      </div>
+      <div class="tuana-chart-wrap">
+        <div class="tuana-chart-tip" id="tu-chart-tip"></div>
+        <svg class="tuana-chart" id="tu-chart" viewBox="0 0 300 72" preserveAspectRatio="none"></svg>
+      </div>
+      <div class="tuana-chart-labels" id="tu-chart-labels"></div>
+    </div>
+  `;
   renderTuanaChart();
-
-  // ── Energía ──────────────────────────────────────────────────
-  const energyEl = document.getElementById('tu-energy');
-  if (energyEl) {
-    if (!checkins.length) {
-      energyEl.innerHTML = '<div class="tuana-empty">Completá el morning brief para ver tu energía.</div>';
-    } else {
-      const EC = ['','#F43F5E','#818CF8','#71717A','#818CF8','#10B981'];
-      energyEl.innerHTML = checkins.map(c => {
-        const dt = new Date(c.date + 'T12:00:00');
-        return `<div class="tuana-energy-dot" style="background:${EC[c.energy]||'#27272A'}" title="${DAYS[dt.getDay()]} ${dt.getDate()}/${dt.getMonth()+1} — ${c.energy}/5"></div>`;
-      }).join('');
-    }
-  }
-
 }
 
 // ── ARRANCAR ────────────────────────────────────────────────
