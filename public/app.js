@@ -701,14 +701,42 @@ async function updatePattern(ev) {
   });
 }
 
+// Confirmación genérica antes de cualquier borrado — un solo modal (sheet
+// abajo, mismo estilo que el de repetición) reusado por eventos, proyectos y
+// notas. Basado en Promise en vez de confirm() nativo para no romper el
+// look de la app con el diálogo feo del navegador.
+let _confirmResolve = null;
+
+function askConfirm(message) {
+  return new Promise(resolve => {
+    document.getElementById('confirm-modal-msg').textContent = message;
+    _confirmResolve = resolve;
+    document.getElementById('confirm-overlay').classList.add('open');
+    document.getElementById('confirm-modal').classList.add('open');
+  });
+}
+
+function resolveConfirm(result) {
+  document.getElementById('confirm-overlay').classList.remove('open');
+  document.getElementById('confirm-modal').classList.remove('open');
+  const resolve = _confirmResolve;
+  _confirmResolve = null;
+  if (resolve) resolve(result);
+}
+
+// Devuelve true si borró de verdad — panelDeleteEvent la usa para no cerrar
+// el panel cuando el usuario cancela en el modal de confirmación.
 async function deleteEvent(id, dateISO) {
   const ev = (eventsCache[dateISO] || []).find(e => e.id === id);
+  if (!await askConfirm(ev ? `¿Eliminar "${ev.title}"?` : '¿Eliminar este evento?')) return false;
+
   const { error } = await db.from('events').delete().eq('id', id);
-  if (error) { console.error(error); return; }
+  if (error) { console.error(error); return false; }
 
   eventsCache[dateISO] = (eventsCache[dateISO] || []).filter(e => e.id !== id);
   removeEventFromDOM(id, dateISO);
   if (ev) showToast(`"${ev.title}" eliminado`, 'error');
+  return true;
 }
 
 // ── PARSER LENGUAJE NATURAL ─────────────────────────────────
@@ -1383,6 +1411,7 @@ async function renderProyectos() {
 }
 
 async function deleteProyecto(id) {
+  if (!await askConfirm('¿Eliminar este elemento?')) return;
   await db.from('proyectos').delete().eq('id', id).eq('user_id', currentUser.id);
   renderProyectos();
 }
@@ -1578,7 +1607,7 @@ async function saveProjModal() {
 
 async function deleteProjModal() {
   if (!projModalId) return;
-  if (!confirm('¿Eliminar este proyecto?')) return;
+  if (!await askConfirm('¿Eliminar este proyecto?')) return;
   await db.from('proyectos').delete().eq('id', projModalId).eq('user_id', currentUser.id);
   closeProjModal();
   renderProyectos();
@@ -2726,8 +2755,7 @@ function togglePanelRow(name) {
 
 async function panelDeleteEvent() {
   if (!panelEvent) return;
-  await deleteEvent(panelEvent.id, panelDateISO);
-  closeEventPanel();
+  if (await deleteEvent(panelEvent.id, panelDateISO)) closeEventPanel();
 }
 
 function updateDoneButton(done) {

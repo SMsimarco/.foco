@@ -841,6 +841,18 @@
   </div>
 </div>
 
+<!-- MODAL CONFIRMACIÓN (genérico — cualquier acción destructiva pasa por acá) -->
+<div id="confirm-overlay" class="recur-overlay confirm-overlay" onclick="resolveConfirm(false)"></div>
+<div id="confirm-modal" class="recur-modal confirm-modal">
+  <div class="recur-modal-header">
+    <div class="recur-modal-question" id="confirm-modal-msg">¿Eliminar?</div>
+  </div>
+  <div class="confirm-modal-actions">
+    <button class="panel-focus-btn" onclick="resolveConfirm(false)">Cancelar</button>
+    <button class="confirm-danger-btn" onclick="resolveConfirm(true)">Eliminar</button>
+  </div>
+</div>
+
 <!-- COMMAND PALETTE -->
 <div id="cmd-overlay" class="cmd-overlay" onclick="closeCmd()"></div>
 <div id="cmd-palette" class="cmd-palette">

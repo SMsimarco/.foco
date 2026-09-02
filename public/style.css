@@ -2552,6 +2552,32 @@ body.ambient #app::before {
   font-family: 'Geist', sans-serif;
 }
 
+/* ── CONFIRMACIÓN GENÉRICA (delete de evento/proyecto/nota) ── */
+/* Reusa .recur-overlay/.recur-modal (mismo sheet centrado abajo), con su
+   propio z-index para quedar arriba del event-panel (z:300) y del recur-modal
+   (z:301/302) — la confirmación de borrado gana si se disparan juntos. */
+.confirm-overlay { z-index: 303; }
+.confirm-modal { z-index: 304; }
+.confirm-modal-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 4px;
+}
+.confirm-danger-btn {
+  flex: 1;
+  height: 46px;
+  border: none;
+  border-radius: 12px;
+  background: var(--danger);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: 'Geist', sans-serif;
+  cursor: pointer;
+  transition: opacity .15s;
+}
+.confirm-danger-btn:hover { opacity: 0.88; }
+
 /* ── REPETICIÓN (event panel) ── */
 .panel-recur-pills {
   display: flex;
