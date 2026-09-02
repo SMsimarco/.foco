@@ -3540,8 +3540,11 @@ body.ambient #app::before {
 }
 .tuana-header { padding: 8px 0 4px; }
 .tuana-title {
-  font-family: 'Instrument Serif', serif;
-  font-style: italic;
+  /* Remanente viejo usaba la serif itálica del logo — Progreso no es parte
+     del trío Día/Semana/Mes (esos sí llevan Instrument Serif a propósito),
+     va con la tipografía del sistema como el resto de los títulos de vista. */
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
+  font-weight: 600;
   font-size: 28px;
   color: var(--text);
 }
@@ -3717,11 +3720,6 @@ body.ambient #app::before {
   height: 10px;
   border-radius: 50%;
   cursor: default;
-}
-.tuana-palabras {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
 }
 .tuana-empty {
   font-size: 11px;

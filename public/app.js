@@ -4040,11 +4040,6 @@ async function renderEquipo() {
         <div class="tuana-section-label">Energía — últimos 30 días</div>
         <div class="tuana-energy-dots" id="tu-energy"></div>
       </div>
-
-      <div class="tuana-card">
-        <div class="tuana-section-label">Palabras del año</div>
-        <div class="tuana-palabras" id="tu-palabras"></div>
-      </div>
     </div>
   `;
 
@@ -4053,17 +4048,15 @@ async function renderEquipo() {
   const since60d = toISO(new Date(Date.now() - 60  * 86400000));
   const since1y  = toISO(new Date(Date.now() - 365 * 86400000));
 
-  const [evRes, checkinRes, streakRes, wordsRes] = await Promise.all([
+  const [evRes, checkinRes, streakRes] = await Promise.all([
     db.from('events').select('date, done').eq('user_id', uid).gte('date', since1y),
     db.from('daily_checkins').select('date, energy').eq('user_id', uid).gte('date', since30d).order('date', { ascending: true }),
-    db.from('daily_checkins').select('date').eq('user_id', uid).gte('date', since60d).order('date', { ascending: false }),
-    db.from('weekly_words').select('week_start, word').eq('user_id', uid).gte('week_start', since1y).order('week_start', { ascending: false })
+    db.from('daily_checkins').select('date').eq('user_id', uid).gte('date', since60d).order('date', { ascending: false })
   ]);
 
   const events     = evRes.data      || [];
   const checkins   = checkinRes.data || [];
   const streakData = streakRes.data  || [];
-  const words      = wordsRes.data   || [];
   tuanaEventsCache = events;
 
   // ── Heatmap ──────────────────────────────────────────────────
@@ -4136,13 +4129,6 @@ async function renderEquipo() {
     }
   }
 
-  // ── Palabras ─────────────────────────────────────────────────
-  const palabrasEl = document.getElementById('tu-palabras');
-  if (palabrasEl) {
-    palabrasEl.innerHTML = words.length
-      ? words.map(w => `<span class="palabra-chip">${escH(w.word)}</span>`).join('')
-      : '<div class="tuana-empty">Todavía no hay palabras. Agregá una desde Sugerencias.</div>';
-  }
 }
 
 // ── ARRANCAR ────────────────────────────────────────────────
