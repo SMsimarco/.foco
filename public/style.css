@@ -985,6 +985,7 @@ html, body {
   padding: 14px;
   gap: 10px;
   overflow-y: auto;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
 }
 
 .mes-header {
@@ -995,8 +996,8 @@ html, body {
 }
 
 .mes-title {
-  font-family: 'Instrument Serif', serif;
-  font-size: 20px;
+  font-size: 17px;
+  font-weight: 700;
   color: var(--text);
 }
 

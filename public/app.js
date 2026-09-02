@@ -510,11 +510,12 @@ async function loadDia() {
   const dateISO = toISO(diaActual);
   const diaSemana = diaActual.getDay();
 
-  const { data, error } = await db
-    .from('events')
-    .select('*')
-    .eq('user_id', currentUser.id)
-    .eq('date', dateISO);
+  // Las dos consultas son independientes — en paralelo tardan lo que tarda
+  // la más lenta, no la suma de las dos (antes eran secuenciales).
+  const [{ data, error }, { data: recData }] = await Promise.all([
+    db.from('events').select('*').eq('user_id', currentUser.id).eq('date', dateISO),
+    db.from('events').select('*').eq('user_id', currentUser.id).eq('recurrente', true)
+  ]);
 
   if (error) { console.error(error); return; }
 
@@ -525,12 +526,6 @@ async function loadDia() {
   });
 
   // Inyectar eventos recurrentes que correspondan a este día de semana
-  const { data: recData } = await db
-    .from('events')
-    .select('*')
-    .eq('user_id', currentUser.id)
-    .eq('recurrente', true);
-
   (recData || []).forEach(ev => {
     if (ev.dia_semana !== null && ev.dia_semana !== diaSemana) return;
     if (eventsCache[dateISO].find(e => e.id === ev.id)) return;
@@ -953,28 +948,34 @@ function renderDiaGrid(dateISO, dayEvents) {
 async function changeDia(dir) {
   const wrap = document.getElementById('hoy-scroll');
   if (wrap) {
-    wrap.style.transition = 'transform 0.2s cubic-bezier(.4,0,.2,1), opacity 0.2s';
-    wrap.style.transform = `translateX(${dir < 0 ? '30px' : '-30px'})`;
+    wrap.style.transition = 'transform 0.16s cubic-bezier(.4,0,.2,1), opacity 0.16s';
+    wrap.style.transform = `translateX(${dir < 0 ? '24px' : '-24px'})`;
     wrap.style.opacity = '0';
+    await new Promise(r => setTimeout(r, 160));
   }
 
   diaActual.setDate(diaActual.getDate() + dir);
-  await loadDia();
 
   if (wrap) {
     wrap.style.transition = 'none';
-    wrap.style.transform = `translateX(${dir < 0 ? '-30px' : '30px'})`;
-    await new Promise(r => requestAnimationFrame(r));
+    wrap.style.transform = `translateX(${dir < 0 ? '-24px' : '24px'})`;
   }
 
+  // Pinta ya con lo que haya en cache (loadWeek ya trajo la semana actual al
+  // entrar a la app) — no espera a Supabase, así el cambio de día se siente
+  // instantáneo en vez de depender de la red.
   renderHoy();
 
   if (wrap) {
-    wrap.style.transition = 'transform 0.24s cubic-bezier(.4,0,.2,1), opacity 0.24s';
+    await new Promise(r => requestAnimationFrame(r));
+    wrap.style.transition = 'transform 0.2s cubic-bezier(.4,0,.2,1), opacity 0.2s';
     wrap.style.transform = 'translateX(0)';
     wrap.style.opacity = '1';
-    setTimeout(() => { wrap.style.transition = ''; wrap.style.transform = ''; wrap.style.opacity = ''; }, 260);
+    setTimeout(() => { wrap.style.transition = ''; wrap.style.transform = ''; wrap.style.opacity = ''; }, 220);
   }
+
+  await loadDia();
+  renderHoy(); // repinta en silencio si Supabase trajo algo distinto de lo cacheado
 }
 
 
