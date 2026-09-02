@@ -683,6 +683,7 @@ html, body {
   display: flex;
   gap: 8px;
   margin-top: 10px;
+  margin-bottom: 14px;
 }
 
 .hoy-day-nav-btn {
@@ -4122,8 +4123,13 @@ body.ambient #app::before {
 }
 
 @media (max-width: 1023px) {
+  /* Scope a #view-semana-grid nada más — .sg-allday/.sg-body son clases
+     compartidas con la grilla de 1 columna de Día (#view-semana), que no
+     necesita ancho mínimo y quedaba con scroll horizontal fantasma. */
   .sg-scrollx { overflow-x: auto; }
-  .sg-daylabels, .sg-allday, .sg-body { min-width: 620px; }
+  #view-semana-grid .sg-daylabels,
+  #view-semana-grid .sg-allday,
+  #view-semana-grid .sg-body { min-width: 620px; }
 }
 
 /* ── VISTA DÍA — grilla de 1 columna, dentro de #view-semana ── */
