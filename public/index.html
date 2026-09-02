@@ -750,26 +750,30 @@
               oninput="autoresizeDetails(this)"
               onblur="savePanelDetails()"></textarea>
 
-    <!-- Área de vida -->
-    <div class="panel-area-wrap" id="panel-area-wrap">
-      <div class="panel-field-label">Área</div>
-      <div class="panel-area-pills" id="panel-area-pills"></div>
-    </div>
-
-    <!-- Repetición -->
-    <div class="panel-recur-wrap">
-      <div class="panel-field-label">Repetición</div>
-      <div class="panel-recur-pills">
-        <button class="recur-pill active" id="recur-once" onclick="setPanelRecurrence(false)">Solo esta vez</button>
-        <button class="recur-pill" id="recur-weekly" onclick="setPanelRecurrence(true)">Cada semana</button>
+    <!-- Propiedades del evento — agrupadas en una sola tarjeta -->
+    <div class="panel-meta-card">
+      <div class="panel-area-wrap" id="panel-area-wrap">
+        <div class="panel-field-label">Área</div>
+        <div class="panel-area-pills" id="panel-area-pills"></div>
       </div>
-    </div>
 
-    <!-- Foco del día -->
-    <div class="panel-focus-wrap">
-      <button class="focus-toggle-pill" id="panel-focus-toggle" onclick="setPanelFocus()">
-        <span id="panel-focus-icon">☆</span> Foco del día
-      </button>
+      <div class="panel-meta-divider"></div>
+
+      <div class="panel-recur-wrap">
+        <div class="panel-field-label">Repetición</div>
+        <div class="panel-recur-pills">
+          <button class="recur-pill active" id="recur-once" onclick="setPanelRecurrence(false)">Solo esta vez</button>
+          <button class="recur-pill" id="recur-weekly" onclick="setPanelRecurrence(true)">Cada semana</button>
+        </div>
+      </div>
+
+      <div class="panel-meta-divider"></div>
+
+      <div class="panel-focus-wrap">
+        <button class="focus-toggle-pill" id="panel-focus-toggle" onclick="setPanelFocus()">
+          <span id="panel-focus-icon">☆</span> Foco del día
+        </button>
+      </div>
     </div>
 
     <!-- Acción principal: estado -->

@@ -1571,7 +1571,7 @@ html, body {
   inset: 0;
   background: rgba(0,0,0,0);
   backdrop-filter: blur(0px);
-  z-index: 199;
+  z-index: 299;
   display: none;
   transition: background 0.3s ease, backdrop-filter 0.3s ease;
 }
@@ -1594,7 +1594,7 @@ html, body {
   border-radius: 22px 22px 0 0;
   transform: translateY(100%);
   transition: transform 0.34s cubic-bezier(.32,0,.15,1);
-  z-index: 200;
+  z-index: 300;
   box-shadow: 0 -24px 64px rgba(0,0,0,0.7), 0 -1px 0 rgba(255,255,255,0.04);
 }
 
@@ -1656,26 +1656,26 @@ html, body {
 
 .panel-details {
   width: 100%;
-  background: transparent;
-  border: none;
-  border-bottom: 1px solid rgba(255,255,255,0.06);
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 10px;
   color: #fff;
   font-size: 13px;
   font-family: 'Geist', sans-serif;
   font-weight: 300;
   line-height: 1.6;
-  padding: 2px 0 8px;
+  padding: 10px 12px;
   outline: none;
   resize: none;
   caret-color: var(--event-color, var(--accent));
   -webkit-appearance: none;
   box-sizing: border-box;
   overflow: hidden;
-  min-height: 28px;
-  transition: border-color 0.2s;
+  min-height: 40px;
+  transition: border-color 0.2s, background 0.2s;
 }
 
-.panel-details:focus { border-bottom-color: rgba(255,255,255,0.14); }
+.panel-details:focus { border-color: rgba(255,255,255,0.16); background: rgba(255,255,255,0.05); }
 .panel-details::placeholder { color: var(--text3); }
 
 .panel-done-main {
@@ -1767,7 +1767,7 @@ html, body {
   flex: 1;
   height: 44px;
   border: 1px solid var(--border2);
-  border-radius: 4px;
+  border-radius: 12px;
   background: var(--bg3);
   color: var(--text2);
   font-size: 13px;
@@ -2304,6 +2304,22 @@ body.ambient #app::before {
   color: var(--text4);
 }
 
+/* ── TARJETA DE PROPIEDADES (Área + Repetición + Foco del día) ── */
+.panel-meta-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: rgba(255,255,255,0.025);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 12px;
+  padding: 14px;
+}
+
+.panel-meta-divider {
+  height: 1px;
+  background: rgba(255,255,255,0.06);
+}
+
 /* ── ÁREA PILLS (event panel) ── */
 .panel-area-wrap {
   display: flex;
@@ -2352,7 +2368,7 @@ body.ambient #app::before {
   position: fixed;
   inset: 0;
   background: rgba(0,0,0,0.55);
-  z-index: 200;
+  z-index: 301;
 }
 .recur-overlay.open { display: block; }
 
@@ -2366,7 +2382,7 @@ body.ambient #app::before {
   border-top: 1px solid var(--border2);
   border-radius: 20px 20px 0 0;
   padding: 20px 16px 32px;
-  z-index: 201;
+  z-index: 302;
   transform: translateY(100%);
   transition: transform 0.25s cubic-bezier(.4,0,.2,1);
 }
@@ -2469,7 +2485,6 @@ body.ambient #app::before {
   color: var(--accent);
 }
 
-.panel-focus-wrap { margin-top: 4px; }
 .focus-toggle-pill {
   display: flex;
   align-items: center;
