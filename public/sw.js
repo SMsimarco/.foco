@@ -1,4 +1,4 @@
-const CACHE = 'foco-v39';
+const CACHE = 'foco-v40';
 const STATIC = ['/', '/index.html', '/app.js', '/style.css', '/manifest.json', '/icon-192.png', '/icon-512.png', '/apple-touch-icon.png', '/foquito-avatar.png'];
 
 self.addEventListener('install', e => {
@@ -27,7 +27,11 @@ self.addEventListener('fetch', e => {
   if (url.includes('/api/')) return;
 
   const path = new URL(url).pathname;
-  const esCodigoApp = path.endsWith('.js') || path.endsWith('.css') || path.endsWith('.html') || path === '/';
+  // foquito-avatar.png entra acá con .js/.css/.html — está cambiando seguido
+  // esta semana, cache-primero (como los íconos de abajo) dejaba a Marco
+  // viendo versiones viejas del personaje sin darse cuenta.
+  const esCodigoApp = path.endsWith('.js') || path.endsWith('.css') || path.endsWith('.html')
+    || path === '/' || path === '/foquito-avatar.png';
 
   if (esCodigoApp) {
     // Red primero: sin esto, un celu con la PWA instalada podía quedarse
