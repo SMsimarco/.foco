@@ -1398,10 +1398,13 @@ html, body {
   bottom: 72px;
   width: 76px;
   height: 76px;
-  border-radius: 24px;
+  border-radius: 50%;
   border: none;
-  background: transparent;
-  padding: 0;
+  /* Redondel de fondo antes de abrir — sin esto Foquito flota suelto sobre
+     la app y no se identifica como botón. Una vez abierto el panel, el
+     header (.foq-avatar-sm) sigue sin fondo, eso no cambia. */
+  background: var(--accent);
+  padding: 9px;
   overflow: hidden;
   cursor: pointer;
   box-shadow: 0 8px 20px rgba(0,0,0,0.45);
@@ -1411,6 +1414,10 @@ html, body {
 
 #foq-fab:hover { transform: scale(1.06); }
 #foq-fab.open { opacity: 0; pointer-events: none; transform: scale(0.7); }
+
+/* Adentro del redondel el personaje entra completo (contain), no recortado
+   a los bordes como en .foq-avatar-sm (que sigue usando cover). */
+#foq-fab .foq-avatar-img { object-fit: contain; }
 
 .foq-avatar-img {
   width: 100%;
