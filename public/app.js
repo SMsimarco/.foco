@@ -2705,7 +2705,10 @@ function openEventPanel(ev, dateISO) {
 
   const d = new Date(dateISO + 'T12:00:00');
   const dayStr = DAYS_FULL[d.getDay()];
-  const horaStr = ev.start_time && ev.end_time ? `${ev.start_time} – ${ev.end_time}` : 'Sin hora';
+  // Mismo criterio que la grilla (buildGridBlockHTML): alcanza con start_time,
+  // end_time es opcional — antes exigía los dos y mostraba "Sin hora" en
+  // eventos que la grilla sí mostraba con hora (ej. "15:30" sin fin).
+  const horaStr = ev.start_time ? `${ev.start_time}${ev.end_time ? ' – ' + ev.end_time : ''}` : 'Sin hora';
   document.getElementById('panel-meta').textContent = `${horaStr} · ${dayStr}`;
 
   const color = eventColor(ev.title, ev.area);
