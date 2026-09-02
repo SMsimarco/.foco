@@ -790,9 +790,18 @@ function parseNL(raw) {
   }
 
   // Día relativo o nombre de día
+  // OJO: \b de JS es ASCII-only ([A-Za-z0-9_]) — una tilde como la de "mié"
+  // NO cuenta como carácter de palabra, entonces \bmié\b matchea adentro de
+  // "miércoles" (ve la é como fin de palabra y arranca de nuevo en la r).
+  // Como los keys cortos ('mié') se prueban antes que los largos
+  // ('miercoles'/'miércoles') en DAYMAP, el replace de abajo cortaba el
+  // título a la mitad ("Miércoles..." → "Rcoles..."). Fix: reemplazar el \b
+  // de cierre por un lookahead que además excluya letras acentuadas, así
+  // ningún key corto puede cortar en medio de una palabra más larga.
+  const finDePalabra = '(?![a-zA-ZÀ-ÿ])';
   if (!date) {
     for (const [key, val] of Object.entries(DAYMAP)) {
-      if (new RegExp('\\b' + key + '\\b', 'i').test(s)) {
+      if (new RegExp('\\b' + key + finDePalabra, 'i').test(s)) {
         const now = new Date();
         if (val === -2) {
           date = new Date();
@@ -806,7 +815,7 @@ function parseNL(raw) {
           date.setDate(now.getDate() + diff);
         }
         // Saca también el artículo pegado antes ("el sábado" → no debe quedar "el" suelto)
-        s = s.replace(new RegExp('\\b(el|la|los|las)\\s+' + key + '\\b|\\b' + key + '\\b', 'i'), ' ');
+        s = s.replace(new RegExp('\\b(el|la|los|las)\\s+' + key + finDePalabra + '|\\b' + key + finDePalabra, 'i'), ' ');
         break;
       }
     }
