@@ -945,37 +945,54 @@ function renderDiaGrid(dateISO, dayEvents) {
   }
 }
 
+let _changingDia = false;
+
 async function changeDia(dir) {
-  const wrap = document.getElementById('hoy-scroll');
-  if (wrap) {
-    wrap.style.transition = 'transform 0.16s cubic-bezier(.4,0,.2,1), opacity 0.16s';
-    wrap.style.transform = `translateX(${dir < 0 ? '24px' : '-24px'})`;
-    wrap.style.opacity = '0';
-    await new Promise(r => setTimeout(r, 160));
+  // Sin esto, tocar ‹/› rápido dos veces seguidas en el celu superpone dos
+  // animaciones sobre el mismo elemento y el layout queda saltando.
+  if (_changingDia) return;
+  _changingDia = true;
+
+  try {
+    const wrap = document.getElementById('hoy-scroll');
+    if (wrap) {
+      wrap.style.transition = 'transform 0.16s cubic-bezier(.4,0,.2,1), opacity 0.16s';
+      wrap.style.transform = `translateX(${dir < 0 ? '24px' : '-24px'})`;
+      wrap.style.opacity = '0';
+      await new Promise(r => setTimeout(r, 160));
+    }
+
+    diaActual.setDate(diaActual.getDate() + dir);
+    const dateISO = toISO(diaActual);
+    const yaEnCache = !!eventsCache[dateISO];
+
+    if (wrap) {
+      wrap.style.transition = 'none';
+      wrap.style.transform = `translateX(${dir < 0 ? '-24px' : '24px'})`;
+    }
+
+    // Si el día ya está en cache (caso común: loadWeek trajo la semana actual
+    // al entrar) pintamos ya, sin esperar a Supabase. Si NO está en cache,
+    // esperamos la respuesta primero — pintar de una mostraría "sin tareas"
+    // por un instante y después el contenido real, un parpadeo feo.
+    if (!yaEnCache) await loadDia();
+    renderHoy();
+
+    if (wrap) {
+      await new Promise(r => requestAnimationFrame(r));
+      wrap.style.transition = 'transform 0.2s cubic-bezier(.4,0,.2,1), opacity 0.2s';
+      wrap.style.transform = 'translateX(0)';
+      wrap.style.opacity = '1';
+      setTimeout(() => { wrap.style.transition = ''; wrap.style.transform = ''; wrap.style.opacity = ''; }, 220);
+    }
+
+    if (yaEnCache) {
+      await loadDia();
+      renderHoy(); // repinta en silencio si Supabase trajo algo distinto de lo cacheado
+    }
+  } finally {
+    _changingDia = false;
   }
-
-  diaActual.setDate(diaActual.getDate() + dir);
-
-  if (wrap) {
-    wrap.style.transition = 'none';
-    wrap.style.transform = `translateX(${dir < 0 ? '-24px' : '24px'})`;
-  }
-
-  // Pinta ya con lo que haya en cache (loadWeek ya trajo la semana actual al
-  // entrar a la app) — no espera a Supabase, así el cambio de día se siente
-  // instantáneo en vez de depender de la red.
-  renderHoy();
-
-  if (wrap) {
-    await new Promise(r => requestAnimationFrame(r));
-    wrap.style.transition = 'transform 0.2s cubic-bezier(.4,0,.2,1), opacity 0.2s';
-    wrap.style.transform = 'translateX(0)';
-    wrap.style.opacity = '1';
-    setTimeout(() => { wrap.style.transition = ''; wrap.style.transform = ''; wrap.style.opacity = ''; }, 220);
-  }
-
-  await loadDia();
-  renderHoy(); // repinta en silencio si Supabase trajo algo distinto de lo cacheado
 }
 
 
@@ -2151,12 +2168,24 @@ function toggleFoquitoMic() {
 if (window.visualViewport) {
   const vv = window.visualViewport;
   const adjustFoquitoForKeyboard = () => {
+    // En desktop el panel está anclado al costado (position:static) — no aplica.
+    if (window.matchMedia('(min-width: 1024px)').matches) return;
+
     const keyboardInset = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
     const bottom = keyboardInset > 60 ? keyboardInset + 12 : 68;
     const fab = document.getElementById('foq-fab');
     const panel = document.getElementById('foq-panel');
     if (fab) fab.style.bottom = bottom + 'px';
-    if (panel) panel.style.bottom = bottom + 'px';
+    if (panel) {
+      panel.style.bottom = bottom + 'px';
+      // Con el teclado abierto, el panel (altura fija en CSS: min(65vh,520px)
+      // calculada contra la pantalla COMPLETA) no entraba en lo que quedaba
+      // arriba del teclado — el header y los mensajes de arriba se corrían
+      // fuera de la vista. Lo capamos a lo que realmente queda visible.
+      panel.style.maxHeight = keyboardInset > 60
+        ? `calc(${vv.height}px - ${bottom + 16}px)`
+        : '';
+    }
   };
   vv.addEventListener('resize', adjustFoquitoForKeyboard);
   vv.addEventListener('scroll', adjustFoquitoForKeyboard);

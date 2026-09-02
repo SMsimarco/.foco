@@ -656,9 +656,10 @@ html, body {
 }
 
 .hoy-title {
+  font-family: 'Instrument Serif', serif;
+  font-style: italic;
   font-size: 34px;
-  font-weight: 700;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.01em;
   color: var(--ios-text);
   line-height: 1.15;
 }
@@ -996,8 +997,9 @@ html, body {
 }
 
 .mes-title {
-  font-size: 17px;
-  font-weight: 700;
+  font-family: 'Instrument Serif', serif;
+  font-style: italic;
+  font-size: 20px;
   color: var(--text);
 }
 
@@ -3859,8 +3861,9 @@ body.ambient #app::before {
 .sg-nav-btn:hover { color: #fff; }
 
 .sg-week-label {
-  font-size: 13px;
-  font-weight: 500;
+  font-family: 'Instrument Serif', serif;
+  font-style: italic;
+  font-size: 17px;
   color: #fff;
   min-width: 110px;
   text-align: center;
