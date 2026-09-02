@@ -1,4 +1,4 @@
-const CACHE = 'foco-v24';
+const CACHE = 'foco-v25';
 const STATIC = ['/', '/index.html', '/app.js', '/style.css', '/manifest.json', '/icon-192.png', '/icon-512.png', '/apple-touch-icon.png'];
 
 self.addEventListener('install', e => {
@@ -26,10 +26,30 @@ self.addEventListener('fetch', e => {
   // API interna (proxy Claude) — siempre a red
   if (url.includes('/api/')) return;
 
+  const path = new URL(url).pathname;
+  const esCodigoApp = path.endsWith('.js') || path.endsWith('.css') || path.endsWith('.html') || path === '/';
+
+  if (esCodigoApp) {
+    // Red primero: sin esto, un celu con la PWA instalada podía quedarse
+    // sirviendo un app.js/style.css viejo del cache indefinidamente, aunque
+    // ya hubiera un fix pusheado — "reportan bugs que ya arreglamos" era esto.
+    // Si no hay internet, cae al cache (la PWA sigue andando offline).
+    e.respondWith(
+      fetch(e.request).then(res => {
+        if (res.ok) {
+          const clone = res.clone();
+          caches.open(CACHE).then(c => c.put(e.request, clone));
+        }
+        return res;
+      }).catch(() => caches.match(e.request))
+    );
+    return;
+  }
+
+  // Assets que casi no cambian (íconos, manifest) — cache primero, más rápido
   e.respondWith(
     caches.match(e.request).then(r => r || fetch(e.request).then(res => {
-      // Cachear assets estáticos on-the-fly
-      if (res.ok && (url.endsWith('.js') || url.endsWith('.css') || url.endsWith('.html'))) {
+      if (res.ok) {
         const clone = res.clone();
         caches.open(CACHE).then(c => c.put(e.request, clone));
       }
