@@ -1400,10 +1400,8 @@ html, body {
   border-radius: 50%;
   border: none;
   background: var(--accent);
-  color: #fff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  padding: 0;
+  overflow: hidden;
   cursor: pointer;
   box-shadow: 0 4px 16px rgba(var(--accent-rgb), 0.4), 0 2px 8px rgba(0,0,0,0.35);
   z-index: 250;
@@ -1413,13 +1411,34 @@ html, body {
 #foq-fab:hover { transform: scale(1.06); }
 #foq-fab.open { opacity: 0; pointer-events: none; transform: scale(0.7); }
 
-/* Estados de Foquito — idle por defecto, happy/thinking se activan por JS */
-#foq-fab .foq-face-happy,
-#foq-fab .foq-face-thinking { display: none; }
-#foq-fab.state-happy .foq-face-idle,
-#foq-fab.state-thinking .foq-face-idle { display: none; }
-#foq-fab.state-happy .foq-face-happy { display: block; }
-#foq-fab.state-thinking .foq-face-thinking { display: block; }
+.foq-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.foq-avatar-sm {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* Estados de Foquito — hasta tener las variantes de expresión separadas,
+   "reacciona" con un gesto simple sobre la misma imagen */
+#foq-fab.state-happy { animation: foqBounce 0.5s cubic-bezier(.34,1.56,.64,1); }
+#foq-fab.state-thinking .foq-avatar-img { animation: foqPulse 1s ease-in-out infinite; }
+
+@keyframes foqBounce {
+  0%, 100% { transform: scale(1); }
+  40% { transform: scale(1.18); }
+}
+
+@keyframes foqPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.55; }
+}
 
 #foq-panel {
   position: fixed;
@@ -1454,8 +1473,8 @@ html, body {
   flex-shrink: 0;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 12px 14px;
+  gap: 8px;
+  padding: 10px 14px;
   border-bottom: 1px solid var(--border);
   font-size: 13px;
   font-weight: 600;
@@ -1463,6 +1482,7 @@ html, body {
 }
 
 .foq-panel-close {
+  margin-left: auto;
   background: none;
   border: none;
   color: var(--text3);
