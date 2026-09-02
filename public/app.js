@@ -1034,7 +1034,7 @@ async function goToCurrentGridWeek() {
 
 // Rango de horas a mostrar: piso 08:00-20:00, se expande si hay eventos afuera de ese rango
 function computeGridHourRange(week) {
-  let minH = 8, maxH = 20;
+  let minH = 6, maxH = 23;
   week.forEach(d => {
     (eventsCache[toISO(d)] || []).forEach(ev => {
       if (!ev.start_time) return;
