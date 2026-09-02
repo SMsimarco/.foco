@@ -1427,9 +1427,9 @@ html, body {
 }
 
 .foq-avatar-sm {
-  width: 28px;
-  height: 28px;
-  border-radius: 9px;
+  width: 38px;
+  height: 38px;
+  border-radius: 11px;
   flex-shrink: 0;
 }
 
