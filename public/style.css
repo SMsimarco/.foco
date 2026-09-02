@@ -2333,6 +2333,9 @@ body.ambient #app::before {
 .panel-row-static { cursor: default; }
 .panel-row-static:hover { background: transparent; }
 
+.panel-row-danger { color: #F87171; }
+.panel-row-danger:hover { background: rgba(244,63,94,0.08); }
+
 .panel-row-icon {
   width: 18px;
   text-align: center;

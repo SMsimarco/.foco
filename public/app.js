@@ -2669,6 +2669,12 @@ function togglePanelRow(name) {
   });
 }
 
+async function panelDeleteEvent() {
+  if (!panelEvent) return;
+  await deleteEvent(panelEvent.id, panelDateISO);
+  closeEventPanel();
+}
+
 function updateDoneButton(done) {
   const btn   = document.getElementById('panel-done-main');
   const label = document.getElementById('panel-done-label');
