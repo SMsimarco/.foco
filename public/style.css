@@ -640,6 +640,12 @@ html, body {
   padding: 8px 16px 16px;
 }
 
+/* Espacio extra abajo en mobile para que el último evento no quede
+   tapado por el FAB de Foquito (fixed, fuera del flujo del scroll) */
+@media (max-width: 1023px) {
+  .hoy-scroll { padding-bottom: calc(116px + env(safe-area-inset-bottom, 0px)); }
+}
+
 /* Header */
 .hoy-header-top {
   display: flex;
@@ -1337,16 +1343,15 @@ html, body {
 #foq-fab {
   position: fixed;
   right: 14px;
-  bottom: 72px;
+  /* alto real de #bottom-nav (52px) + margen visible (24px) para que el
+     FAB flote limpio arriba de la tab bar, no apoyado. +env() por si el
+     dispositivo tiene home indicator (safe area) que la tab bar no resta. */
+  bottom: calc(52px + 24px + env(safe-area-inset-bottom, 0px));
   width: 76px;
   height: 76px;
   border-radius: 50%;
   border: none;
-  /* Redondel de fondo antes de abrir — sin esto Foquito flota suelto sobre
-     la app y no se identifica como botón. Una vez abierto el panel, el
-     header (.foq-avatar-sm) sigue sin fondo, eso no cambia. */
   background: var(--accent);
-  padding: 9px;
   overflow: hidden;
   cursor: pointer;
   box-shadow: 0 8px 20px rgba(0,0,0,0.45);
@@ -1357,9 +1362,15 @@ html, body {
 #foq-fab:hover { transform: scale(1.06); }
 #foq-fab.open { opacity: 0; pointer-events: none; transform: scale(0.7); }
 
-/* Adentro del redondel el personaje entra completo (contain), no recortado
-   a los bordes como en .foq-avatar-sm (que sigue usando cover). */
-#foq-fab .foq-avatar-img { object-fit: contain; }
+/* Imagen ocupa el botón entero, sin padding que deje ver el redondel de
+   fondo — pensado para el asset circular y sin fondo que va a reemplazar
+   al PNG actual. */
+#foq-fab .foq-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
 
 .foq-avatar-img {
   width: 100%;
@@ -3886,6 +3897,12 @@ body.ambient #app::before {
   overflow-y: auto;
   overflow-x: hidden;
   min-height: 0;
+}
+
+/* Mismo colchón que .hoy-scroll: evita que el FAB tape el último evento
+   de la grilla horaria (Semana/Día) */
+@media (max-width: 1023px) {
+  .sg-scrollx { padding-bottom: calc(116px + env(safe-area-inset-bottom, 0px)); }
 }
 
 .sg-hours-spacer { width: 44px; flex-shrink: 0; }
