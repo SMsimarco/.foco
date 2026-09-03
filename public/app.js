@@ -2051,25 +2051,45 @@ function pushFoqHistory(userText, foqText) {
   if (_foqHistory.length > 12) _foqHistory = _foqHistory.slice(-12);
 }
 
-// Busca una tarea de hoy por nombre (sin tildes, case-insensitive, match parcial)
-// para poder marcarla hecha cuando el usuario la menciona charlando.
-function findFoqEventByName(nombre) {
+// Busca una tarea por nombre en un día del cache (sin tildes, case-insensitive,
+// match parcial) — dateISO default hoy. Usada por marcar_hecho, editar_evento
+// y borrar_evento.
+function findFoqEventByName(nombre, dateISO = toISO(new Date())) {
   const norm = s => (s || '').toLowerCase().normalize('NFD').replace(new RegExp('[\\u0300-\\u036f]', 'g'), '');
   const target = norm(nombre);
   if (!target) return null;
-  const dateISO = toISO(new Date());
   const dayEvs = eventsCache[dateISO] || [];
   return dayEvs.find(e => !e.done && (norm(e.title).includes(target) || target.includes(norm(e.title))));
 }
 
-// Le pregunta a Claude qué hacer con el mensaje: anotar, marcar hecho, pedir un dato
-// que falta, o charlar. Devuelve null si la IA no responde — ahí se usa el fallback local.
+// Arma el texto de agenda de los próximos 7 días (hoy incluido) a partir de lo
+// que ya está en eventsCache — sin queries nuevas. Días fuera de la semana
+// actual pueden no estar cargados; esos se omiten en vez de mostrarlos vacíos
+// (evita que la IA piense que no hay nada cuando en realidad no se sabe).
+function buildFoqAgendaText() {
+  const today = new Date();
+  const lines = [];
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(today);
+    d.setDate(d.getDate() + i);
+    const iso = toISO(d);
+    const dayEvs = eventsCache[iso];
+    if (dayEvs === undefined) continue;
+    const label = i === 0 ? 'HOY' : i === 1 ? 'MAÑANA' : DAYS_FULL[d.getDay()];
+    const detalle = dayEvs.length
+      ? dayEvs.map(ev => `${ev.start_time || 'sin hora'} ${ev.title}${ev.done ? ' (hecho)' : ''}`).join(', ')
+      : 'sin tareas';
+    lines.push(`${label} (${iso}): ${detalle}`);
+  }
+  return lines.join('\n');
+}
+
+// Le pregunta a Claude qué hacer con el mensaje: anotar (uno o varios), editar,
+// borrar, marcar hecho, pedir un dato que falta, o charlar. Devuelve null si la
+// IA no responde — ahí se usa el fallback local.
 async function interpretFoquitoMessage(text) {
   const dateISO = toISO(new Date());
-  const dayEvs = eventsCache[dateISO] || [];
-  const eventsText = dayEvs.map(ev =>
-    `${ev.start_time || 'sin hora'}: ${ev.title}${ev.done ? ' (hecho)' : ''}`
-  ).join('\n');
+  const agendaText = buildFoqAgendaText();
 
   try {
     const response = await fetch('/api/claude', {
@@ -2077,14 +2097,14 @@ async function interpretFoquitoMessage(text) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         model: 'claude-haiku-4-5-20251001',
-        max_tokens: 250,
+        max_tokens: 300,
         system: `Sos Foquito, el asistente de agenda de la app .foco. Hablás en español rioplatense, de vos, cálido y breve (1-2 frases, sin emojis). Nunca reprochás ni hacés sentir mal a la persona.
 Hoy es ${DAYS_FULL[new Date().getDay()]} ${dateISO}.
 
-Agenda de hoy:
-${eventsText || 'sin tareas anotadas'}
+Agenda de los próximos días:
+${agendaText || 'sin tareas anotadas'}
 
-Analizá el mensaje del usuario (y la charla previa si la hay) y respondé SOLO con JSON válido, sin markdown ni texto extra. Una de estas 5 formas exactas:
+Analizá el mensaje del usuario (y la charla previa si la hay) y respondé SOLO con JSON válido, sin markdown ni texto extra. Una de estas 7 formas exactas:
 
 1. Pide anotar/agendar UNA sola actividad y la fecha está clara o no hace falta precisarla:
 {"accion":"crear_evento","nombre":"texto corto sin palabras de tiempo","fecha":"YYYY-MM-DD","hora_inicio":"HH:MM o null","hora_fin":"HH:MM o null","respuesta":"confirmación breve y cálida"}
@@ -2093,20 +2113,27 @@ Analizá el mensaje del usuario (y la charla previa si la hay) y respondé SOLO 
 {"accion":"crear_multiple","eventos":[{"nombre":"texto corto de esa actividad","fecha":"YYYY-MM-DD o null","dia_semana":"0-6 (0=domingo) o null","hora_inicio":"HH:MM o null","hora_fin":"HH:MM o null","recurrente":true o false}],"respuesta":"confirmación breve y cálida, mencionando cuántas cosas anotaste"}
 - Si algo se repite cada semana (rutina fija: gym, facultad, cursada) → recurrente:true + dia_semana correspondiente, fecha en null.
 - Si es puntual, de una sola vez → recurrente:false + fecha concreta, dia_semana en null.
-- Si el pedido es una rutina pero falta el horario de alguna actividad, no inventes: usá la forma 3 (preguntar) por esa actividad antes de crear nada.
+- Si el pedido es una rutina pero falta el horario de alguna actividad, no inventes: usá la forma 4 (preguntar) por esa actividad antes de crear nada.
 
-3. Pide anotar algo (uno o varios) pero falta un dato importante (sobre todo día u hora, si no es evidente):
+3. Pide mover, cambiar de día u hora, o reprogramar una actividad que ya está en la agenda (buscala ahí por nombre y día):
+{"accion":"editar_evento","fecha_actual":"YYYY-MM-DD del día donde está hoy en la agenda","nombre":"nombre tal cual aparece en la agenda","nueva_fecha":"YYYY-MM-DD o null si no cambia de día","nueva_hora_inicio":"HH:MM o null si no cambia","nueva_hora_fin":"HH:MM o null si no cambia","respuesta":"confirmación breve"}
+Solo completá nueva_fecha/nueva_hora_* con lo que el usuario pidió cambiar — null en lo demás, no lo toques.
+
+4. Pide sacar, borrar o cancelar una actividad que ya está en la agenda:
+{"accion":"borrar_evento","fecha":"YYYY-MM-DD del día donde está en la agenda","nombre":"nombre tal cual aparece en la agenda","respuesta":"confirmación breve"}
+
+5. Pide anotar, mover o borrar algo pero falta un dato importante (sobre todo día u hora, o no identificás bien cuál actividad es si hay varias parecidas):
 {"accion":"preguntar","respuesta":"pregunta corta pidiendo justo lo que falta, una sola cosa por vez"}
 No inventes el dato que falta, preguntá.
 
-4. Dice que ya hizo, terminó o completó algo que está en la agenda de hoy (usá el nombre tal cual aparece ahí):
+6. Dice que ya hizo, terminó o completó algo que está en la agenda (usá el nombre tal cual aparece ahí):
 {"accion":"marcar_hecho","nombre":"nombre exacto de la tarea en la agenda","respuesta":"festejo breve y genuino"}
 
-5. Cualquier otra cosa — pregunta cómo viene el día, charla, pide un resumen, dice que no hizo nada, o se traba y no sabe por dónde arrancar:
-{"accion":"conversar","respuesta":"tu respuesta, usando la agenda de hoy si aplica"}
+7. Cualquier otra cosa — pregunta cómo viene el día, charla, pide un resumen, dice que no hizo nada, o se traba y no sabe por dónde arrancar:
+{"accion":"conversar","respuesta":"tu respuesta, usando la agenda si aplica"}
 Si viene flojo o no hizo nada, nunca lo retés — ofrecé pasar algo para mañana. Si está trabado con muchas cosas, sugerí UNA para arrancar (la más corta), no un discurso.
 
-Si no da fecha para crear evento puntual y es evidente que es hoy, usá ${dateISO}.`,
+Si no da fecha para crear evento puntual y es evidente que es hoy, usá ${dateISO}. Si una actividad para editar/borrar no está en la agenda de arriba, no inventes que existe — usá preguntar.`,
         messages: [..._foqHistory, { role: 'user', content: text }]
       })
     });
@@ -2154,6 +2181,52 @@ async function sendFoquitoMessage(rawText) {
   if (result?.accion === 'crear_multiple' && Array.isArray(result.eventos) && result.eventos.length) {
     await createBatchEvents(result.eventos);
     const respuesta = result.respuesta || `Anotadas ${result.eventos.length} actividades.`;
+    addFoqBubble(respuesta, 'foq');
+    pushFoqHistory(text, respuesta);
+    return;
+  }
+
+  if (result?.accion === 'editar_evento' && result.nombre) {
+    const fechaBusqueda = result.fecha_actual || toISO(new Date());
+    const ev = findFoqEventByName(result.nombre, fechaBusqueda);
+    let respuesta;
+    if (ev) {
+      const patch = {};
+      if (result.nueva_fecha) patch.date = result.nueva_fecha;
+      if (result.nueva_hora_inicio) patch.start_time = result.nueva_hora_inicio;
+      if (result.nueva_hora_fin) patch.end_time = result.nueva_hora_fin;
+
+      if (Object.keys(patch).length) {
+        await db.from('events').update(patch).eq('id', ev.id);
+        const destFecha = patch.date || fechaBusqueda;
+        eventsCache[fechaBusqueda] = (eventsCache[fechaBusqueda] || []).filter(e => e.id !== ev.id);
+        if (!eventsCache[destFecha]) eventsCache[destFecha] = [];
+        eventsCache[destFecha].push({ ...ev, ...patch });
+        refreshDiaOSemanaGrid(fechaBusqueda);
+        if (destFecha !== fechaBusqueda) refreshDiaOSemanaGrid(destFecha);
+      }
+      respuesta = result.respuesta || `Listo, actualicé "${ev.title}".`;
+    } else {
+      respuesta = 'No encontré esa actividad en la agenda. ¿Cómo se llama exacto y qué día está?';
+    }
+    addFoqBubble(respuesta, 'foq');
+    pushFoqHistory(text, respuesta);
+    return;
+  }
+
+  if (result?.accion === 'borrar_evento' && result.nombre) {
+    const fechaBusqueda = result.fecha || toISO(new Date());
+    const ev = findFoqEventByName(result.nombre, fechaBusqueda);
+    let respuesta;
+    if (ev) {
+      await db.from('events').delete().eq('id', ev.id);
+      eventsCache[fechaBusqueda] = (eventsCache[fechaBusqueda] || []).filter(e => e.id !== ev.id);
+      removeEventFromDOM(ev.id, fechaBusqueda);
+      refreshDiaOSemanaGrid(fechaBusqueda);
+      respuesta = result.respuesta || `Saqué "${ev.title}".`;
+    } else {
+      respuesta = 'No encontré esa actividad en la agenda. ¿Cómo se llama exacto y qué día está?';
+    }
     addFoqBubble(respuesta, 'foq');
     pushFoqHistory(text, respuesta);
     return;
