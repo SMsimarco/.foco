@@ -1349,12 +1349,14 @@ html, body {
   bottom: calc(52px + 24px + env(safe-area-inset-bottom, 0px));
   /* 92px (no 76): el personaje llena ~85% del cuadrado del asset, con
      76px quedaba grande dentro del redondel. Agrandar el boton en vez
-     de volver a tocar la imagen. */
+     de volver a tocar la imagen. padding achica un toque mas sin
+     tocar el asset ni el tamano del boton. */
   width: 92px;
   height: 92px;
   border-radius: 50%;
   border: none;
   background: var(--accent);
+  padding: 5px;
   overflow: hidden;
   cursor: pointer;
   box-shadow: 0 8px 20px rgba(0,0,0,0.45);
