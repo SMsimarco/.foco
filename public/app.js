@@ -401,8 +401,20 @@ function toggleNotif() {
 // ── INICIALIZACIÓN ──────────────────────────────────────────
 
 async function init() {
-  // Verificar sesión existente directamente — no depender solo de onAuthStateChange
-  const { data: { session } } = await db.auth.getSession();
+  // Verificar sesión existente directamente — no depender solo de onAuthStateChange.
+  // OJO: getSession() puede colgarse para siempre en Safari/PWA — bug conocido de
+  // supabase-js, usa el Web Locks API y si una pestaña anterior murió a mitad de
+  // esta misma llamada (típico si el SO mata la PWA en segundo plano), el lock
+  // queda tomado y nadie lo libera nunca. Sin este timeout, la pantalla de login
+  // quedaba trabada indefinidamente — no es que deslogueaba, el chequeo de sesión
+  // ni terminaba. Si se cumple el timeout, se muestra el login (un toque en
+  // "Continuar con Google" alcanza para volver a entrar) en vez de colgar para
+  // siempre.
+  const sessionCheck = db.auth.getSession();
+  const timeout = new Promise(resolve => setTimeout(() => resolve(null), 4000));
+  const result = await Promise.race([sessionCheck, timeout]);
+  const session = result?.data?.session;
+
   if (session?.user) {
     currentUser = session.user;
     const { data } = await db.from('profiles').select('*').eq('id', currentUser.id).single();
@@ -410,6 +422,20 @@ async function init() {
     showApp();
   } else {
     showAuth();
+    // Si esto pasó por el timeout de arriba (no por falta real de sesión), la
+    // llamada original puede seguir viva y resolver más tarde — si trae una
+    // sesión válida y el usuario no se logueó a mano mientras tanto, entrar
+    // solo en vez de dejarlo pantalla de login sin necesidad.
+    sessionCheck.then(async (late) => {
+      if (currentUser) return;
+      const lateSession = late?.data?.session;
+      if (lateSession?.user) {
+        currentUser = lateSession.user;
+        const { data } = await db.from('profiles').select('*').eq('id', currentUser.id).single();
+        currentProfile = data;
+        showApp();
+      }
+    }).catch(() => {});
   }
 
   // Solo para eventos reactivos posteriores (logout, refresh de token)
