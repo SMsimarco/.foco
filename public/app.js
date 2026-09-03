@@ -2142,12 +2142,15 @@ ${agendaText || 'sin tareas anotadas'}
 Analizá el mensaje del usuario (y la charla previa si la hay) y respondé SOLO con JSON válido, sin markdown ni texto extra. Una de estas 7 formas exactas:
 
 1. Pide anotar/agendar UNA sola actividad y la fecha está clara o no hace falta precisarla:
-{"accion":"crear_evento","nombre":"texto corto sin palabras de tiempo","fecha":"YYYY-MM-DD","hora_inicio":"HH:MM o null","hora_fin":"HH:MM o null","respuesta":"confirmación breve y cálida"}
+{"accion":"crear_evento","nombre":"texto corto sin palabras de tiempo","fecha":"YYYY-MM-DD o null","dia_semana":"0-6 (0=domingo) o null","hora_inicio":"HH:MM o null","hora_fin":"HH:MM o null","respuesta":"confirmación breve y cálida"}
+- Si menciona un DÍA DE LA SEMANA por nombre ("el lunes", "los jueves", "el martes que viene") en vez de una fecha exacta o "hoy"/"mañana": completá dia_semana con ese número y dejá fecha en null. NO calcules vos qué fecha calendario es ese día — el sistema la calcula. Esto es importante: no hagas la cuenta de días, es donde más te equivocás.
+- Si es "hoy", "mañana", o te dan una fecha concreta: completá fecha (vos podés calcular hoy/mañana, son solo +0/+1 día) y dejá dia_semana en null.
 
 2. Pide organizar/armar una rutina, semana, o cualquier pedido que junte VARIAS actividades en un mismo mensaje (ej: "armame mi semana: gym lunes y miércoles 7am, facultad martes y jueves 14 a 18, estudiar todos los días 20hs"). Un objeto por actividad, NUNCA todo el pedido metido en un solo nombre de evento — separá cada actividad en su propio item:
 {"accion":"crear_multiple","eventos":[{"nombre":"texto corto de esa actividad","fecha":"YYYY-MM-DD o null","dia_semana":"0-6 (0=domingo) o null","hora_inicio":"HH:MM o null","hora_fin":"HH:MM o null","recurrente":true o false}],"respuesta":"confirmación breve y cálida, mencionando cuántas cosas anotaste"}
 - Si algo se repite cada semana (rutina fija: gym, facultad, cursada) → recurrente:true + dia_semana correspondiente, fecha en null.
-- Si es puntual, de una sola vez → recurrente:false + fecha concreta, dia_semana en null.
+- Si es puntual pero mencionado por DÍA DE LA SEMANA ("el jueves que viene tengo turno") → recurrente:false + dia_semana correspondiente, fecha en null. No calcules vos la fecha de ese día, dejá dia_semana y el sistema la resuelve.
+- Si es puntual y te dan fecha concreta o "hoy"/"mañana" → recurrente:false + fecha, dia_semana en null.
 - Si el pedido es una rutina pero falta el horario de alguna actividad, no inventes: usá la forma 5 (preguntar) por esa actividad antes de crear nada.
 - **El umbral para confirmar antes de crear es si hay algo RECURRENTE, no la cantidad:** si alguna actividad del pedido tiene recurrente:true (se repite todas las semanas), NO crees todavía aunque sea una sola — un recurrente mal interpretado ensucia todas las semanas futuras, no un día. Primero resumí en pocos bullets lo que entendiste (actividad, día, hora, si es recurrente) usando la forma 7 (conversar) y preguntá "¿Está bien así o cambio algo?". Recién cuando la persona confirme en su próximo mensaje, devolvé crear_multiple con esos eventos — no antes. Mismo criterio que la entrevista de onboarding.
 - Si TODAS las actividades del pedido son puntuales (recurrente:false, fecha concreta, no se repiten), podés crear directo sin este paso extra, sin importar cuántas sean.
@@ -2207,7 +2210,8 @@ async function sendFoquitoMessage(rawText) {
   setFoquitoState(null);
 
   if (result?.accion === 'crear_evento' && result.nombre) {
-    const dateISO = result.fecha || toISO(new Date());
+    const diaSemana = Number.isInteger(result.dia_semana) ? result.dia_semana : null;
+    const dateISO = diaSemana !== null ? nextDateForWeekday(diaSemana) : (result.fecha || toISO(new Date()));
     const dup = findDuplicateEvent(result.nombre, dateISO);
     let respuesta;
     if (dup) {
@@ -2739,13 +2743,18 @@ async function createBatchEvents(eventos) {
   for (const ev of eventos) {
     if (!ev?.nombre) continue;
     const recurrente = !!ev.recurrente;
-    const diaSemana = recurrente && Number.isInteger(ev.dia_semana) ? ev.dia_semana : null;
-    const dateISO = diaSemana !== null ? nextDateForWeekday(diaSemana) : (ev.fecha || toISO(new Date()));
+    // dia_semana puede venir aunque el evento sea puntual (no recurrente) —
+    // sirve igual para calcular la fecha real sin que la IA haga la cuenta
+    // ("el jueves que viene" también se ancla así). Solo se GUARDA en la
+    // columna dia_semana si es recurrente — para uno puntual esa columna
+    // debe quedar null, el ancla ya se resolvió en dateISO.
+    const diaSemanaAncla = Number.isInteger(ev.dia_semana) ? ev.dia_semana : null;
+    const dateISO = diaSemanaAncla !== null ? nextDateForWeekday(diaSemanaAncla) : (ev.fecha || toISO(new Date()));
     if (findDuplicateEvent(ev.nombre, dateISO)) {
       duplicados.push(ev.nombre);
       continue;
     }
-    await addEvent(dateISO, ev.nombre, ev.hora_inicio || null, ev.hora_fin || null, recurrente, diaSemana, false);
+    await addEvent(dateISO, ev.nombre, ev.hora_inicio || null, ev.hora_fin || null, recurrente, recurrente ? diaSemanaAncla : null, false);
     creados++;
   }
   return { creados, duplicados };
