@@ -429,7 +429,10 @@
     <div class="foq-panel-hd">
       <img src="/foquito-avatar.png" alt="" class="foq-avatar-img foq-avatar-sm"/>
       <span>Foquito</span>
-      <button class="foq-panel-close" onclick="toggleFoquitoWidget()">×</button>
+      <div class="foq-panel-hd-right">
+        <button id="foq-ob-skip-btn" class="foq-ob-skip-btn" style="display:none" onclick="skipFoquitoOnboarding()">Saltear</button>
+        <button class="foq-panel-close" onclick="toggleFoquitoWidget()">×</button>
+      </div>
     </div>
     <div class="foq-scroll" id="foq-messages"></div>
     <div class="foq-input-bar">
@@ -499,26 +502,6 @@
     </div>
   </div>
 
-</div>
-
-<!-- ONBOARDING — entrevista con Foquito, arma la semana base -->
-<div id="onboarding-screen" class="onboarding-screen" style="display:none">
-  <div class="onboarding-box ob-chat-box">
-    <div class="foq-panel-hd">
-      <img src="/foquito-avatar.png" alt="" class="foq-avatar-img foq-avatar-sm"/>
-      <span>Foquito</span>
-    </div>
-    <div class="foq-scroll" id="ob-chat-scroll"></div>
-    <div class="foq-input-bar">
-      <input id="ob-chat-input" type="text" placeholder="Escribí tu respuesta..."
-        onkeydown="if(event.key==='Enter')sendObMessage()"/>
-      <button type="button" class="foq-send-btn" id="ob-chat-send-btn" onclick="sendObMessage()" title="Enviar">
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-          <path d="M2 8h11M8 2.5 13.5 8 8 13.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-      </button>
-    </div>
-  </div>
 </div>
 
 <!-- WEEKLY DIGEST -->

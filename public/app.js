@@ -71,9 +71,10 @@ let tuanaEventsCache  = [];
 let tuanaChartVals    = [];
 let tuanaChartLabels  = [];
 
-// Onboarding state — historial de la entrevista con Foquito
+// Onboarding state — _foqOnboarding prendido usa el system prompt de la
+// entrevista dentro del chat real de Foquito (ver sendFoquitoMessage)
+let _foqOnboarding = false;
 let _obHistory = [];
-let _obBusy = false;
 
 // Morning brief state
 let morningEnergy = null;
@@ -2126,6 +2127,12 @@ async function sendFoquitoMessage(rawText) {
   inp.value = '';
   setFoquitoState('thinking');
 
+  if (_foqOnboarding) {
+    await handleOnboardingReply(text);
+    setFoquitoState(null);
+    return;
+  }
+
   const result = await interpretFoquitoMessage(text);
   setFoquitoState(null);
 
@@ -2398,24 +2405,36 @@ document.addEventListener('DOMContentLoaded', () => {
   }, { passive: true });
 })();
 
-// ── ONBOARDING ──────────────────────────────────────────────
+// ── ONBOARDING (entrevista de Foquito en el primer login) ───
+// No es una pantalla propia: usa el panel/FAB real de Foquito, con el
+// system prompt de acá abajo en vez del normal mientras _foqOnboarding
+// esté prendido. Ver sendFoquitoMessage() para el branching.
 
+// Primer login = perfil sin onboarding_completed (requiere la columna,
+// ver SQL avisado aparte) Y sin eventos todavía. Un usuario viejo que
+// por lo que sea no tiene la columna en true pero ya tiene eventos
+// cargados no es "nuevo" — se marca completado sin mostrar nada.
 function checkOnboarding() {
   if (!currentUser) return;
-  const key = `foco_onboarded_${currentUser.id}`;
-  if (localStorage.getItem(key)) return;
+  if (currentProfile?.onboarding_completed) return;
 
-  // Usuario existente con eventos = ya usó la app, no mostrar
   const hasEvents = Object.values(eventsCache).some(evs => evs.length > 0);
-  if (hasEvents) { localStorage.setItem(key, '1'); return; }
+  if (hasEvents) { markOnboardingCompleted(); return; }
 
-  showOnboarding();
+  startFoquitoOnboarding();
+}
+
+async function markOnboardingCompleted() {
+  if (!currentUser) return;
+  await db.from('profiles').upsert({ id: currentUser.id, onboarding_completed: true });
+  if (currentProfile) currentProfile.onboarding_completed = true;
 }
 
 // System prompt de la entrevista — reemplaza al system prompt normal de
-// Foquito SOLO durante esta pantalla. Formato de respuesta {mensaje, acciones}
-// es propio de la entrevista, distinto del {accion,respuesta} del chat normal
-// (interpretFoquitoMessage) — no se comparten historiales ni parsers.
+// Foquito (interpretFoquitoMessage) SOLO mientras _foqOnboarding es true.
+// Formato de respuesta {mensaje, acciones} es propio de la entrevista,
+// distinto del {accion,respuesta} del chat normal — no comparten parser,
+// pero sí el mismo panel, el mismo input y el mismo addFoqBubble.
 const OB_SYSTEM_PROMPT = `Sos Foquito, el asistente de la app .foco, y es la primera vez que hablás con esta
 persona. Todavía no sabés nada de ella. Tu trabajo ahora es conocer su rutina semanal
 con una charla corta, y al final armarle su semana base cargando los eventos que se
@@ -2474,27 +2493,6 @@ Respondé SIEMPRE un JSON válido y nada fuera de él:
   agotamiento fuerte o malestar emocional, sugerí hablarlo con alguien, no lo
   resuelvas con la rutina.`;
 
-function showOnboarding() {
-  _obHistory = [];
-  document.getElementById('ob-chat-scroll').innerHTML = '';
-  document.getElementById('onboarding-screen').style.display = 'flex';
-  obKickoff();
-}
-
-function finishOnboarding() {
-  localStorage.setItem(`foco_onboarded_${currentUser.id}`, '1');
-  document.getElementById('onboarding-screen').style.display = 'none';
-}
-
-function addObBubble(text, who) {
-  const wrap = document.getElementById('ob-chat-scroll');
-  const bubble = document.createElement('div');
-  bubble.className = 'foq-bubble foq-bubble-' + who;
-  bubble.textContent = text;
-  wrap.appendChild(bubble);
-  wrap.scrollTop = wrap.scrollHeight;
-}
-
 function pushObHistory(userText, assistantResult) {
   _obHistory.push({ role: 'user', content: userText }, { role: 'assistant', content: JSON.stringify(assistantResult) });
 }
@@ -2527,19 +2525,46 @@ async function interpretOnboardingMessage(text) {
   }
 }
 
-async function obKickoff() {
-  _obBusy = true;
+// Abre el panel real de Foquito (en desktop ya está siempre visible; en
+// mobile fuerza el toggle a abierto, como pide el punto 2 del pedido) y
+// dispara la primera pregunta en modo onboarding. _foqGreeted se prende
+// ANTES de tocar el panel para que no se pise con el saludo normal.
+async function startFoquitoOnboarding() {
+  _foqOnboarding = true;
+  _obHistory = [];
+  _foqGreeted = true;
+  toggleObSkipButton(true);
+  if (!_foqOpen) toggleFoquitoWidget();
+
+  setFoquitoState('thinking');
   const kickoffText = 'Arrancá la entrevista.';
   const result = await interpretOnboardingMessage(kickoffText);
-  _obBusy = false;
+  setFoquitoState(null);
 
   if (result?.mensaje) {
-    addObBubble(result.mensaje, 'foq');
+    addFoqBubble(result.mensaje, 'foq');
     pushObHistory(kickoffText, result);
   } else {
-    addObBubble('¡Hola! Soy Foquito. Contame: ¿estudiás, trabajás, o las dos cosas? ¿Y en qué horarios?', 'foq');
+    addFoqBubble('¡Hola! Soy Foquito. Contame: ¿estudiás, trabajás, o las dos cosas? ¿Y en qué horarios?', 'foq');
   }
-  document.getElementById('ob-chat-input')?.focus();
+}
+
+function toggleObSkipButton(show) {
+  const btn = document.getElementById('foq-ob-skip-btn');
+  if (btn) btn.style.display = show ? '' : 'none';
+}
+
+function skipFoquitoOnboarding() {
+  if (!_foqOnboarding) return;
+  addFoqBubble('Salteado. Cuando quieras armamos tu semana, avisame.', 'foq');
+  endFoquitoOnboarding();
+}
+
+async function endFoquitoOnboarding() {
+  _foqOnboarding = false;
+  _obHistory = [];
+  toggleObSkipButton(false);
+  await markOnboardingCompleted();
 }
 
 // Crea los eventos recurrentes que arma la entrevista. dia_semana no trae
@@ -2565,39 +2590,33 @@ async function createOnboardingEvents(acciones) {
   }
 }
 
-async function sendObMessage() {
-  const inp = document.getElementById('ob-chat-input');
-  const text = inp.value.trim();
-  if (!text || _obBusy) return;
-
-  // Salteo explícito manejado acá, no confiado al JSON de la IA: "acciones
-  // vacío" es indistinguible de "sigo preguntando" o "muestro el resumen",
-  // así que sin esto la pantalla nunca cerraría sola al saltear.
+// Llamado desde sendFoquitoMessage cuando _foqOnboarding está prendido —
+// mismo input, mismo #foq-messages, mismo botón de enviar que el chat
+// normal. Devuelve el control a sendFoquitoMessage, que ya puso la
+// burbuja del usuario y el estado "thinking".
+async function handleOnboardingReply(text) {
+  // Salteo por texto además del botón visible (skipFoquitoOnboarding):
+  // "acciones vacío" en el JSON es indistinguible de "sigo preguntando"
+  // o "muestro el resumen", así que esto no puede depender de la IA.
   if (/\b(saltear|saltalo|salteemos|skip|despu[ée]s lo hago|ahora no|m[aá]s tarde)\b/i.test(text)) {
-    addObBubble(text, 'user');
-    inp.value = '';
-    addObBubble('Dale, sin drama. Cuando quieras armamos tu semana, me encontrás acá abajo.', 'foq');
-    setTimeout(finishOnboarding, 900);
+    addFoqBubble('Dale, sin drama. Cuando quieras armamos tu semana, avisame.', 'foq');
+    await endFoquitoOnboarding();
     return;
   }
 
-  addObBubble(text, 'user');
-  inp.value = '';
-  _obBusy = true;
   const result = await interpretOnboardingMessage(text);
-  _obBusy = false;
 
   if (!result?.mensaje) {
-    addObBubble('No te entendí bien, ¿me lo contás de nuevo?', 'foq');
+    addFoqBubble('No te entendí bien, ¿me lo contás de nuevo?', 'foq');
     return;
   }
 
-  addObBubble(result.mensaje, 'foq');
+  addFoqBubble(result.mensaje, 'foq');
   pushObHistory(text, result);
 
   if (Array.isArray(result.acciones) && result.acciones.length) {
     await createOnboardingEvents(result.acciones);
-    finishOnboarding();
+    await endFoquitoOnboarding();
   }
 }
 

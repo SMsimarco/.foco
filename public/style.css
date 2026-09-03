@@ -276,40 +276,6 @@ html, body {
   color: var(--text);
 }
 
-/* ── ONBOARDING ── */
-.onboarding-screen {
-  position: fixed;
-  inset: 0;
-  background: var(--bg);
-  z-index: 500;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  animation: fadeIn .3s ease;
-}
-
-.onboarding-box {
-  max-width: 340px;
-  width: 90%;
-  padding: 0 8px;
-}
-
-/* Entrevista de Foquito — mismo lenguaje visual que #foq-panel (bubbles,
-   scroll, input bar), pero como pantalla propia en vez de flotante. */
-.onboarding-box.ob-chat-box {
-  display: flex;
-  flex-direction: column;
-  width: min(400px, 92vw);
-  max-width: none;
-  height: min(78vh, 600px);
-  padding: 0;
-  background: var(--bg2);
-  border: 1px solid var(--border2);
-  border-radius: 18px;
-  box-shadow: 0 12px 40px rgba(0,0,0,0.5);
-  overflow: hidden;
-}
-
 /* ── WEEKLY DIGEST ── */
 .digest-overlay {
   position: fixed;
@@ -1400,8 +1366,31 @@ html, body {
   color: var(--text);
 }
 
-.foq-panel-close {
+/* Agrupa el botón de saltear (solo visible en modo onboarding) y la X,
+   empujados juntos a la derecha del header — antes el margin-left:auto
+   vivía en .foq-panel-close solo, que alcanzaba porque era el único
+   elemento del lado derecho. */
+.foq-panel-hd-right {
   margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.foq-ob-skip-btn {
+  background: none;
+  border: 1px solid var(--border2);
+  border-radius: 8px;
+  color: var(--text3);
+  font-size: 11px;
+  font-family: 'Geist', sans-serif;
+  cursor: pointer;
+  padding: 4px 8px;
+}
+
+.foq-ob-skip-btn:hover { color: var(--text); border-color: var(--accent); }
+
+.foq-panel-close {
   background: none;
   border: none;
   color: var(--text3);
