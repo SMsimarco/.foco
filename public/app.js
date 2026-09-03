@@ -2062,6 +2062,18 @@ function findFoqEventByName(nombre, dateISO = toISO(new Date())) {
   return dayEvs.find(e => !e.done && (norm(e.title).includes(target) || target.includes(norm(e.title))));
 }
 
+// Mismo matching que findFoqEventByName pero sin excluir hechos — un
+// duplicado sigue siendo duplicado aunque el original ya esté marcado.
+// Usada antes de crear (crear_evento/crear_multiple) para no duplicar
+// en silencio algo que ya está anotado ese día.
+function findDuplicateEvent(nombre, dateISO) {
+  const norm = s => (s || '').toLowerCase().normalize('NFD').replace(new RegExp('[\\u0300-\\u036f]', 'g'), '');
+  const target = norm(nombre);
+  if (!target) return null;
+  const dayEvs = eventsCache[dateISO] || [];
+  return dayEvs.find(e => norm(e.title).includes(target) || target.includes(norm(e.title)));
+}
+
 // Arma el texto de agenda de los próximos 7 días (hoy incluido) a partir de lo
 // que ya está en eventsCache — sin queries nuevas. Días fuera de la semana
 // actual pueden no estar cargados; esos se omiten en vez de mostrarlos vacíos
@@ -2173,16 +2185,27 @@ async function sendFoquitoMessage(rawText) {
 
   if (result?.accion === 'crear_evento' && result.nombre) {
     const dateISO = result.fecha || toISO(new Date());
-    await addEvent(dateISO, result.nombre, result.hora_inicio || null, result.hora_fin || null, false, null, false);
-    const respuesta = result.respuesta || `Anotado: "${result.nombre}".`;
+    const dup = findDuplicateEvent(result.nombre, dateISO);
+    let respuesta;
+    if (dup) {
+      respuesta = `Ya tenés "${dup.title}"${dup.start_time ? ' a las ' + dup.start_time : ''} anotado ese día. ¿Creo otro igual o preferís que actualice ese?`;
+    } else {
+      await addEvent(dateISO, result.nombre, result.hora_inicio || null, result.hora_fin || null, false, null, false);
+      respuesta = result.respuesta || `Anotado: "${result.nombre}".`;
+    }
     addFoqBubble(respuesta, 'foq');
     pushFoqHistory(text, respuesta);
     return;
   }
 
   if (result?.accion === 'crear_multiple' && Array.isArray(result.eventos) && result.eventos.length) {
-    await createBatchEvents(result.eventos);
-    const respuesta = result.respuesta || `Anotadas ${result.eventos.length} actividades.`;
+    const { creados, duplicados } = await createBatchEvents(result.eventos);
+    let respuesta = creados
+      ? (result.respuesta || `Anotadas ${creados} actividades.`)
+      : 'No anoté nada nuevo — todo lo que pediste ya estaba en la agenda.';
+    if (duplicados.length) {
+      respuesta += ` Ya tenías anotad${duplicados.length === 1 ? 'a' : 'as'} "${duplicados.join('", "')}" — no ${duplicados.length === 1 ? 'la' : 'las'} dupliqué.`;
+    }
     addFoqBubble(respuesta, 'foq');
     pushFoqHistory(text, respuesta);
     return;
@@ -2684,15 +2707,25 @@ async function createOnboardingEvents(acciones) {
 // rutina/organizar varias actividades en un solo pedido). A diferencia de
 // la entrevista, acá cada actividad puede traer fecha puntual en vez de
 // día de semana recurrente — mismo addEvent() de siempre, sin lógica nueva
-// de guardado.
+// de guardado. Salta (no duplica) actividades que ya están anotadas ese
+// día — devuelve cuántas creó y cuáles saltó, para que sendFoquitoMessage
+// avise en vez de duplicar en silencio.
 async function createBatchEvents(eventos) {
+  let creados = 0;
+  const duplicados = [];
   for (const ev of eventos) {
     if (!ev?.nombre) continue;
     const recurrente = !!ev.recurrente;
     const diaSemana = recurrente && Number.isInteger(ev.dia_semana) ? ev.dia_semana : null;
     const dateISO = diaSemana !== null ? nextDateForWeekday(diaSemana) : (ev.fecha || toISO(new Date()));
+    if (findDuplicateEvent(ev.nombre, dateISO)) {
+      duplicados.push(ev.nombre);
+      continue;
+    }
     await addEvent(dateISO, ev.nombre, ev.hora_inicio || null, ev.hora_fin || null, recurrente, diaSemana, false);
+    creados++;
   }
+  return { creados, duplicados };
 }
 
 // Llamado desde sendFoquitoMessage cuando _foqOnboarding está prendido —
