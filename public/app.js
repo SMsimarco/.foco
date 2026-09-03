@@ -71,8 +71,9 @@ let tuanaEventsCache  = [];
 let tuanaChartVals    = [];
 let tuanaChartLabels  = [];
 
-// Onboarding state
-let obSelectedHour = 9;
+// Onboarding state — historial de la entrevista con Foquito
+let _obHistory = [];
+let _obBusy = false;
 
 // Morning brief state
 let morningEnergy = null;
@@ -2411,60 +2412,193 @@ function checkOnboarding() {
   showOnboarding();
 }
 
+// System prompt de la entrevista — reemplaza al system prompt normal de
+// Foquito SOLO durante esta pantalla. Formato de respuesta {mensaje, acciones}
+// es propio de la entrevista, distinto del {accion,respuesta} del chat normal
+// (interpretFoquitoMessage) — no se comparten historiales ni parsers.
+const OB_SYSTEM_PROMPT = `Sos Foquito, el asistente de la app .foco, y es la primera vez que hablás con esta
+persona. Todavía no sabés nada de ella. Tu trabajo ahora es conocer su rutina semanal
+con una charla corta, y al final armarle su semana base cargando los eventos que se
+repiten.
+
+# Tono
+- Español rioplatense, de vos, cálido y cercano. Sos Foquito, no un consultor.
+- Breve: una sola pregunta por mensaje, en 1-2 frases. Nunca listas de preguntas.
+- Cero sermones, cero análisis del tiempo, cero motivación genérica.
+
+# Cómo entrevistás
+- Arrancá presentándote en una línea y explicando que le vas a hacer unas pocas
+  preguntas para armarle la semana. Después, la primera pregunta.
+- MÁXIMO 6 preguntas. Si ya tenés lo necesario antes, cortá.
+- Una pregunta por mensaje. Esperá la respuesta antes de seguir.
+- Adaptá cada pregunta a lo que ya te dijo. No preguntes algo que ya se deduce.
+- Si una respuesta es vaga, repreguntá UNA vez con una opción concreta; si sigue
+  vaga, avanzá.
+- Lo que necesitás descubrir (adaptado, no como checklist rígido):
+  1. Qué estudia o en qué trabaja, y sus horarios fijos (facultad, trabajo, cursadas).
+  2. Qué cosas hace de forma recurrente (gym, deporte, hobbies, comidas fijas).
+  3. Qué días y a qué hora de cada una.
+  4. Si algo de eso NO es todas las semanas (para no marcarlo recurrente de más).
+  5. A qué le quiere dar prioridad esta etapa.
+
+# Cierre (importante)
+- Cuando tengas lo necesario, NO crees nada todavía. Primero resumí en pocos bullets
+  la rutina que entendiste (día, hora y si es recurrente) y preguntá: "¿Está bien así
+  o cambio algo?".
+- Recién cuando la persona confirme, devolvé las acciones para crear los eventos.
+
+# Recurrencia
+- Por defecto, lo que es rutina va como recurrente (se repite cada semana ese día).
+- Si la persona dijo que algo no es todas las semanas, o si tenés dudas, preguntáselo
+  antes de marcarlo recurrente. No asumas.
+
+# Formato de respuesta
+Respondé SIEMPRE un JSON válido y nada fuera de él:
+{
+  "mensaje": "lo que le decís (tu pregunta, o el resumen, o la confirmación final)",
+  "acciones": []
+}
+- Durante la entrevista y en el resumen: "acciones" va VACÍO. Solo conversás.
+- Solo DESPUÉS de que confirme el resumen, llená "acciones" con un objeto por evento:
+  {"tipo":"crear","titulo":"...","dia_semana":<0-6, 0=domingo>,"hora":"HH:MM" o null,
+   "recurrente":true,"esFoco":false}
+  - Para rutina semanal: recurrente:true + el dia_semana correspondiente.
+  - hora: null si es algo sin horario fijo.
+- Si la persona quiere saltear el onboarding en cualquier momento, respondé con un
+  mensaje corto de bienvenida y "acciones" vacío. No la obligues.
+
+# Reglas
+- Usá solo lo que la persona te dijo. Si falta un dato para crear un evento, preguntalo.
+- Nunca inventes horarios ni actividades que no mencionó.
+- No des indicaciones médicas, de dieta ni de ayuno. Si aparecen señales de
+  agotamiento fuerte o malestar emocional, sugerí hablarlo con alguien, no lo
+  resuelvas con la rutina.`;
+
 function showOnboarding() {
-  const name = currentProfile?.display_name || '';
-  const titleEl = document.getElementById('ob-title-1');
-  if (titleEl) titleEl.textContent = name ? `Hola, ${name.split(' ')[0]}.` : 'Hola.';
-  const nameInp = document.getElementById('ob-name');
-  if (nameInp) nameInp.value = name;
+  _obHistory = [];
+  document.getElementById('ob-chat-scroll').innerHTML = '';
   document.getElementById('onboarding-screen').style.display = 'flex';
+  obKickoff();
 }
 
-function obGoToStep(step) {
-  [1, 2, 3].forEach(s => {
-    document.getElementById(`ob-step-${s}`).classList.toggle('active', s === step);
-    document.getElementById(`ob-dot-${s}`).classList.toggle('active', s === step);
-  });
+function finishOnboarding() {
+  localStorage.setItem(`foco_onboarded_${currentUser.id}`, '1');
+  document.getElementById('onboarding-screen').style.display = 'none';
 }
 
-async function obNext(step) {
-  if (step === 1) {
-    const name = document.getElementById('ob-name').value.trim();
-    if (!name) return;
-    if (name !== currentProfile?.display_name) {
-      await db.from('profiles').upsert({ id: currentUser.id, display_name: name });
-      if (currentProfile) currentProfile.display_name = name;
+function addObBubble(text, who) {
+  const wrap = document.getElementById('ob-chat-scroll');
+  const bubble = document.createElement('div');
+  bubble.className = 'foq-bubble foq-bubble-' + who;
+  bubble.textContent = text;
+  wrap.appendChild(bubble);
+  wrap.scrollTop = wrap.scrollHeight;
+}
+
+function pushObHistory(userText, assistantResult) {
+  _obHistory.push({ role: 'user', content: userText }, { role: 'assistant', content: JSON.stringify(assistantResult) });
+}
+
+// Le pregunta a Claude qué decir/preguntar según el system prompt de arriba.
+// Devuelve {mensaje, acciones} o null si la IA no responde.
+async function interpretOnboardingMessage(text) {
+  try {
+    const response = await fetch('/api/claude', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 700,
+        system: OB_SYSTEM_PROMPT,
+        messages: [..._obHistory, { role: 'user', content: text }]
+      })
+    });
+
+    const data = await response.json();
+    const raw = (data.content?.[0]?.text || '').trim();
+    try {
+      return JSON.parse(raw);
+    } catch {
+      const m = raw.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
+      try { return JSON.parse(m?.[1] || ''); } catch { return null; }
     }
-    obGoToStep(2);
-    setTimeout(() => document.getElementById('ob-goal')?.focus(), 100);
-  } else if (step === 2) {
-    const goal = document.getElementById('ob-goal').value.trim();
-    if (goal) {
-      localStorage.setItem(`foco_week_goal_${currentUser.id}`, goal);
-    }
-    obGoToStep(3);
+  } catch {
+    return null;
   }
 }
 
-function selectObHour(btn, h) {
-  obSelectedHour = h;
-  document.querySelectorAll('.time-option').forEach(b => b.classList.remove('selected'));
-  btn.classList.add('selected');
+async function obKickoff() {
+  _obBusy = true;
+  const kickoffText = 'Arrancá la entrevista.';
+  const result = await interpretOnboardingMessage(kickoffText);
+  _obBusy = false;
+
+  if (result?.mensaje) {
+    addObBubble(result.mensaje, 'foq');
+    pushObHistory(kickoffText, result);
+  } else {
+    addObBubble('¡Hola! Soy Foquito. Contame: ¿estudiás, trabajás, o las dos cosas? ¿Y en qué horarios?', 'foq');
+  }
+  document.getElementById('ob-chat-input')?.focus();
 }
 
-async function obFinish() {
-  localStorage.setItem(`foco_start_hour_${currentUser.id}`, obSelectedHour);
-  localStorage.setItem(`foco_onboarded_${currentUser.id}`, '1');
-  document.getElementById('onboarding-screen').style.display = 'none';
-  // Hacer scroll al horario preferido
-  const gridWrap = document.getElementById('grid-wrap');
-  if (gridWrap) gridWrap.scrollTop = Math.max(0, (obSelectedHour - 1) * SLOT_H);
+// Crea los eventos recurrentes que arma la entrevista. dia_semana no trae
+// una fecha — se ancla a la próxima ocurrencia de ese día desde hoy (o hoy
+// mismo si coincide); recurrente:true hace que se repita todas las semanas
+// sin importar esa fecha ancla (mismo criterio que "hacer recurrente" desde
+// el panel de evento, ver confirmRecurrence).
+async function createOnboardingEvents(acciones) {
+  const today = new Date();
+  for (const a of acciones) {
+    if (a.tipo !== 'crear' || !a.titulo) continue;
+    const diaSemana = Number.isInteger(a.dia_semana) ? a.dia_semana : null;
+    let dateISO;
+    if (diaSemana !== null) {
+      const offset = (diaSemana - today.getDay() + 7) % 7;
+      const d = new Date(today);
+      d.setDate(d.getDate() + offset);
+      dateISO = toISO(d);
+    } else {
+      dateISO = toISO(today);
+    }
+    await addEvent(dateISO, a.titulo, a.hora || null, null, !!a.recurrente, diaSemana, !!a.esFoco);
+  }
 }
 
-function getUserStartHour() {
-  if (!currentUser) return null;
-  const stored = localStorage.getItem(`foco_start_hour_${currentUser.id}`);
-  return stored ? parseInt(stored) : null;
+async function sendObMessage() {
+  const inp = document.getElementById('ob-chat-input');
+  const text = inp.value.trim();
+  if (!text || _obBusy) return;
+
+  // Salteo explícito manejado acá, no confiado al JSON de la IA: "acciones
+  // vacío" es indistinguible de "sigo preguntando" o "muestro el resumen",
+  // así que sin esto la pantalla nunca cerraría sola al saltear.
+  if (/\b(saltear|saltalo|salteemos|skip|despu[ée]s lo hago|ahora no|m[aá]s tarde)\b/i.test(text)) {
+    addObBubble(text, 'user');
+    inp.value = '';
+    addObBubble('Dale, sin drama. Cuando quieras armamos tu semana, me encontrás acá abajo.', 'foq');
+    setTimeout(finishOnboarding, 900);
+    return;
+  }
+
+  addObBubble(text, 'user');
+  inp.value = '';
+  _obBusy = true;
+  const result = await interpretOnboardingMessage(text);
+  _obBusy = false;
+
+  if (!result?.mensaje) {
+    addObBubble('No te entendí bien, ¿me lo contás de nuevo?', 'foq');
+    return;
+  }
+
+  addObBubble(result.mensaje, 'foq');
+  pushObHistory(text, result);
+
+  if (Array.isArray(result.acciones) && result.acciones.length) {
+    await createOnboardingEvents(result.acciones);
+    finishOnboarding();
+  }
 }
 
 // ── WEEKLY DIGEST ───────────────────────────────────────────

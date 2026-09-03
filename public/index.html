@@ -501,53 +501,23 @@
 
 </div>
 
-<!-- ONBOARDING -->
+<!-- ONBOARDING — entrevista con Foquito, arma la semana base -->
 <div id="onboarding-screen" class="onboarding-screen" style="display:none">
-  <div class="onboarding-box">
-
-    <!-- Paso 1 -->
-    <div class="onboarding-step active" id="ob-step-1">
-      <div class="onboarding-num">1 de 3</div>
-      <div class="onboarding-title" id="ob-title-1">Hola.</div>
-      <div class="onboarding-sub">Confirmá tu nombre para personalizar la app.</div>
-      <input class="auth-input" id="ob-name" type="text" placeholder="Tu nombre"/>
-      <button class="morning-cta" onclick="obNext(1)">Continuar →</button>
+  <div class="onboarding-box ob-chat-box">
+    <div class="foq-panel-hd">
+      <img src="/foquito-avatar.png" alt="" class="foq-avatar-img foq-avatar-sm"/>
+      <span>Foquito</span>
     </div>
-
-    <!-- Paso 2 -->
-    <div class="onboarding-step" id="ob-step-2">
-      <div class="onboarding-num">2 de 3</div>
-      <div class="onboarding-title">¿Qué querés lograr esta semana?</div>
-      <div class="onboarding-sub">Una sola cosa. Lo más importante.</div>
-      <input class="auth-input" id="ob-goal" type="text" placeholder="Mi objetivo esta semana es..."/>
-      <button class="morning-cta" onclick="obNext(2)">Continuar →</button>
+    <div class="foq-scroll" id="ob-chat-scroll"></div>
+    <div class="foq-input-bar">
+      <input id="ob-chat-input" type="text" placeholder="Escribí tu respuesta..."
+        onkeydown="if(event.key==='Enter')sendObMessage()"/>
+      <button type="button" class="foq-send-btn" id="ob-chat-send-btn" onclick="sendObMessage()" title="Enviar">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <path d="M2 8h11M8 2.5 13.5 8 8 13.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
     </div>
-
-    <!-- Paso 3 -->
-    <div class="onboarding-step" id="ob-step-3">
-      <div class="onboarding-num">3 de 3</div>
-      <div class="onboarding-title">¿A qué hora arrancás el día?</div>
-      <div class="onboarding-sub">Usamos esto para configurar tu calendario.</div>
-      <div class="time-options">
-        <button class="time-option" data-h="7" onclick="selectObHour(this, 7)">
-          Temprano <span style="color:var(--text4)">7–9hs</span>
-        </button>
-        <button class="time-option" data-h="9" onclick="selectObHour(this, 9)">
-          A la mañana <span style="color:var(--text4)">9–11hs</span>
-        </button>
-        <button class="time-option" data-h="11" onclick="selectObHour(this, 11)">
-          A la tarde <span style="color:var(--text4)">11hs+</span>
-        </button>
-      </div>
-      <button class="morning-cta" id="ob-finish-btn" onclick="obFinish()" style="margin-top:8px">Arrancar →</button>
-    </div>
-
-    <div class="onboarding-dots">
-      <div class="onboarding-dot active" id="ob-dot-1"></div>
-      <div class="onboarding-dot" id="ob-dot-2"></div>
-      <div class="onboarding-dot" id="ob-dot-3"></div>
-    </div>
-
   </div>
 </div>
 

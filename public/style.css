@@ -294,75 +294,21 @@ html, body {
   padding: 0 8px;
 }
 
-.onboarding-step {
-  display: none;
-  flex-direction: column;
-  gap: 14px;
-  animation: fadeIn .3s ease;
-}
-
-.onboarding-step.active { display: flex; }
-
-.onboarding-num {
-  font-size: 11px;
-  color: var(--text4);
-  letter-spacing: .06em;
-}
-
-.onboarding-title {
-  font-family: 'Instrument Serif', serif;
-  font-size: 28px;
-  color: var(--text);
-  line-height: 1.2;
-}
-
-.onboarding-sub {
-  font-size: 13px;
-  color: var(--text3);
-  margin-bottom: 4px;
-}
-
-.time-options {
+/* Entrevista de Foquito — mismo lenguaje visual que #foq-panel (bubbles,
+   scroll, input bar), pero como pantalla propia en vez de flotante. */
+.onboarding-box.ob-chat-box {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-}
-
-.time-option {
-  background: var(--surface);
+  width: min(400px, 92vw);
+  max-width: none;
+  height: min(78vh, 600px);
+  padding: 0;
+  background: var(--bg2);
   border: 1px solid var(--border2);
-  border-radius: 10px;
-  padding: 14px 16px;
-  cursor: pointer;
-  font-size: 13px;
-  color: var(--text2);
-  font-family: 'Geist', sans-serif;
-  text-align: left;
-  transition: all .15s;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+  border-radius: 18px;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.5);
+  overflow: hidden;
 }
-
-.time-option:hover { border-color: var(--accent); color: var(--text); }
-.time-option.selected { border-color: var(--accent); background: rgba(var(--accent-rgb), 0.08); color: var(--text); }
-
-.onboarding-dots {
-  display: flex;
-  gap: 6px;
-  justify-content: center;
-  margin-top: 28px;
-}
-
-.onboarding-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--border2);
-  transition: background .2s;
-}
-
-.onboarding-dot.active { background: var(--accent); }
 
 /* ── WEEKLY DIGEST ── */
 .digest-overlay {
