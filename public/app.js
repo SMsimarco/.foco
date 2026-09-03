@@ -124,8 +124,17 @@ function getWeekDates(offset = 0) {
   });
 }
 
+// OJO: NO usar date.toISOString() acá. toISOString() convierte a UTC —
+// en Argentina (UTC-3), entre las 21:00 y medianoche hora local el
+// instante ya cruzó medianoche en UTC, así que devolvía la fecha de
+// MAÑANA durante esas 3hs cada noche (afecta "hoy" en toda la app: vista
+// Hoy, día de Foquito, dia_semana de eventos recurrentes, etc). getFullYear/
+// getMonth/getDate son locales al huso horario del navegador — correctos.
 function toISO(date) {
-  return date.toISOString().split('T')[0];
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
 }
 
 function fmtTime(h, m) {
@@ -2051,27 +2060,41 @@ function pushFoqHistory(userText, foqText) {
   if (_foqHistory.length > 12) _foqHistory = _foqHistory.slice(-12);
 }
 
-// Busca una tarea por nombre en un día del cache (sin tildes, case-insensitive,
-// match parcial) — dateISO default hoy. Usada por marcar_hecho, editar_evento
-// y borrar_evento.
-function findFoqEventByName(nombre, dateISO = toISO(new Date())) {
+// Todas las coincidencias por nombre en un día del cache (sin tildes,
+// case-insensitive, match parcial) — no solo la primera. Necesario para
+// que editar_evento/borrar_evento/marcar_hecho puedan detectar ambigüedad
+// (ej. "Estudiar física" y "Estudiar química" el mismo día) y preguntar en
+// vez de tomar a ciegas lo primero que matchea.
+function findFoqEventMatches(nombre, dateISO, { incluirHechos = false } = {}) {
   const norm = s => (s || '').toLowerCase().normalize('NFD').replace(new RegExp('[\\u0300-\\u036f]', 'g'), '');
   const target = norm(nombre);
-  if (!target) return null;
+  if (!target) return [];
   const dayEvs = eventsCache[dateISO] || [];
-  return dayEvs.find(e => !e.done && (norm(e.title).includes(target) || target.includes(norm(e.title))));
+  return dayEvs.filter(e => (incluirHechos || !e.done) && (norm(e.title).includes(target) || target.includes(norm(e.title))));
 }
 
-// Mismo matching que findFoqEventByName pero sin excluir hechos — un
-// duplicado sigue siendo duplicado aunque el original ya esté marcado.
-// Usada antes de crear (crear_evento/crear_multiple) para no duplicar
-// en silencio algo que ya está anotado ese día.
+// Sin excluir hechos — un duplicado sigue siendo duplicado aunque el
+// original ya esté marcado. Usada antes de crear (crear_evento/
+// crear_multiple) para no duplicar en silencio algo ya anotado ese día.
 function findDuplicateEvent(nombre, dateISO) {
-  const norm = s => (s || '').toLowerCase().normalize('NFD').replace(new RegExp('[\\u0300-\\u036f]', 'g'), '');
-  const target = norm(nombre);
-  if (!target) return null;
-  const dayEvs = eventsCache[dateISO] || [];
-  return dayEvs.find(e => norm(e.title).includes(target) || target.includes(norm(e.title)));
+  return findFoqEventMatches(nombre, dateISO, { incluirHechos: true })[0] || null;
+}
+
+// Resuelve nombre+día a UN evento, o null con mensaje si no hay match o
+// hay más de uno parecido (ambiguo) — mismo criterio para marcar_hecho,
+// editar_evento y borrar_evento: mejor preguntar que actuar sobre el
+// evento equivocado (tomar "lo primero que matchea" a ciegas es lo que
+// puede borrar/editar/marcar algo que no era).
+function resolveFoqMatch(nombre, dateISO) {
+  const matches = findFoqEventMatches(nombre, dateISO);
+  if (matches.length === 0) {
+    return { ev: null, mensaje: 'No encontré esa actividad en la agenda. ¿Cómo se llama exacto y qué día está?' };
+  }
+  if (matches.length > 1) {
+    const lista = matches.map(e => `"${e.title}"${e.start_time ? ' (' + e.start_time + ')' : ''}`).join(', ');
+    return { ev: null, mensaje: `Encontré varias parecidas: ${lista}. ¿Cuál de estas?` };
+  }
+  return { ev: matches[0], mensaje: null };
 }
 
 // Arma el texto de agenda de los próximos 7 días (hoy incluido) a partir de lo
@@ -2126,8 +2149,8 @@ Analizá el mensaje del usuario (y la charla previa si la hay) y respondé SOLO 
 - Si algo se repite cada semana (rutina fija: gym, facultad, cursada) → recurrente:true + dia_semana correspondiente, fecha en null.
 - Si es puntual, de una sola vez → recurrente:false + fecha concreta, dia_semana en null.
 - Si el pedido es una rutina pero falta el horario de alguna actividad, no inventes: usá la forma 5 (preguntar) por esa actividad antes de crear nada.
-- **Si son 3 o más actividades, o es una rutina recurrente que arma/reemplaza buena parte de la semana:** NO crees todavía. Primero resumí en pocos bullets lo que entendiste (actividad, día, hora, si es recurrente) usando la forma 7 (conversar) y preguntá "¿Está bien así o cambio algo?". Recién cuando la persona confirme en su próximo mensaje, devolvé crear_multiple con esos eventos — no antes. Mismo criterio que la entrevista de onboarding.
-- Si son 1 o 2 tareas puntuales simples y claras, podés crear directo sin este paso extra.
+- **El umbral para confirmar antes de crear es si hay algo RECURRENTE, no la cantidad:** si alguna actividad del pedido tiene recurrente:true (se repite todas las semanas), NO crees todavía aunque sea una sola — un recurrente mal interpretado ensucia todas las semanas futuras, no un día. Primero resumí en pocos bullets lo que entendiste (actividad, día, hora, si es recurrente) usando la forma 7 (conversar) y preguntá "¿Está bien así o cambio algo?". Recién cuando la persona confirme en su próximo mensaje, devolvé crear_multiple con esos eventos — no antes. Mismo criterio que la entrevista de onboarding.
+- Si TODAS las actividades del pedido son puntuales (recurrente:false, fecha concreta, no se repiten), podés crear directo sin este paso extra, sin importar cuántas sean.
 
 3. Pide mover, cambiar de día u hora, o reprogramar una actividad que ya está en la agenda (buscala ahí por nombre y día):
 {"accion":"editar_evento","fecha_actual":"YYYY-MM-DD del día donde está hoy en la agenda","nombre":"nombre tal cual aparece en la agenda","nueva_fecha":"YYYY-MM-DD o null si no cambia de día","nueva_hora_inicio":"HH:MM o null si no cambia","nueva_hora_fin":"HH:MM o null si no cambia","respuesta":"confirmación breve"}
@@ -2213,7 +2236,7 @@ async function sendFoquitoMessage(rawText) {
 
   if (result?.accion === 'editar_evento' && result.nombre) {
     const fechaBusqueda = result.fecha_actual || toISO(new Date());
-    const ev = findFoqEventByName(result.nombre, fechaBusqueda);
+    const { ev, mensaje } = resolveFoqMatch(result.nombre, fechaBusqueda);
     let respuesta;
     if (ev) {
       const patch = {};
@@ -2232,7 +2255,7 @@ async function sendFoquitoMessage(rawText) {
       }
       respuesta = result.respuesta || `Listo, actualicé "${ev.title}".`;
     } else {
-      respuesta = 'No encontré esa actividad en la agenda. ¿Cómo se llama exacto y qué día está?';
+      respuesta = mensaje;
     }
     addFoqBubble(respuesta, 'foq');
     pushFoqHistory(text, respuesta);
@@ -2241,7 +2264,7 @@ async function sendFoquitoMessage(rawText) {
 
   if (result?.accion === 'borrar_evento' && result.nombre) {
     const fechaBusqueda = result.fecha || toISO(new Date());
-    const ev = findFoqEventByName(result.nombre, fechaBusqueda);
+    const { ev, mensaje } = resolveFoqMatch(result.nombre, fechaBusqueda);
     let respuesta;
     if (ev) {
       await db.from('events').delete().eq('id', ev.id);
@@ -2250,7 +2273,7 @@ async function sendFoquitoMessage(rawText) {
       refreshDiaOSemanaGrid(fechaBusqueda);
       respuesta = result.respuesta || `Saqué "${ev.title}".`;
     } else {
-      respuesta = 'No encontré esa actividad en la agenda. ¿Cómo se llama exacto y qué día está?';
+      respuesta = mensaje;
     }
     addFoqBubble(respuesta, 'foq');
     pushFoqHistory(text, respuesta);
@@ -2258,13 +2281,13 @@ async function sendFoquitoMessage(rawText) {
   }
 
   if (result?.accion === 'marcar_hecho' && result.nombre) {
-    const ev = findFoqEventByName(result.nombre);
+    const { ev, mensaje } = resolveFoqMatch(result.nombre, toISO(new Date()));
     let respuesta;
     if (ev) {
       await toggleDone(ev.id, toISO(new Date()));
       respuesta = result.respuesta || `Marcado: "${ev.title}".`;
     } else {
-      respuesta = 'No encontré esa tarea en tu agenda de hoy. ¿Cómo se llama exacto?';
+      respuesta = mensaje;
     }
     addFoqBubble(respuesta, 'foq');
     pushFoqHistory(text, respuesta);
