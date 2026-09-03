@@ -643,7 +643,7 @@ html, body {
 /* Espacio extra abajo en mobile para que el último evento no quede
    tapado por el FAB de Foquito (fixed, fuera del flujo del scroll) */
 @media (max-width: 1023px) {
-  .hoy-scroll { padding-bottom: calc(116px + env(safe-area-inset-bottom, 0px)); }
+  .hoy-scroll { padding-bottom: calc(132px + env(safe-area-inset-bottom, 0px)); }
 }
 
 /* Header */
@@ -1347,8 +1347,11 @@ html, body {
      FAB flote limpio arriba de la tab bar, no apoyado. +env() por si el
      dispositivo tiene home indicator (safe area) que la tab bar no resta. */
   bottom: calc(52px + 24px + env(safe-area-inset-bottom, 0px));
-  width: 76px;
-  height: 76px;
+  /* 92px (no 76): el personaje llena ~85% del cuadrado del asset, con
+     76px quedaba grande dentro del redondel. Agrandar el boton en vez
+     de volver a tocar la imagen. */
+  width: 92px;
+  height: 92px;
   border-radius: 50%;
   border: none;
   background: var(--accent);
@@ -3902,7 +3905,7 @@ body.ambient #app::before {
 /* Mismo colchón que .hoy-scroll: evita que el FAB tape el último evento
    de la grilla horaria (Semana/Día) */
 @media (max-width: 1023px) {
-  .sg-scrollx { padding-bottom: calc(116px + env(safe-area-inset-bottom, 0px)); }
+  .sg-scrollx { padding-bottom: calc(132px + env(safe-area-inset-bottom, 0px)); }
 }
 
 .sg-hours-spacer { width: 44px; flex-shrink: 0; }
