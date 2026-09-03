@@ -2113,7 +2113,9 @@ Analizá el mensaje del usuario (y la charla previa si la hay) y respondé SOLO 
 {"accion":"crear_multiple","eventos":[{"nombre":"texto corto de esa actividad","fecha":"YYYY-MM-DD o null","dia_semana":"0-6 (0=domingo) o null","hora_inicio":"HH:MM o null","hora_fin":"HH:MM o null","recurrente":true o false}],"respuesta":"confirmación breve y cálida, mencionando cuántas cosas anotaste"}
 - Si algo se repite cada semana (rutina fija: gym, facultad, cursada) → recurrente:true + dia_semana correspondiente, fecha en null.
 - Si es puntual, de una sola vez → recurrente:false + fecha concreta, dia_semana en null.
-- Si el pedido es una rutina pero falta el horario de alguna actividad, no inventes: usá la forma 4 (preguntar) por esa actividad antes de crear nada.
+- Si el pedido es una rutina pero falta el horario de alguna actividad, no inventes: usá la forma 5 (preguntar) por esa actividad antes de crear nada.
+- **Si son 3 o más actividades, o es una rutina recurrente que arma/reemplaza buena parte de la semana:** NO crees todavía. Primero resumí en pocos bullets lo que entendiste (actividad, día, hora, si es recurrente) usando la forma 7 (conversar) y preguntá "¿Está bien así o cambio algo?". Recién cuando la persona confirme en su próximo mensaje, devolvé crear_multiple con esos eventos — no antes. Mismo criterio que la entrevista de onboarding.
+- Si son 1 o 2 tareas puntuales simples y claras, podés crear directo sin este paso extra.
 
 3. Pide mover, cambiar de día u hora, o reprogramar una actividad que ya está en la agenda (buscala ahí por nombre y día):
 {"accion":"editar_evento","fecha_actual":"YYYY-MM-DD del día donde está hoy en la agenda","nombre":"nombre tal cual aparece en la agenda","nueva_fecha":"YYYY-MM-DD o null si no cambia de día","nueva_hora_inicio":"HH:MM o null si no cambia","nueva_hora_fin":"HH:MM o null si no cambia","respuesta":"confirmación breve"}
