@@ -2084,23 +2084,29 @@ Hoy es ${DAYS_FULL[new Date().getDay()]} ${dateISO}.
 Agenda de hoy:
 ${eventsText || 'sin tareas anotadas'}
 
-Analizá el mensaje del usuario (y la charla previa si la hay) y respondé SOLO con JSON válido, sin markdown ni texto extra. Una de estas 4 formas exactas:
+Analizá el mensaje del usuario (y la charla previa si la hay) y respondé SOLO con JSON válido, sin markdown ni texto extra. Una de estas 5 formas exactas:
 
-1. Pide anotar/agendar algo y la fecha está clara o no hace falta precisarla:
+1. Pide anotar/agendar UNA sola actividad y la fecha está clara o no hace falta precisarla:
 {"accion":"crear_evento","nombre":"texto corto sin palabras de tiempo","fecha":"YYYY-MM-DD","hora_inicio":"HH:MM o null","hora_fin":"HH:MM o null","respuesta":"confirmación breve y cálida"}
 
-2. Pide anotar algo pero falta un dato importante (sobre todo la fecha, si no es evidente que es hoy):
-{"accion":"preguntar","respuesta":"pregunta corta pidiendo justo lo que falta"}
-No inventes la fecha en este caso, preguntá.
+2. Pide organizar/armar una rutina, semana, o cualquier pedido que junte VARIAS actividades en un mismo mensaje (ej: "armame mi semana: gym lunes y miércoles 7am, facultad martes y jueves 14 a 18, estudiar todos los días 20hs"). Un objeto por actividad, NUNCA todo el pedido metido en un solo nombre de evento — separá cada actividad en su propio item:
+{"accion":"crear_multiple","eventos":[{"nombre":"texto corto de esa actividad","fecha":"YYYY-MM-DD o null","dia_semana":"0-6 (0=domingo) o null","hora_inicio":"HH:MM o null","hora_fin":"HH:MM o null","recurrente":true o false}],"respuesta":"confirmación breve y cálida, mencionando cuántas cosas anotaste"}
+- Si algo se repite cada semana (rutina fija: gym, facultad, cursada) → recurrente:true + dia_semana correspondiente, fecha en null.
+- Si es puntual, de una sola vez → recurrente:false + fecha concreta, dia_semana en null.
+- Si el pedido es una rutina pero falta el horario de alguna actividad, no inventes: usá la forma 3 (preguntar) por esa actividad antes de crear nada.
 
-3. Dice que ya hizo, terminó o completó algo que está en la agenda de hoy (usá el nombre tal cual aparece ahí):
+3. Pide anotar algo (uno o varios) pero falta un dato importante (sobre todo día u hora, si no es evidente):
+{"accion":"preguntar","respuesta":"pregunta corta pidiendo justo lo que falta, una sola cosa por vez"}
+No inventes el dato que falta, preguntá.
+
+4. Dice que ya hizo, terminó o completó algo que está en la agenda de hoy (usá el nombre tal cual aparece ahí):
 {"accion":"marcar_hecho","nombre":"nombre exacto de la tarea en la agenda","respuesta":"festejo breve y genuino"}
 
-4. Cualquier otra cosa — pregunta cómo viene el día, charla, pide un resumen, dice que no hizo nada, o se traba y no sabe por dónde arrancar:
+5. Cualquier otra cosa — pregunta cómo viene el día, charla, pide un resumen, dice que no hizo nada, o se traba y no sabe por dónde arrancar:
 {"accion":"conversar","respuesta":"tu respuesta, usando la agenda de hoy si aplica"}
 Si viene flojo o no hizo nada, nunca lo retés — ofrecé pasar algo para mañana. Si está trabado con muchas cosas, sugerí UNA para arrancar (la más corta), no un discurso.
 
-Si no da fecha para crear evento y es evidente que es hoy, usá ${dateISO}.`,
+Si no da fecha para crear evento puntual y es evidente que es hoy, usá ${dateISO}.`,
         messages: [..._foqHistory, { role: 'user', content: text }]
       })
     });
@@ -2140,6 +2146,14 @@ async function sendFoquitoMessage(rawText) {
     const dateISO = result.fecha || toISO(new Date());
     await addEvent(dateISO, result.nombre, result.hora_inicio || null, result.hora_fin || null, false, null, false);
     const respuesta = result.respuesta || `Anotado: "${result.nombre}".`;
+    addFoqBubble(respuesta, 'foq');
+    pushFoqHistory(text, respuesta);
+    return;
+  }
+
+  if (result?.accion === 'crear_multiple' && Array.isArray(result.eventos) && result.eventos.length) {
+    await createBatchEvents(result.eventos);
+    const respuesta = result.respuesta || `Anotadas ${result.eventos.length} actividades.`;
     addFoqBubble(respuesta, 'foq');
     pushFoqHistory(text, respuesta);
     return;
@@ -2567,26 +2581,42 @@ async function endFoquitoOnboarding() {
   await markOnboardingCompleted();
 }
 
-// Crea los eventos recurrentes que arma la entrevista. dia_semana no trae
-// una fecha — se ancla a la próxima ocurrencia de ese día desde hoy (o hoy
-// mismo si coincide); recurrente:true hace que se repita todas las semanas
-// sin importar esa fecha ancla (mismo criterio que "hacer recurrente" desde
-// el panel de evento, ver confirmRecurrence).
-async function createOnboardingEvents(acciones) {
+// dia_semana (0-6) sin fecha concreta se ancla a su próxima ocurrencia
+// desde hoy (o hoy mismo si coincide) — recurrente:true en addEvent hace
+// que después se repita todas las semanas sin importar esta fecha ancla
+// (mismo criterio que "hacer recurrente" desde el panel de evento, ver
+// confirmRecurrence). Compartido entre la entrevista de onboarding y el
+// "crear_multiple" del chat normal — ambos arman rutinas por día de semana.
+function nextDateForWeekday(diaSemana) {
   const today = new Date();
+  const offset = (diaSemana - today.getDay() + 7) % 7;
+  const d = new Date(today);
+  d.setDate(d.getDate() + offset);
+  return toISO(d);
+}
+
+// Crea los eventos recurrentes que arma la entrevista de onboarding.
+async function createOnboardingEvents(acciones) {
   for (const a of acciones) {
     if (a.tipo !== 'crear' || !a.titulo) continue;
     const diaSemana = Number.isInteger(a.dia_semana) ? a.dia_semana : null;
-    let dateISO;
-    if (diaSemana !== null) {
-      const offset = (diaSemana - today.getDay() + 7) % 7;
-      const d = new Date(today);
-      d.setDate(d.getDate() + offset);
-      dateISO = toISO(d);
-    } else {
-      dateISO = toISO(today);
-    }
+    const dateISO = diaSemana !== null ? nextDateForWeekday(diaSemana) : toISO(new Date());
     await addEvent(dateISO, a.titulo, a.hora || null, null, !!a.recurrente, diaSemana, !!a.esFoco);
+  }
+}
+
+// Crea el lote de eventos del "crear_multiple" del chat normal (armar
+// rutina/organizar varias actividades en un solo pedido). A diferencia de
+// la entrevista, acá cada actividad puede traer fecha puntual en vez de
+// día de semana recurrente — mismo addEvent() de siempre, sin lógica nueva
+// de guardado.
+async function createBatchEvents(eventos) {
+  for (const ev of eventos) {
+    if (!ev?.nombre) continue;
+    const recurrente = !!ev.recurrente;
+    const diaSemana = recurrente && Number.isInteger(ev.dia_semana) ? ev.dia_semana : null;
+    const dateISO = diaSemana !== null ? nextDateForWeekday(diaSemana) : (ev.fecha || toISO(new Date()));
+    await addEvent(dateISO, ev.nombre, ev.hora_inicio || null, ev.hora_fin || null, recurrente, diaSemana, false);
   }
 }
 
