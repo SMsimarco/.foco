@@ -273,6 +273,28 @@ function startLiveClock() {
 const GOOGLE_CLIENT_ID = '268120297099-c2uml03ln4c3uoffqpgiebju7tm2e2mg.apps.googleusercontent.com';
 const VAPID_PUBLIC_KEY = 'BFsTfVDGrFgb523bGBTe-kNZned8b0dojS1DcVp_GIAK-58MJHf0fLIDc664EG2wrPD-RZC8M6Vlsp-GiWF1v7M';
 
+// Cartel de Foquito arriba del login/registro — sin sesión todavía, así
+// que es texto fijo random (no hay agenda ni nombre para personalizar
+// como el saludo post-login de getFoquitoGreeting).
+const AUTH_FOQ_MESSAGES = [
+  'Che, soy Foquito. Registrate y armamos tu semana juntos.',
+  'Contame tu rutina y te la organizo — pero primero necesito que entres.',
+  '¿Nueva persona por acá? Creá tu cuenta y arrancamos ya.',
+  'Yo me encargo de tu agenda. Vos solo tenés que registrarte.',
+  'Che, dale — registrate y en dos minutos ya tenés tu semana armada.'
+];
+
+function initAuthFoquitoHint() {
+  const el = document.getElementById('auth-foq-msg');
+  if (!el) return;
+  el.textContent = AUTH_FOQ_MESSAGES[Math.floor(Math.random() * AUTH_FOQ_MESSAGES.length)];
+}
+
+function clickAuthFoquitoHint() {
+  switchTab('register');
+  document.getElementById('auth-name')?.focus();
+}
+
 function switchTab(mode) {
   authMode = mode;
   document.getElementById('field-name').style.display = mode === 'register' ? 'block' : 'none';
@@ -464,6 +486,7 @@ async function init() {
 function showAuth() {
   document.getElementById('auth-screen').style.display = 'flex';
   document.getElementById('app').style.display = 'none';
+  initAuthFoquitoHint();
   if (window.google?.accounts?.id) {
     initGoogleButton();
   } else {
@@ -2001,23 +2024,61 @@ function setFoquitoState(state) {
   if (state) fab.classList.add('state-' + state);
 }
 
-// Saludo cambia según cómo viene el día — no es siempre el mismo texto
+// Saludo cambia según cómo viene el día, y no es siempre el mismo texto
+// dentro de cada situación — varias variantes por bucket, una al azar.
+// Nombre de pila aparece la mayoría de las veces (no siempre, para que no
+// suene repetitivo) — este saludo es literalmente "cuando entrás" (primer
+// open del panel de la sesión, ver toggleFoquitoWidget/initFoquitoDesktop).
 function getFoquitoGreeting() {
   const dateISO = toISO(new Date());
   const dayEvs = eventsCache[dateISO] || [];
+  const nombre = (currentProfile?.display_name || '').split(' ')[0];
+  const usarNombre = !!nombre && Math.random() < 0.6;
+  const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+
   if (!dayEvs.length) {
-    return 'Hola, soy Foquito. Contame qué tenés que hacer, por texto o por audio, y te lo anoto.';
+    return pick(usarNombre ? [
+      `Hola ${nombre}, soy Foquito. Contame qué tenés que hacer y te lo anoto.`,
+      `${nombre}, arrancamos de cero hoy. Decime algo y lo agendo.`,
+      `Hola ${nombre}. ¿Qué tenés pensado para hoy?`
+    ] : [
+      'Hola, soy Foquito. Contame qué tenés que hacer, por texto o por audio, y te lo anoto.',
+      'Arrancamos de cero hoy. Decime algo y lo agendo.',
+      '¿Qué tenés pensado para hoy? Te lo anoto.'
+    ]);
   }
+
   const done = dayEvs.filter(e => e.done).length;
   const total = dayEvs.length;
+
   if (done === total) {
-    return 'Ya cerraste todo por hoy. ¿Sumamos algo para mañana?';
+    return pick(usarNombre ? [
+      `Ya cerraste todo por hoy, ${nombre}. ¿Sumamos algo para mañana?`,
+      `${nombre}, día completo. ¿Dejamos algo listo para mañana?`
+    ] : [
+      'Ya cerraste todo por hoy. ¿Sumamos algo para mañana?',
+      'Día completo. ¿Dejamos algo listo para mañana?'
+    ]);
   }
+
   const hour = new Date().getHours();
   if (hour >= 18 && done === 0) {
-    return 'Vamos que todavía se puede. ¿Con cuál arrancamos?';
+    return pick(usarNombre ? [
+      `Vamos ${nombre}, que todavía se puede. ¿Con cuál arrancamos?`,
+      `${nombre}, todavía hay tiempo. ¿Arrancamos con algo corto?`
+    ] : [
+      'Vamos que todavía se puede. ¿Con cuál arrancamos?',
+      'Todavía hay tiempo. ¿Arrancamos con algo corto?'
+    ]);
   }
-  return `Vas ${done} de ${total} hoy. Contame qué más anotamos.`;
+
+  return pick(usarNombre ? [
+    `Vas ${done} de ${total} hoy, ${nombre}. Contame qué más anotamos.`,
+    `${nombre}, ${done} de ${total} hecho. ¿Seguimos?`
+  ] : [
+    `Vas ${done} de ${total} hoy. Contame qué más anotamos.`,
+    `${done} de ${total} hecho. ¿Seguimos?`
+  ]);
 }
 
 // En desktop (>=1024px) el panel de Foquito queda fijo y siempre visible por CSS
