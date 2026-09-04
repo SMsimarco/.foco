@@ -14,6 +14,29 @@ if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js'));
 }
 
+// ── THEME (claro/oscuro) ────────────────────────────────────
+function applyTheme(theme) {
+  const root = document.documentElement;
+  if (theme === 'light') root.setAttribute('data-theme', 'light');
+  else root.removeAttribute('data-theme');
+
+  const icon = document.getElementById('theme-toggle-icon');
+  if (icon) icon.textContent = theme === 'light' ? '☀' : '☾';
+
+  const metaTheme = document.querySelector('meta[name="theme-color"]');
+  if (metaTheme) metaTheme.setAttribute('content', theme === 'light' ? '#FBFAF8' : '#050507');
+}
+
+function toggleTheme() {
+  const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+  const next = isLight ? 'dark' : 'light';
+  localStorage.setItem('foco-theme', next);
+  applyTheme(next);
+}
+
+// Sincroniza el ícono/meta con lo que el script inline del <head> ya aplicó
+applyTheme(document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark');
+
 // ── ÁREAS DE VIDA ────────────────────────────────────────────
 const AREAS = {
   trabajo:     { label: 'Trabajo',     color: '#3B82F6' },
@@ -3468,6 +3491,7 @@ const CMD_ACTIONS = [
   { label: 'Palabra de semana', icon: '❋',  hint: '',  fn: () => { closeCmd(); showPalabra(); } },
   { label: 'Nuevo evento',      icon: '+',  hint: 'N', fn: () => { closeCmd(); toggleFoquitoWidget(); } },
   { label: 'Modo foco ambiente',icon: '✿',  hint: '',  fn: () => { closeCmd(); toggleAmbientMode(); } },
+  { label: 'Cambiar tema claro/oscuro', icon: '☾', hint: '', fn: () => { closeCmd(); toggleTheme(); } },
   { label: 'Cerrar sesión',     icon: '↪',  hint: '',  fn: () => logout() },
 ];
 

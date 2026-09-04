@@ -11,6 +11,13 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
   <link rel="stylesheet" href="/style.css"/>
   <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500&family=Instrument+Serif:ital@1&display=swap" rel="stylesheet"/>
+  <script>
+    // Aplica el theme guardado ANTES del primer paint, evita flash oscuro->claro
+    (function () {
+      var t = localStorage.getItem('foco-theme');
+      if (t === 'light') document.documentElement.setAttribute('data-theme', 'light');
+    })();
+  </script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
   <script src="https://accounts.google.com/gsi/client" id="google-identity-script" async defer></script>
 </head>
@@ -63,7 +70,7 @@
       <div class="morning-section-label">¿Hiciste lo más importante de hoy?</div>
       <div class="evening-main-btns">
         <button class="evening-main-btn" data-v="yes" onclick="selectEveningMain('yes')">
-          <div class="evening-dot" style="background:#10B981"></div>
+          <div class="evening-dot" style="background:var(--success)"></div>
           <span class="evening-btn-label">Sí</span>
         </button>
         <button class="evening-main-btn" data-v="partial" onclick="selectEveningMain('partial')">
@@ -71,31 +78,31 @@
           <span class="evening-btn-label">Parcial</span>
         </button>
         <button class="evening-main-btn" data-v="no" onclick="selectEveningMain('no')">
-          <div class="evening-dot" style="background:#F43F5E"></div>
+          <div class="evening-dot" style="background:var(--danger)"></div>
           <span class="evening-btn-label">No</span>
         </button>
       </div>
       <div class="morning-section-label" style="margin-top:20px">¿Cómo cerrás el día?</div>
       <div class="energy-btns">
         <button class="energy-btn" data-e="1" onclick="selectEveningEnergy(1)">
-          <div style="width:8px;height:8px;border-radius:50%;background:#F43F5E;margin:0 auto 4px"></div>
-          <span style="font-size:9px;color:rgba(255,255,255,0.4);font-family:'Geist',sans-serif">Mal</span>
+          <div style="width:8px;height:8px;border-radius:50%;background:var(--danger);margin:0 auto 4px"></div>
+          <span style="font-size:9px;color:var(--text-muted);font-family:'Geist',sans-serif">Mal</span>
         </button>
         <button class="energy-btn" data-e="2" onclick="selectEveningEnergy(2)">
           <div style="width:8px;height:8px;border-radius:50%;background:#818CF8;margin:0 auto 4px"></div>
-          <span style="font-size:9px;color:rgba(255,255,255,0.4);font-family:'Geist',sans-serif">Bajo</span>
+          <span style="font-size:9px;color:var(--text-muted);font-family:'Geist',sans-serif">Bajo</span>
         </button>
         <button class="energy-btn" data-e="3" onclick="selectEveningEnergy(3)">
           <div style="width:8px;height:8px;border-radius:50%;background:#71717A;margin:0 auto 4px"></div>
-          <span style="font-size:9px;color:rgba(255,255,255,0.4);font-family:'Geist',sans-serif">Ok</span>
+          <span style="font-size:9px;color:var(--text-muted);font-family:'Geist',sans-serif">Ok</span>
         </button>
         <button class="energy-btn" data-e="4" onclick="selectEveningEnergy(4)">
           <div style="width:8px;height:8px;border-radius:50%;background:#818CF8;margin:0 auto 4px"></div>
-          <span style="font-size:9px;color:rgba(255,255,255,0.4);font-family:'Geist',sans-serif">Bien</span>
+          <span style="font-size:9px;color:var(--text-muted);font-family:'Geist',sans-serif">Bien</span>
         </button>
         <button class="energy-btn" data-e="5" onclick="selectEveningEnergy(5)">
-          <div style="width:8px;height:8px;border-radius:50%;background:#10B981;margin:0 auto 4px"></div>
-          <span style="font-size:9px;color:rgba(255,255,255,0.4);font-family:'Geist',sans-serif">Genial</span>
+          <div style="width:8px;height:8px;border-radius:50%;background:var(--success);margin:0 auto 4px"></div>
+          <span style="font-size:9px;color:var(--text-muted);font-family:'Geist',sans-serif">Genial</span>
         </button>
       </div>
       <div class="morning-section-label" style="margin-top:20px">¿Algo que no querés olvidar?</div>
@@ -112,24 +119,24 @@
       <div class="morning-section-label">¿Cómo llegás hoy?</div>
       <div class="energy-btns">
         <button class="energy-btn" data-e="1" onclick="selectMorningEnergy(1)">
-          <div style="width:8px;height:8px;border-radius:50%;background:#F43F5E;margin:0 auto 4px"></div>
-          <span style="font-size:9px;color:rgba(255,255,255,0.4);font-family:'Geist',sans-serif">Mal</span>
+          <div style="width:8px;height:8px;border-radius:50%;background:var(--danger);margin:0 auto 4px"></div>
+          <span style="font-size:9px;color:var(--text-muted);font-family:'Geist',sans-serif">Mal</span>
         </button>
         <button class="energy-btn" data-e="2" onclick="selectMorningEnergy(2)">
           <div style="width:8px;height:8px;border-radius:50%;background:#818CF8;margin:0 auto 4px"></div>
-          <span style="font-size:9px;color:rgba(255,255,255,0.4);font-family:'Geist',sans-serif">Bajo</span>
+          <span style="font-size:9px;color:var(--text-muted);font-family:'Geist',sans-serif">Bajo</span>
         </button>
         <button class="energy-btn" data-e="3" onclick="selectMorningEnergy(3)">
           <div style="width:8px;height:8px;border-radius:50%;background:#71717A;margin:0 auto 4px"></div>
-          <span style="font-size:9px;color:rgba(255,255,255,0.4);font-family:'Geist',sans-serif">Ok</span>
+          <span style="font-size:9px;color:var(--text-muted);font-family:'Geist',sans-serif">Ok</span>
         </button>
         <button class="energy-btn" data-e="4" onclick="selectMorningEnergy(4)">
           <div style="width:8px;height:8px;border-radius:50%;background:#818CF8;margin:0 auto 4px"></div>
-          <span style="font-size:9px;color:rgba(255,255,255,0.4);font-family:'Geist',sans-serif">Bien</span>
+          <span style="font-size:9px;color:var(--text-muted);font-family:'Geist',sans-serif">Bien</span>
         </button>
         <button class="energy-btn" data-e="5" onclick="selectMorningEnergy(5)">
-          <div style="width:8px;height:8px;border-radius:50%;background:#10B981;margin:0 auto 4px"></div>
-          <span style="font-size:9px;color:rgba(255,255,255,0.4);font-family:'Geist',sans-serif">Genial</span>
+          <div style="width:8px;height:8px;border-radius:50%;background:var(--success);margin:0 auto 4px"></div>
+          <span style="font-size:9px;color:var(--text-muted);font-family:'Geist',sans-serif">Genial</span>
         </button>
       </div>
       <div class="morning-section-label" style="margin-top:20px">¿Cuál es la cosa más importante?</div>
@@ -147,13 +154,16 @@
     <span id="live-clock" class="live-clock"></span>
 
     <div class="header-right">
+      <button class="theme-toggle-btn" id="theme-toggle-btn" onclick="toggleTheme()" title="Cambiar tema">
+        <span id="theme-toggle-icon">☾</span>
+      </button>
       <button class="notif-btn" id="notif-btn" onclick="toggleNotif()" title="Notificaciones">
         <div class="notif-dot" id="notif-dot"></div>
       </button>
       <div class="commitment-wrap" title="Commitment score">
         <div class="commitment-ring">
           <svg width="32" height="32" viewBox="0 0 32 32">
-            <circle cx="16" cy="16" r="12" fill="none" stroke="#18181B" stroke-width="2.5"/>
+            <circle cx="16" cy="16" r="12" fill="none" stroke="var(--border2)" stroke-width="2.5"/>
             <circle id="commitment-arc" cx="16" cy="16" r="12" fill="none" stroke="#818CF8"
               stroke-width="2.5" stroke-dasharray="0 75" stroke-linecap="round"/>
           </svg>
@@ -343,7 +353,7 @@
         <div class="sug-hero-eyebrow">Esta semana</div>
         <div class="pulso-num" id="sug-done">—</div>
         <div class="pulso-label">completadas esta semana</div>
-        <div class="proj-progress"><div class="proj-progress-fill" id="pulso-bar-fill" style="width:0%;background:#34D399"></div></div>
+        <div class="proj-progress"><div class="proj-progress-fill" id="pulso-bar-fill" style="width:0%;background:var(--success-text)"></div></div>
       </div>
 
       <!-- BLOQUE 2: INSIGHT DE LA IA (protagonista) -->
