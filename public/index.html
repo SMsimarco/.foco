@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
   <meta name="theme-color" content="#050507"/>
   <title>foco.</title>
   <link rel="manifest" href="/manifest.json"/>
@@ -18,13 +18,20 @@
       if (t === 'light') document.documentElement.setAttribute('data-theme', 'light');
     })();
   </script>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <script src="/vendor/supabase.js"></script>
   <script src="https://accounts.google.com/gsi/client" id="google-identity-script" async defer></script>
 </head>
 <body>
 
+<!-- BOOT LOADING — se ve mientras se resuelve la sesión (getSession), antes de
+     decidir login vs app. Evita el parpadeo de "pantalla de login" a usuarios
+     que ya estaban loggeados. -->
+<div id="boot-loading" class="boot-loading">
+  <span class="boot-logo">foco.</span>
+</div>
+
 <!-- AUTH SCREEN -->
-<div id="auth-screen" class="auth-screen">
+<div id="auth-screen" class="auth-screen" style="display:none">
   <div class="auth-foq-hint" onclick="clickAuthFoquitoHint()" title="Registrate">
     <div class="auth-foq-bubble" id="auth-foq-msg"></div>
   </div>

@@ -108,6 +108,30 @@ html, body {
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
 
+/* ── BOOT LOADING ── */
+.boot-loading {
+  height: 100vh;
+  height: 100dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg);
+}
+
+.boot-logo {
+  font-family: 'Instrument Serif', serif;
+  font-style: italic;
+  font-size: 32px;
+  color: var(--text);
+  opacity: 0.5;
+  animation: bootPulse 1.4s ease-in-out infinite;
+}
+
+@keyframes bootPulse {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 0.7; }
+}
+
 /* ── AUTH ── */
 .auth-screen {
   height: 100vh;
@@ -1289,7 +1313,7 @@ html, body {
   height: 52px;
   display: flex;
   align-items: center;
-  padding: 6px 12px;
+  padding: 6px 12px calc(6px + env(safe-area-inset-bottom, 0px));
   gap: 4px;
   border-top: 1px solid var(--border);
   flex-shrink: 0;

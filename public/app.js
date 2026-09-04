@@ -458,16 +458,19 @@ function toggleNotif() {
 
 async function init() {
   // Verificar sesión existente directamente — no depender solo de onAuthStateChange.
+  // Mientras esto resuelve queda #boot-loading en pantalla (ver index.html), NO
+  // login — así un usuario con sesión válida nunca ve el form de login parpadear.
   // OJO: getSession() puede colgarse para siempre en Safari/PWA — bug conocido de
   // supabase-js, usa el Web Locks API y si una pestaña anterior murió a mitad de
   // esta misma llamada (típico si el SO mata la PWA en segundo plano), el lock
-  // queda tomado y nadie lo libera nunca. Sin este timeout, la pantalla de login
-  // quedaba trabada indefinidamente — no es que deslogueaba, el chequeo de sesión
-  // ni terminaba. Si se cumple el timeout, se muestra el login (un toque en
+  // queda tomado y nadie lo libera nunca. El timeout es solo red de seguridad para
+  // ese cuelgue real, no para latencia de red normal (el SDK ya está self-hosted,
+  // sin esa demora) — por eso puede ser generoso sin que el usuario note nada raro,
+  // sigue viendo el loading. Si se cumple, se muestra el login (un toque en
   // "Continuar con Google" alcanza para volver a entrar) en vez de colgar para
   // siempre.
   const sessionCheck = db.auth.getSession();
-  const timeout = new Promise(resolve => setTimeout(() => resolve(null), 4000));
+  const timeout = new Promise(resolve => setTimeout(() => resolve(null), 8000));
   const result = await Promise.race([sessionCheck, timeout]);
   const session = result?.data?.session;
 
@@ -506,7 +509,13 @@ async function init() {
   });
 }
 
+function hideBootLoading() {
+  const boot = document.getElementById('boot-loading');
+  if (boot) boot.style.display = 'none';
+}
+
 function showAuth() {
+  hideBootLoading();
   document.getElementById('auth-screen').style.display = 'flex';
   document.getElementById('app').style.display = 'none';
   initAuthFoquitoHint();
@@ -518,6 +527,7 @@ function showAuth() {
 }
 
 async function showApp() {
+  hideBootLoading();
   document.getElementById('auth-screen').style.display = 'none';
   document.getElementById('app').style.display = 'flex';
   await loadWeek(); // datos semanales para el ring de commitment y Sugerencias
