@@ -677,7 +677,9 @@ html, body {
 /* Espacio extra abajo en mobile para que el último evento no quede
    tapado por el FAB de Foquito (fixed, fuera del flujo del scroll) */
 @media (max-width: 1023px) {
-  .hoy-scroll { padding-bottom: calc(132px + env(safe-area-inset-bottom, 0px)); }
+  /* FAB: bottom 52px (nav) + 24px (margen) + 92px (alto) = 168px de zócalo
+     real; +16px de aire para que nunca quede pegado al borde del scroll. */
+  .hoy-scroll { padding-bottom: calc(184px + env(safe-area-inset-bottom, 0px)); }
 }
 
 /* Header */
@@ -696,8 +698,8 @@ html, body {
 }
 
 .hoy-title {
-  font-family: 'Instrument Serif', serif;
-  font-style: italic;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
+  font-weight: 700;
   font-size: 34px;
   letter-spacing: -0.01em;
   color: var(--ios-text);
@@ -3979,7 +3981,7 @@ body.ambient #app::before {
 /* Mismo colchón que .hoy-scroll: evita que el FAB tape el último evento
    de la grilla horaria (Semana/Día) */
 @media (max-width: 1023px) {
-  .sg-scrollx { padding-bottom: calc(132px + env(safe-area-inset-bottom, 0px)); }
+  .sg-scrollx { padding-bottom: calc(184px + env(safe-area-inset-bottom, 0px)); }
 }
 
 .sg-hours-spacer { width: 44px; flex-shrink: 0; }
