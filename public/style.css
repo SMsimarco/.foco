@@ -3,6 +3,9 @@
   box-sizing: border-box;
   margin: 0;
   padding: 0;
+  /* Sin flash azul/gris nativo al tocar — el feedback táctil lo dan los
+     :active de cada elemento tocable, no el navegador. */
+  -webkit-tap-highlight-color: transparent;
 }
 
 :root {
@@ -719,7 +722,10 @@ html, body {
   cursor: pointer;
   flex-shrink: 0;
   margin-top: 6px;
+  transition: transform 0.12s;
 }
+
+.hoy-add-btn:active { transform: scale(0.9); }
 
 .hoy-day-nav {
   display: flex;
@@ -767,7 +773,10 @@ html, body {
   padding: 11px 14px;
   cursor: pointer;
   position: relative;
+  transition: background-color 0.1s;
 }
+
+.hoy-row:active { background: var(--overlay-strong); }
 
 .hoy-row:not(:last-child)::after {
   content: '';
@@ -1355,6 +1364,7 @@ html, body {
 
 .nav-btn:hover { color: var(--text-muted); background: var(--border); }
 .nav-btn.active { color: var(--text); background: var(--border2); }
+.nav-btn:active .nav-icon { transform: scale(0.88); }
 
 .nav-btn.active::after {
   content: '';
@@ -3913,6 +3923,8 @@ body.ambient #app::before {
   color: var(--text);
 }
 
+.view-pill:active { opacity: 0.6; }
+
 /* ── VISTA SEMANA (grilla horaria) — estética tipo Notion Calendar / Cron ── */
 #view-semana-grid {
   flex: 1;
@@ -4064,7 +4076,10 @@ body.ambient #app::before {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  transition: opacity 0.1s;
 }
+
+.sg-chip:active { opacity: 0.6; }
 
 .sg-body {
   display: flex;
@@ -4106,6 +4121,8 @@ body.ambient #app::before {
   overflow: hidden;
   cursor: pointer;
 }
+
+.sg-block:active .sg-block-content { opacity: 0.6; }
 
 .sg-block-content {
   height: 100%;

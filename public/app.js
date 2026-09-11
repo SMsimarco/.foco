@@ -2464,8 +2464,9 @@ function toggleFoquitoMic() {
   _foqRecognition.start();
 }
 
-// Mantiene el FAB/panel de Foquito pegados arriba del teclado en mobile
-// (position:fixed con bottom fijo queda tapado por el teclado en iOS/Android)
+// Mantiene el FAB/panel de Foquito y el panel de evento pegados arriba del
+// teclado en mobile (position:fixed con bottom fijo queda tapado por el
+// teclado en iOS/Android — mismo bug, mismo fix, dos bottom sheets distintos).
 if (window.visualViewport) {
   const vv = window.visualViewport;
   const adjustFoquitoForKeyboard = () => {
@@ -2486,6 +2487,17 @@ if (window.visualViewport) {
       panel.style.maxHeight = keyboardInset > 60
         ? `calc(${vv.height}px - ${bottom + 16}px)`
         : '';
+    }
+
+    // Panel de evento: textarea de notas (#panel-details) quedaba tapada por
+    // el teclado porque bottom:0 fijo no reacciona al viewport visual.
+    const evPanel = document.getElementById('event-panel');
+    if (evPanel) {
+      evPanel.style.bottom = keyboardInset > 60 ? keyboardInset + 'px' : '';
+      evPanel.style.maxHeight = keyboardInset > 60
+        ? `calc(${vv.height}px - ${keyboardInset + 16}px)`
+        : '';
+      evPanel.style.overflowY = keyboardInset > 60 ? 'auto' : '';
     }
   };
   vv.addEventListener('resize', adjustFoquitoForKeyboard);
