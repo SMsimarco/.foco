@@ -160,7 +160,8 @@ const I18N_UI = {
     panelDetailsPh: 'Agregar nota…', panelArea: 'Área', panelHora: 'Hora', panelSinHora: 'Sin hora',
     panelDia: 'Día', panelRepetir: 'Repetir', panelSoloVez: 'Solo esta vez', panelCadaSemana: 'Cada semana',
     panelFocoDia: 'Foco del día', panelPausar: 'Pausar', panelTerminar: 'Terminar',
-    panelCompletar: 'Completar', panelIniciarFoco: 'Iniciar foco',
+    panelCompletar: 'Completar', panelCompletada: 'Completada', panelIniciarFoco: 'Iniciar foco',
+    seRepiteCadaSemana: 'Se repite cada semana',
     recurQuestion: '¿Repetir este evento?', recurSoloHoy: 'Solo hoy', recurSoloHoyDesc: 'Se agrega una vez',
     recurCadaSemanaDesc: 'Se repite el mismo día', recurTodosDias: 'Todos los días', recurTodosDiasDesc: 'Aparece cada día',
     manana: 'Mañana', ayer: 'Ayer',
@@ -231,7 +232,8 @@ const I18N_UI = {
     panelDetailsPh: 'Add note…', panelArea: 'Area', panelHora: 'Time', panelSinHora: 'No time',
     panelDia: 'Day', panelRepetir: 'Repeat', panelSoloVez: 'Just this once', panelCadaSemana: 'Every week',
     panelFocoDia: 'Focus of the day', panelPausar: 'Pause', panelTerminar: 'Finish',
-    panelCompletar: 'Complete', panelIniciarFoco: 'Start focus',
+    panelCompletar: 'Complete', panelCompletada: 'Completed', panelIniciarFoco: 'Start focus',
+    seRepiteCadaSemana: 'Repeats every week',
     recurQuestion: 'Repeat this event?', recurSoloHoy: 'Just today', recurSoloHoyDesc: 'Added once',
     recurCadaSemanaDesc: 'Repeats on the same day', recurTodosDias: 'Every day', recurTodosDiasDesc: 'Appears every day',
     manana: 'Tomorrow', ayer: 'Yesterday',
@@ -3470,7 +3472,7 @@ function openEventPanel(ev, dateISO) {
     recWeekly.classList.toggle('active', !!ev.recurrente);
   }
   const recurValueEl = document.getElementById('panel-row-recur-value');
-  if (recurValueEl) recurValueEl.textContent = ev.recurrente ? 'Cada semana' : 'Solo esta vez';
+  if (recurValueEl) recurValueEl.textContent = ev.recurrente ? t('panelCadaSemana') : t('panelSoloVez');
 
   updateFocusButton(!!ev.is_focus);
 
@@ -3507,7 +3509,7 @@ function updateDoneButton(done) {
   const btn   = document.getElementById('panel-done-main');
   const label = document.getElementById('panel-done-label');
   if (!btn || !label) return;
-  label.textContent = done ? 'Completada' : 'Completar';
+  label.textContent = done ? t('panelCompletada') : t('panelCompletar');
   btn.classList.toggle('done', done);
 }
 
@@ -3651,11 +3653,11 @@ async function setPanelRecurrence(recurrente) {
   document.getElementById('recur-once').classList.toggle('active', !recurrente);
   document.getElementById('recur-weekly').classList.toggle('active', recurrente);
   const recurValueEl = document.getElementById('panel-row-recur-value');
-  if (recurValueEl) recurValueEl.textContent = recurrente ? 'Cada semana' : 'Solo esta vez';
+  if (recurValueEl) recurValueEl.textContent = recurrente ? t('panelCadaSemana') : t('panelSoloVez');
 
   renderPanelDiaEditor(panelEvent, panelDateISO);
   renderHoy();
-  showToast(recurrente ? 'Se repite cada semana' : 'Solo esta vez', 'success');
+  showToast(recurrente ? t('seRepiteCadaSemana') : t('panelSoloVez'), 'success');
 }
 
 // "Foco del día" — máx 3 tareas prioritarias por día
