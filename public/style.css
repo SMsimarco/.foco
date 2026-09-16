@@ -1386,9 +1386,13 @@ html, body {
 .nav-btn:active .nav-icon { transform: scale(0.88); }
 
 .nav-btn.active::after {
+  /* Antes vivía pegado abajo (bottom:6px) muy cerca del label de texto —
+     en la tab bar real (52px de alto) casi tocaba/cruzaba el texto y se
+     leía como un tachado. Movido arriba del ícono, mismo patrón que
+     usan la mayoría de las tab bars con indicador de activo. */
   content: '';
   position: absolute;
-  bottom: 6px;
+  top: 2px;
   left: 50%;
   transform: translateX(-50%);
   width: 20px;
@@ -1768,6 +1772,7 @@ html, body {
 .panel-hora-edit {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 8px;
   padding: 10px 2px 2px;
 }
@@ -1780,12 +1785,18 @@ html, body {
   font-family: 'Geist', sans-serif;
   font-size: 13px;
   padding: 6px 8px;
+  /* Los <input type="time"> nativos tienen ancho intrínseco grande (más
+     con formato 12h AM/PM del navegador) — sin min-width:0 un flex item
+     no se achica por debajo de ese intrínseco y empuja el botón Guardar
+     fuera del panel. flex-basis:0 los reparte parejo en el espacio real. */
+  flex: 1 1 0;
+  min-width: 0;
 }
 
-.panel-hora-sep { color: var(--text3); }
+.panel-hora-sep { color: var(--text3); flex-shrink: 0; }
 
 .panel-hora-save-btn {
-  margin-left: auto;
+  flex-shrink: 0;
   background: var(--accent);
   border: none;
   border-radius: 8px;
@@ -2246,6 +2257,7 @@ body.ambient #app::before {
 
 /* ── WEEKLY REVIEW ── */
 .review-box {
+  position: relative;
   background: var(--surface);
   border: 1px solid var(--border2);
   border-radius: 18px;
@@ -2257,6 +2269,20 @@ body.ambient #app::before {
   gap: 18px;
   animation: fadeIn 0.25s ease;
 }
+
+.review-close-btn {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: none;
+  border: none;
+  color: var(--text3);
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 4px 8px;
+}
+.review-close-btn:hover { color: var(--text); }
 
 .review-progress {
   font-size: 10px;

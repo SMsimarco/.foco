@@ -32,6 +32,12 @@ function toggleTheme() {
   const next = isLight ? 'dark' : 'light';
   localStorage.setItem('foco-theme', next);
   applyTheme(next);
+  // El heatmap de Vista Progreso pinta colores fijos por tema (no son
+  // variables CSS) — sin esto quedaba con la paleta vieja hasta cambiar
+  // de vista y volver.
+  if (typeof currentView !== 'undefined' && currentView === 'equipo' && typeof renderEquipo === 'function') {
+    renderEquipo();
+  }
 }
 
 // Sincroniza el ícono/meta con lo que el script inline del <head> ya aplicó
@@ -158,6 +164,15 @@ const I18N_UI = {
     recurQuestion: '¿Repetir este evento?', recurSoloHoy: 'Solo hoy', recurSoloHoyDesc: 'Se agrega una vez',
     recurCadaSemanaDesc: 'Se repite el mismo día', recurTodosDias: 'Todos los días', recurTodosDiasDesc: 'Aparece cada día',
     manana: 'Mañana', ayer: 'Ayer',
+    sinFechasProximas: 'Sin fechas próximas', sinNotas: 'Sin notas', sinProyectosAun: 'Sin proyectos aún',
+    vencido: 'Vencido',
+    progresoTitulo: 'Progreso.', actividadUltimos6Meses: 'Actividad — últimos 6 meses',
+    menos: 'Menos', mas: 'Más', completadasLabel: 'completadas', rachaActual: 'racha actual',
+    tendencia: 'Tendencia',
+    tendenciaEmpty: 'Tu tendencia de tareas aparece acá cuando tengas un par de semanas registradas. Seguí un poco más.',
+    periodoSem: 'Sem', periodoMes: 'Mes', periodoAnio: 'Año',
+    diaSingular: 'día', diaPlural: 'días',
+    subEstaSemana: 'esta semana', subUltimoMes: 'último mes', subEsteAnio: 'este año',
     cmdPlaceholder: '¿Qué querés hacer? (Cmd+K)', cmdFooter: '↑↓ navegar · Enter seleccionar · Esc cerrar',
     cmdIrHoy: 'Ir a hoy', cmdDiaAnt: 'Día anterior', cmdDiaSig: 'Día siguiente',
     cmdVistaHoy: 'Vista Hoy', cmdVistaMes: 'Vista Mes', cmdVistaProyectos: 'Vista Proyectos',
@@ -220,6 +235,15 @@ const I18N_UI = {
     recurQuestion: 'Repeat this event?', recurSoloHoy: 'Just today', recurSoloHoyDesc: 'Added once',
     recurCadaSemanaDesc: 'Repeats on the same day', recurTodosDias: 'Every day', recurTodosDiasDesc: 'Appears every day',
     manana: 'Tomorrow', ayer: 'Yesterday',
+    sinFechasProximas: 'No upcoming dates', sinNotas: 'No notes', sinProyectosAun: 'No projects yet',
+    vencido: 'Overdue',
+    progresoTitulo: 'Progress.', actividadUltimos6Meses: 'Activity — last 6 months',
+    menos: 'Less', mas: 'More', completadasLabel: 'completed', rachaActual: 'current streak',
+    tendencia: 'Trend',
+    tendenciaEmpty: 'Your task trend shows up here once you have a couple of weeks logged. Keep going.',
+    periodoSem: 'Wk', periodoMes: 'Mo', periodoAnio: 'Yr',
+    diaSingular: 'day', diaPlural: 'days',
+    subEstaSemana: 'this week', subUltimoMes: 'last month', subEsteAnio: 'this year',
     cmdPlaceholder: 'What do you want to do? (Cmd+K)', cmdFooter: '↑↓ navigate · Enter select · Esc close',
     cmdIrHoy: 'Go to today', cmdDiaAnt: 'Previous day', cmdDiaSig: 'Next day',
     cmdVistaHoy: 'Today view', cmdVistaMes: 'Month view', cmdVistaProyectos: 'Projects view',
@@ -275,6 +299,7 @@ function setLanguage(lang) {
     if (typeof renderMes === 'function' && currentView === 'mes') renderMes();
     if (typeof renderSemanaGrid === 'function' && currentView === 'semana-grid') renderSemanaGrid();
     if (typeof renderProyectos === 'function' && currentView === 'patrones') renderProyectos();
+    if (typeof renderEquipo === 'function' && currentView === 'equipo') renderEquipo();
   }
   showToast(lang === 'en' ? 'Language: English' : 'Idioma: Español', 'info');
 }
@@ -1504,7 +1529,7 @@ function renderSemanaGrid() {
   const label = document.getElementById('sg-week-label');
   if (label) {
     if (gridWeekOffset === 0) {
-      label.textContent = 'Esta semana';
+      label.textContent = t('sugEstaSemana');
     } else {
       const ini = week[0], fin = week[6];
       const mesIni = MONTHS_FULL[ini.getMonth()].slice(0, 3).toLowerCase();
@@ -1711,7 +1736,7 @@ async function renderProyectos() {
   const recList = document.getElementById('recordatorios-list');
   if (recList) {
     recList.innerHTML = recordatorios.length === 0
-      ? '<div class="slab-empty">Sin fechas próximas</div>'
+      ? `<div class="slab-empty">${t('sinFechasProximas')}</div>`
       : recordatorios.map(r => {
           const hoy = new Date(); hoy.setHours(0,0,0,0);
           let rightHtml = '';
@@ -1719,7 +1744,7 @@ async function renderProyectos() {
             const fl = new Date(r.fecha_limite + 'T00:00:00');
             const diff = Math.ceil((fl - hoy) / 86400000);
             const cls = diff < 0 ? 'overdue' : diff <= 2 ? 'soon' : diff <= 7 ? 'week' : '';
-            const label = diff < 0 ? 'Vencido' : diff === 0 ? 'Hoy' : `${diff}d`;
+            const label = diff < 0 ? t('vencido') : diff === 0 ? t('hoyTitleDefault') : `${diff}d`;
             const dateStr = formatDate(fl, { year: false });
             rightHtml = `<div class="recorda-right">
               <span class="recorda-date">${dateStr}</span>
@@ -1738,7 +1763,7 @@ async function renderProyectos() {
   const notasList = document.getElementById('notas-list');
   if (notasList) {
     notasList.innerHTML = notas.length === 0
-      ? '<div class="slab-empty">Sin notas</div>'
+      ? `<div class="slab-empty">${t('sinNotas')}</div>`
       : notas.map(n => `
           <div class="slab-item nota-item">
             <button class="slab-del" onclick="event.stopPropagation();deleteProyecto('${n.id}')">×</button>
@@ -1750,7 +1775,7 @@ async function renderProyectos() {
   const projList = document.getElementById('proyectos-simple-list');
   if (projList) {
     projList.innerHTML = projs.length === 0
-      ? '<div class="slab-empty">Sin proyectos aún</div>'
+      ? `<div class="slab-empty">${t('sinProyectosAun')}</div>`
       : projs.map(p => {
           const col = PROJ_COLS.find(c => c.id === p.estado) || PROJ_COLS[0];
           const area = p.area && AREAS[p.area] ? AREAS[p.area] : null;
@@ -4094,7 +4119,7 @@ function startWeeklyReview() {
     const el = document.getElementById(id);
     if (el) el.value = '';
   });
-  document.getElementById('review-progress').textContent = '1 de 3';
+  document.getElementById('review-progress').textContent = appLang === 'en' ? '1 of 3' : '1 de 3';
   document.getElementById('review-overlay').style.display = 'flex';
   setTimeout(() => document.getElementById('rv-ans-1')?.focus(), 100);
 }
@@ -4106,7 +4131,7 @@ function reviewNext(step) {
   if (step < 3) {
     document.getElementById(`rv-${step}`).style.display = 'none';
     document.getElementById(`rv-${step + 1}`).style.display = 'flex';
-    document.getElementById('review-progress').textContent = `${step + 1} de 3`;
+    document.getElementById('review-progress').textContent = appLang === 'en' ? `${step + 1} of 3` : `${step + 1} de 3`;
     setTimeout(() => document.getElementById(`rv-ans-${step + 1}`)?.focus(), 80);
   } else {
     document.getElementById('rv-3').style.display = 'none';
@@ -4701,7 +4726,7 @@ function renderTuanaChart() {
   tuanaChartLabels = labels;
 
   const total = vals.reduce((s, v) => s + v, 0);
-  const subMap = { semana: 'esta semana', mes: 'último mes', año: 'este año' };
+  const subMap = { semana: t('subEstaSemana'), mes: t('subUltimoMes'), año: t('subEsteAnio') };
   if (bigEl) bigEl.textContent = total;
   if (subEl) subEl.textContent = subMap[tuanaChartPeriod];
 
@@ -4795,6 +4820,17 @@ function renderTuanaChart() {
   }
 }
 
+// Antes eran 5 colores fijos pensados para fondo oscuro — en tema claro
+// el nivel 0 (#12141F, casi negro) quedaba igual de oscuro que en dark,
+// un bloque negro grande sobre fondo claro. Clarea la escala completa
+// cuando el tema activo es "light".
+function heatmapColors() {
+  const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+  return isLight
+    ? ['#E8E9F5', '#C7CCEE', '#9AA3E0', '#6B76D6', '#4C56C4']
+    : ['#12141F', '#1C2045', '#3B4280', '#818CF8', '#C7D2FE'];
+}
+
 async function renderEquipo() {
   const uid  = currentUser.id;
   const wrap = document.getElementById('view-equipo');
@@ -4803,35 +4839,35 @@ async function renderEquipo() {
   wrap.innerHTML = `
     <div class="tuana-wrap">
       <div class="tuana-header">
-        <div class="tuana-title">Progreso.</div>
+        <div class="tuana-title">${t('progresoTitulo')}</div>
       </div>
 
       <div class="tuana-card">
-        <div class="tuana-section-label">Actividad — últimos 6 meses</div>
+        <div class="tuana-section-label">${t('actividadUltimos6Meses')}</div>
         <div class="tuana-heatmap-scroll">
           <div class="tuana-hm-grid" id="tu-heatmap"></div>
         </div>
         <div class="tuana-heatmap-legend">
-          <span>Menos</span>
+          <span>${t('menos')}</span>
           <div class="tuana-legend-dots">
-            <div class="tuana-legend-dot" style="background:#12141F"></div>
-            <div class="tuana-legend-dot" style="background:#1C2045"></div>
-            <div class="tuana-legend-dot" style="background:#3B4280"></div>
-            <div class="tuana-legend-dot" style="background:#818CF8"></div>
-            <div class="tuana-legend-dot" style="background:#C7D2FE"></div>
+            <div class="tuana-legend-dot" style="background:${heatmapColors()[0]}"></div>
+            <div class="tuana-legend-dot" style="background:${heatmapColors()[1]}"></div>
+            <div class="tuana-legend-dot" style="background:${heatmapColors()[2]}"></div>
+            <div class="tuana-legend-dot" style="background:${heatmapColors()[3]}"></div>
+            <div class="tuana-legend-dot" style="background:${heatmapColors()[4]}"></div>
           </div>
-          <span>Más</span>
+          <span>${t('mas')}</span>
         </div>
       </div>
 
       <div class="tuana-highlights">
         <div class="tuana-hl">
           <div class="tuana-hl-val" id="tu-total-done">—</div>
-          <div class="tuana-hl-lbl">completadas</div>
+          <div class="tuana-hl-lbl">${t('completadasLabel')}</div>
         </div>
         <div class="tuana-hl">
           <div class="tuana-hl-val" id="tu-racha">—</div>
-          <div class="tuana-hl-lbl">racha actual</div>
+          <div class="tuana-hl-lbl">${t('rachaActual')}</div>
         </div>
       </div>
 
@@ -4865,7 +4901,7 @@ async function renderEquipo() {
 
     const totalDays = Math.ceil((today - start) / 86400000) + 1;
     const weeks     = Math.ceil(totalDays / 7);
-    const heatColors = ['#12141F','#1C2045','#3B4280','#818CF8','#C7D2FE'];
+    const heatColors = heatmapColors();
     heatmapEl.style.gridTemplateRows = 'repeat(7, 10px)';
 
     let html = '';
@@ -4878,7 +4914,7 @@ async function renderEquipo() {
         const count = doneByDate[iso] || 0;
         const lvl   = count === 0 ? 0 : count === 1 ? 1 : count === 2 ? 2 : count <= 4 ? 3 : 4;
         const ring  = iso === toISO(today) ? ' today' : '';
-        html += `<div class="tuana-hm-cell${ring}" style="background:${heatColors[lvl]}" title="${iso}: ${count} completadas"></div>`;
+        html += `<div class="tuana-hm-cell${ring}" style="background:${heatColors[lvl]}" title="${iso}: ${count} ${t('completadasLabel')}"></div>`;
       }
     }
     heatmapEl.innerHTML = html;
@@ -4901,7 +4937,7 @@ async function renderEquipo() {
     if (!checkinSet.has(toISO(cursor))) cursor.setDate(cursor.getDate() - 1);
     while (checkinSet.has(toISO(cursor))) { streak++; cursor.setDate(cursor.getDate() - 1); }
     // Antes mostraba "—" en 0 — se confundía con "no se pudo calcular".
-    elRacha.textContent = streak + (streak === 1 ? ' día' : ' días');
+    elRacha.textContent = streak + ' ' + (streak === 1 ? t('diaSingular') : t('diaPlural'));
   }
 
   // ── Tendencia ────────────────────────────────────────────────
@@ -4923,13 +4959,13 @@ function renderTendenciaCard(hayDatos) {
   if (!hayDatos) {
     el.innerHTML = `
       <div class="tuana-card">
-        <div class="tuana-section-label">Tendencia</div>
+        <div class="tuana-section-label">${t('tendencia')}</div>
         <div class="tuana-empty-state">
           <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
             <polyline points="4,30 14,20 20,25 36,8" stroke="#3A3A3C" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
             <circle cx="36" cy="8" r="2.5" fill="#3A3A3C"/>
           </svg>
-          <div class="tuana-empty">Tu tendencia de tareas aparece acá cuando tengas un par de semanas registradas. Seguí un poco más.</div>
+          <div class="tuana-empty">${t('tendenciaEmpty')}</div>
         </div>
       </div>
     `;
@@ -4940,16 +4976,16 @@ function renderTendenciaCard(hayDatos) {
     <div class="tuana-card">
       <div class="tuana-card-top">
         <div>
-          <div class="tuana-section-label">Tendencia</div>
+          <div class="tuana-section-label">${t('tendencia')}</div>
           <div class="tuana-chart-stat">
             <span class="tuana-chart-big" id="tu-chart-big">—</span>
             <span class="tuana-chart-sub" id="tu-chart-sub"></span>
           </div>
         </div>
         <div class="tuana-period-toggle">
-          <button class="tuana-period-btn${tuanaChartPeriod==='semana'?' active':''}" data-p="semana" onclick="setTuanaChartPeriod('semana')">Sem</button>
-          <button class="tuana-period-btn${tuanaChartPeriod==='mes'?' active':''}" data-p="mes" onclick="setTuanaChartPeriod('mes')">Mes</button>
-          <button class="tuana-period-btn${tuanaChartPeriod==='año'?' active':''}" data-p="año" onclick="setTuanaChartPeriod('año')">Año</button>
+          <button class="tuana-period-btn${tuanaChartPeriod==='semana'?' active':''}" data-p="semana" onclick="setTuanaChartPeriod('semana')">${t('periodoSem')}</button>
+          <button class="tuana-period-btn${tuanaChartPeriod==='mes'?' active':''}" data-p="mes" onclick="setTuanaChartPeriod('mes')">${t('periodoMes')}</button>
+          <button class="tuana-period-btn${tuanaChartPeriod==='año'?' active':''}" data-p="año" onclick="setTuanaChartPeriod('año')">${t('periodoAnio')}</button>
         </div>
       </div>
       <div class="tuana-chart-wrap">
