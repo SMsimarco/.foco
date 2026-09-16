@@ -2226,7 +2226,7 @@ async function interpretFoquitoMessage(text) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         model: 'claude-haiku-4-5-20251001',
-        max_tokens: 300,
+        max_tokens: 2000,
         system: `Sos Foquito, el asistente de agenda de la app .foco. Hablás en español rioplatense, de vos, cálido y breve (1-2 frases, sin emojis). Nunca reprochás ni hacés sentir mal a la persona.
 Hoy es ${DAYS_FULL[new Date().getDay()]} ${dateISO}.
 
@@ -2752,7 +2752,7 @@ async function interpretOnboardingMessage(text) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         model: 'claude-haiku-4-5-20251001',
-        max_tokens: 700,
+        max_tokens: 2000,
         system: OB_SYSTEM_PROMPT,
         messages: [..._obHistory, { role: 'user', content: text }]
       })
