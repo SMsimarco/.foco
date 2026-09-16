@@ -46,11 +46,250 @@ const AREAS = {
   descanso:    { label: 'Descanso',    color: '#06B6D4' }
 };
 
+// AREAS[key].label queda en español (es lo que se guarda/compara en otros
+// lugares por key, no por texto — el label ahí es solo un fallback). Para
+// mostrar en pantalla usar esta función, que sí respeta el idioma activo.
+const I18N_AREA_LABELS = {
+  es: { trabajo: 'Trabajo', salud: 'Salud', relaciones: 'Relaciones', aprendizaje: 'Aprendizaje', descanso: 'Descanso' },
+  en: { trabajo: 'Work', salud: 'Health', relaciones: 'Relationships', aprendizaje: 'Learning', descanso: 'Rest' }
+};
+function areaLabel(key) {
+  return I18N_AREA_LABELS[appLang]?.[key] || AREAS[key]?.label || key;
+}
+
+// ── IDIOMA (ES/EN) ───────────────────────────────────────────
+// Preferencia por dispositivo (localStorage, no por cuenta). DAYS/DAYS_FULL/
+// MONTHS_* quedan `let` en vez de `const` para poder reasignarse acá sin
+// tener que tocar las decenas de referencias sueltas en el resto del
+// archivo — todo lo que lee DAYS[i]/MONTHS_FULL[i] se actualiza solo.
+let appLang = localStorage.getItem('foco-lang') || 'es';
+
+const I18N_DAYS = {
+  es: ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'],
+  en: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+};
+const I18N_DAYS_FULL = {
+  es: ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'],
+  en: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+};
+const I18N_MONTHS_FULL = {
+  es: ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'],
+  en: ['January','February','March','April','May','June','July','August','September','October','November','December']
+};
+const I18N_MONTHS_SHORT = {
+  es: ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'],
+  en: ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
+};
+
+let DAYS, DAYS_FULL, MONTHS_FULL, MONTHS_SHORT;
+function applyLanguageArrays() {
+  DAYS = I18N_DAYS[appLang];
+  DAYS_FULL = I18N_DAYS_FULL[appLang];
+  MONTHS_FULL = I18N_MONTHS_FULL[appLang];
+  MONTHS_SHORT = I18N_MONTHS_SHORT[appLang];
+}
+applyLanguageArrays();
+
+// dd/mm/yy en español, mm/dd/yy en inglés — { year:false } para labels
+// cortos (ej. eje de un gráfico) donde el año sobra.
+function formatDate(d, { year = true } = {}) {
+  const dd = String(d.getDate()).padStart(2, '0');
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const yy = String(d.getFullYear()).slice(-2);
+  const [a, b] = appLang === 'en' ? [mm, dd] : [dd, mm];
+  return year ? `${a}/${b}/${yy}` : `${a}/${b}`;
+}
+
+// Diccionario de la UI estática (botones, labels, placeholders fijos).
+// Cubre lo que nunca cambia de texto por sí solo. Lo que SÍ se genera
+// dinámicamente en JS (toasts, mensajes de Foquito, nombres de área,
+// estados de proyecto) queda en español por ahora — fuera del alcance
+// de esta pasada, ver resumen que le pasé a Marco.
+const I18N_UI = {
+  es: {
+    authTagline: 'Organizá tu semana.', authOr: 'o con email', authNamePh: 'Tu nombre',
+    authEmailPh: 'Email', authPasswordPh: 'Contraseña', authEnter: 'Entrar',
+    authNoAccount: '¿No tenés cuenta? ', authRegister: 'Registrate',
+    authConfirmText: '📩 Te mandamos un email para confirmar la cuenta. Confirmalo y después entrá con tu email y contraseña.',
+    authBackToLogin: 'Volver a entrar',
+    eveningTitle: 'Cerrando el día.', eveningSub: 'Tomá 2 minutos.',
+    eveningQ1: '¿Hiciste lo más importante de hoy?', optYes: 'Sí', optPartial: 'Parcial', optNo: 'No',
+    eveningQ2: '¿Cómo cerrás el día?',
+    energyBad: 'Mal', energyLow: 'Bajo', energyOk: 'Ok', energyGood: 'Bien', energyGreat: 'Genial',
+    eveningQ3: '¿Algo que no querés olvidar?', optionalPh: 'Opcional...', eveningCta: 'Cerrar el día →',
+    morningGreetingDefault: 'Buenos días.', morningSubDefault: 'Cargando tu día...',
+    morningQ1: '¿Cómo llegás hoy?', morningQ2: '¿Cuál es la cosa más importante?',
+    morningIntentionPh: 'Lo más importante hoy es...', morningCta: 'Arrancar el día →',
+    themeToggleTitle: 'Cambiar tema', notifTitle: 'Notificaciones', goalBarLabel: 'foco semanal',
+    pillDay: 'Día', pillWeek: 'Semana', pillMonth: 'Mes',
+    hoyTitleDefault: 'Hoy', hoySectionFoco: 'Tu foco', sgToday: 'Hoy',
+    slabProximas: 'Próximas fechas', recordaNombrePh: 'Ej: Parcial física', guardar: 'Guardar',
+    slabNotas: 'Notas', notaTextoPh: 'Escribí lo que no querés olvidar...', slabProyectos: 'Proyectos',
+    navHoy: 'Hoy', navProyectos: 'Proyectos', navSugerencias: 'Sugerencias', navProgreso: 'Progreso',
+    sugHoy: 'Hoy', sugEstadoTitle: '¿Cómo estás hoy?', sugEstadoDesc: '30 segundos. Tres preguntas.',
+    registrar: 'Registrar →', sugPulso: 'Pulso', sugEstaSemana: 'Esta semana',
+    sugCompletadas: 'completadas esta semana', sugInsight: 'Insight de tu semana',
+    sugAnalizando: 'Analizando tu semana...', sugCerrarSemana: 'Cerrar la semana',
+    sugRevision: 'Revisión semanal', sugRevisionDesc: 'Cerrá la semana con una reflexión corta.',
+    comenzar: 'Comenzar →', sugFootHint: '¿Reorganizar algo? Pedíselo a Foquito.',
+    foqSaltear: 'Saltear', foqRedoTitle: 'Rehacer mi semana', foqInputPh: 'Escribile a Foquito...',
+    lmNewProject: 'Nuevo proyecto', lmNombre: 'Nombre', lmNombrePh: 'Mi proyecto...',
+    lmDesc: 'Descripción', lmDescPh: '¿De qué se trata?', lmArea: 'Área',
+    lmFechaLimite: 'Fecha límite', lmProgreso: 'Progreso:', lmEstado: 'Estado',
+    lmNotas: 'Notas', lmNotasPh: 'Detalles, contexto, próximos pasos...',
+    eliminar: 'Eliminar', cancelar: 'Cancelar',
+    digestCompletadas: 'completadas', digestCommitment: 'commitment', digestTotal: 'total', cerrar: 'Cerrar',
+    rvQ1: '¿Qué fue lo más importante que lograste esta semana?', rvPh1: 'Escribí libremente...',
+    siguiente: 'Siguiente →', rvQ2: '¿Qué no salió como esperabas? ¿Por qué?', rvPh2: 'Sin juicio, solo observar...',
+    rvQ3: '¿Qué vas a hacer diferente la próxima semana?', rvPh3: 'Una cosa concreta...',
+    rvGenerar: 'Generar mi ficha →', rvAnalizando: 'Claude está analizando tu semana...',
+    rvFichaLabel: 'Tu ficha de la semana',
+    estadoPulso: 'Pulso del día', estadoComo: '¿Cómo estás?', estadoComoPh: 'Hoy me siento...',
+    estadoPreocupa: '¿Qué te preocupa?', estadoPreocupaPh: 'Me preocupa...',
+    estadoOrgullo: '¿De qué estás orgulloso/a hoy?', estadoOrgulloPh: 'Me siento bien de...',
+    guardarFlecha: 'Guardar →', saltar: 'Saltar',
+    palabraPrompt: '¿Una palabra para esta semana?', palabraSub: 'Una sola. La que mejor la define.',
+    palabraPh: 'caos · foco · crecimiento · calma...',
+    goalEditTitle: 'Objetivo de la semana', goalEditPh: 'Lo más importante esta semana es...',
+    panelDetailsPh: 'Agregar nota…', panelArea: 'Área', panelHora: 'Hora', panelSinHora: 'Sin hora',
+    panelDia: 'Día', panelRepetir: 'Repetir', panelSoloVez: 'Solo esta vez', panelCadaSemana: 'Cada semana',
+    panelFocoDia: 'Foco del día', panelPausar: 'Pausar', panelTerminar: 'Terminar',
+    panelCompletar: 'Completar', panelIniciarFoco: 'Iniciar foco',
+    recurQuestion: '¿Repetir este evento?', recurSoloHoy: 'Solo hoy', recurSoloHoyDesc: 'Se agrega una vez',
+    recurCadaSemanaDesc: 'Se repite el mismo día', recurTodosDias: 'Todos los días', recurTodosDiasDesc: 'Aparece cada día',
+    manana: 'Mañana', ayer: 'Ayer',
+    cmdPlaceholder: '¿Qué querés hacer? (Cmd+K)', cmdFooter: '↑↓ navegar · Enter seleccionar · Esc cerrar',
+    cmdIrHoy: 'Ir a hoy', cmdDiaAnt: 'Día anterior', cmdDiaSig: 'Día siguiente',
+    cmdVistaHoy: 'Vista Hoy', cmdVistaMes: 'Vista Mes', cmdVistaProyectos: 'Vista Proyectos',
+    cmdVistaSugerencias: 'Vista Sugerencias', cmdVistaProgreso: 'Vista Progreso',
+    cmdRevisionSemanal: 'Revisión semanal', cmdObjetivoSemanal: 'Objetivo semanal',
+    cmdPulsoDia: 'Pulso del día', cmdPalabraSemana: 'Palabra de semana',
+    cmdNuevoEvento: 'Nuevo evento', cmdRehacerSemana: 'Rehacer mi semana',
+    cmdModoFoco: 'Modo foco ambiente', cmdCambiarTema: 'Cambiar tema claro/oscuro',
+    cmdCambiarIdioma: 'Cambiar idioma (Español/English)', cmdCerrarSesion: 'Cerrar sesión'
+  },
+  en: {
+    authTagline: 'Organize your week.', authOr: 'or with email', authNamePh: 'Your name',
+    authEmailPh: 'Email', authPasswordPh: 'Password', authEnter: 'Sign in',
+    authNoAccount: "Don't have an account? ", authRegister: 'Sign up',
+    authConfirmText: "📩 We sent you an email to confirm your account. Confirm it, then sign in with your email and password.",
+    authBackToLogin: 'Back to sign in',
+    eveningTitle: 'Closing the day.', eveningSub: 'Take 2 minutes.',
+    eveningQ1: 'Did you do the most important thing today?', optYes: 'Yes', optPartial: 'Partial', optNo: 'No',
+    eveningQ2: 'How was the day?',
+    energyBad: 'Bad', energyLow: 'Low', energyOk: 'Ok', energyGood: 'Good', energyGreat: 'Great',
+    eveningQ3: "Anything you don't want to forget?", optionalPh: 'Optional...', eveningCta: 'Close the day →',
+    morningGreetingDefault: 'Good morning.', morningSubDefault: 'Loading your day...',
+    morningQ1: 'How are you feeling today?', morningQ2: "What's the most important thing?",
+    morningIntentionPh: 'The most important thing today is...', morningCta: 'Start the day →',
+    themeToggleTitle: 'Toggle theme', notifTitle: 'Notifications', goalBarLabel: 'weekly focus',
+    pillDay: 'Day', pillWeek: 'Week', pillMonth: 'Month',
+    hoyTitleDefault: 'Today', hoySectionFoco: 'Your focus', sgToday: 'Today',
+    slabProximas: 'Upcoming dates', recordaNombrePh: 'E.g: Physics exam', guardar: 'Save',
+    slabNotas: 'Notes', notaTextoPh: "Write what you don't want to forget...", slabProyectos: 'Projects',
+    navHoy: 'Today', navProyectos: 'Projects', navSugerencias: 'Suggestions', navProgreso: 'Progress',
+    sugHoy: 'Today', sugEstadoTitle: 'How are you today?', sugEstadoDesc: '30 seconds. Three questions.',
+    registrar: 'Log →', sugPulso: 'Pulse', sugEstaSemana: 'This week',
+    sugCompletadas: 'completed this week', sugInsight: 'Insight of your week',
+    sugAnalizando: 'Analyzing your week...', sugCerrarSemana: 'Close the week',
+    sugRevision: 'Weekly review', sugRevisionDesc: 'Close the week with a short reflection.',
+    comenzar: 'Start →', sugFootHint: 'Want to reorganize something? Ask Foquito.',
+    foqSaltear: 'Skip', foqRedoTitle: 'Redo my week', foqInputPh: 'Message Foquito...',
+    lmNewProject: 'New project', lmNombre: 'Name', lmNombrePh: 'My project...',
+    lmDesc: 'Description', lmDescPh: "What's it about?", lmArea: 'Area',
+    lmFechaLimite: 'Due date', lmProgreso: 'Progress:', lmEstado: 'Status',
+    lmNotas: 'Notes', lmNotasPh: 'Details, context, next steps...',
+    eliminar: 'Delete', cancelar: 'Cancel',
+    digestCompletadas: 'completed', digestCommitment: 'commitment', digestTotal: 'total', cerrar: 'Close',
+    rvQ1: 'What was the most important thing you accomplished this week?', rvPh1: 'Write freely...',
+    siguiente: 'Next →', rvQ2: "What didn't go as expected? Why?", rvPh2: 'No judgment, just observe...',
+    rvQ3: 'What will you do differently next week?', rvPh3: 'One concrete thing...',
+    rvGenerar: 'Generate my recap →', rvAnalizando: 'Claude is analyzing your week...',
+    rvFichaLabel: 'Your week recap',
+    estadoPulso: 'Pulse of the day', estadoComo: 'How are you?', estadoComoPh: 'Today I feel...',
+    estadoPreocupa: "What's worrying you?", estadoPreocupaPh: "I'm worried about...",
+    estadoOrgullo: 'What are you proud of today?', estadoOrgulloPh: 'I feel good about...',
+    guardarFlecha: 'Save →', saltar: 'Skip',
+    palabraPrompt: 'One word for this week?', palabraSub: 'Just one. The one that defines it best.',
+    palabraPh: 'chaos · focus · growth · calm...',
+    goalEditTitle: 'Goal of the week', goalEditPh: 'The most important thing this week is...',
+    panelDetailsPh: 'Add note…', panelArea: 'Area', panelHora: 'Time', panelSinHora: 'No time',
+    panelDia: 'Day', panelRepetir: 'Repeat', panelSoloVez: 'Just this once', panelCadaSemana: 'Every week',
+    panelFocoDia: 'Focus of the day', panelPausar: 'Pause', panelTerminar: 'Finish',
+    panelCompletar: 'Complete', panelIniciarFoco: 'Start focus',
+    recurQuestion: 'Repeat this event?', recurSoloHoy: 'Just today', recurSoloHoyDesc: 'Added once',
+    recurCadaSemanaDesc: 'Repeats on the same day', recurTodosDias: 'Every day', recurTodosDiasDesc: 'Appears every day',
+    manana: 'Tomorrow', ayer: 'Yesterday',
+    cmdPlaceholder: 'What do you want to do? (Cmd+K)', cmdFooter: '↑↓ navigate · Enter select · Esc close',
+    cmdIrHoy: 'Go to today', cmdDiaAnt: 'Previous day', cmdDiaSig: 'Next day',
+    cmdVistaHoy: 'Today view', cmdVistaMes: 'Month view', cmdVistaProyectos: 'Projects view',
+    cmdVistaSugerencias: 'Suggestions view', cmdVistaProgreso: 'Progress view',
+    cmdRevisionSemanal: 'Weekly review', cmdObjetivoSemanal: 'Weekly goal',
+    cmdPulsoDia: 'Pulse of the day', cmdPalabraSemana: 'Word of the week',
+    cmdNuevoEvento: 'New event', cmdRehacerSemana: 'Redo my week',
+    cmdModoFoco: 'Ambient focus mode', cmdCambiarTema: 'Toggle light/dark theme',
+    cmdCambiarIdioma: 'Switch language (Español/English)', cmdCerrarSesion: 'Sign out'
+  }
+};
+
+function t(key) {
+  return I18N_UI[appLang][key] ?? I18N_UI.es[key] ?? key;
+}
+
+// Se antepone a TODOS los system prompts que le hablan a Claude (Foquito,
+// digest semanal, ficha de revisión, insight mensual, etc.) — así el
+// contenido que genera la IA respeta el idioma sin tener que reescribir
+// cada prompt entero en inglés.
+function langDirective() {
+  return appLang === 'en'
+    ? 'Respond in English — warm, casual, natural tone (skip the Rioplatense Spanish slang, just be friendly in English).\n\n'
+    : '';
+}
+
+function applyI18nDom() {
+  document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.getAttribute('data-i18n')); });
+  document.querySelectorAll('[data-i18n-ph]').forEach(el => { el.placeholder = t(el.getAttribute('data-i18n-ph')); });
+  document.querySelectorAll('[data-i18n-title]').forEach(el => { el.title = t(el.getAttribute('data-i18n-title')); });
+
+  const mesDayNames = document.getElementById('mes-day-names');
+  if (mesDayNames) {
+    // Fila de Vista Mes arranca en lunes — DAYS arranca en domingo (índice 0).
+    mesDayNames.innerHTML = [1,2,3,4,5,6,0].map(i => `<div class="mes-day-name">${DAYS[i]}</div>`).join('');
+  }
+
+  const langLabel = document.getElementById('lang-toggle-label');
+  if (langLabel) langLabel.textContent = appLang.toUpperCase();
+  document.documentElement.lang = appLang;
+}
+
+function setLanguage(lang) {
+  if (lang !== 'es' && lang !== 'en') return;
+  appLang = lang;
+  localStorage.setItem('foco-lang', lang);
+  applyLanguageArrays();
+  applyI18nDom();
+  // Re-renderiza lo que ya se había pintado en el idioma viejo (nombres de
+  // día/mes, fechas) — solo si la app ya arrancó, si no hay nada que repintar.
+  if (typeof currentUser !== 'undefined' && currentUser) {
+    if (typeof renderHoy === 'function' && currentView === 'semana') renderHoy();
+    if (typeof renderMes === 'function' && currentView === 'mes') renderMes();
+    if (typeof renderSemanaGrid === 'function' && currentView === 'semana-grid') renderSemanaGrid();
+    if (typeof renderProyectos === 'function' && currentView === 'patrones') renderProyectos();
+  }
+  showToast(lang === 'en' ? 'Language: English' : 'Idioma: Español', 'info');
+}
+
+function toggleLanguage() {
+  setLanguage(appLang === 'es' ? 'en' : 'es');
+}
+
+// app.js va al final del <body> — el DOM ya existe, no hace falta esperar
+// DOMContentLoaded para pintar la traducción inicial (cubre auth-screen
+// y #app, aunque uno de los dos esté display:none en este momento).
+applyI18nDom();
+
 // ── ESTADO GLOBAL ───────────────────────────────────────────
 const SLOT_H = 48; // px por hora — NO CAMBIAR
-const DAYS = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
-const DAYS_FULL = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
-const MONTHS_FULL = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 const COLORS = [
   '#818CF8', // ámbar
   '#8B5CF6', // violeta
@@ -70,6 +309,14 @@ const PROJ_COLS = [
   { id: 'bloqueado', label: 'Bloqueado', color: '#FB923C' },
   { id: 'hecho',     label: 'Hecho',     color: '#10B981' },
 ];
+
+const I18N_PROJ_LABELS = {
+  es: { idea: 'Idea', en_curso: 'En curso', bloqueado: 'Bloqueado', hecho: 'Hecho' },
+  en: { idea: 'Idea', en_curso: 'In progress', bloqueado: 'Blocked', hecho: 'Done' }
+};
+function projLabel(id) {
+  return I18N_PROJ_LABELS[appLang]?.[id] || id;
+}
 
 let currentUser = null;
 let currentProfile = null;
@@ -989,7 +1236,13 @@ function parseNL(raw) {
 
 // ── RENDER HOY ──────────────────────────────────────────────
 
-const MONTHS_LOWER = MONTHS_FULL.map(m => m.toLowerCase());
+// "16 de septiembre" en español, "September 16" en inglés — función y no un
+// array precalculado porque MONTHS_FULL puede reasignarse en runtime
+// (toggle de idioma) y un const acá quedaría con el idioma viejo.
+function formatLongDate(d) {
+  const month = MONTHS_FULL[d.getMonth()];
+  return appLang === 'en' ? `${month} ${d.getDate()}` : `${d.getDate()} de ${month.toLowerCase()}`;
+}
 
 function checkIconSVG() {
   return `<svg width="10" height="10" viewBox="0 0 14 14" fill="none">
@@ -1030,12 +1283,12 @@ function renderHoy() {
   const titleEl = document.getElementById('hoy-title');
   const dateEl = document.getElementById('hoy-date');
   if (titleEl) {
-    titleEl.textContent = isToday(diaActual) ? 'Hoy'
-      : isTomorrow(diaActual) ? 'Mañana'
-      : isYesterday(diaActual) ? 'Ayer'
+    titleEl.textContent = isToday(diaActual) ? t('hoyTitleDefault')
+      : isTomorrow(diaActual) ? t('manana')
+      : isYesterday(diaActual) ? t('ayer')
       : DAYS_FULL[diaActual.getDay()];
   }
-  if (dateEl) dateEl.textContent = `${diaActual.getDate()} de ${MONTHS_LOWER[diaActual.getMonth()]}`;
+  if (dateEl) dateEl.textContent = formatLongDate(diaActual);
 
   // "Tu foco" sigue siendo una lista chica arriba — no compite con el calendario de abajo
   const foco = dayEvents.filter(e => e.is_focus).slice(0, 3);
@@ -1467,7 +1720,7 @@ async function renderProyectos() {
             const diff = Math.ceil((fl - hoy) / 86400000);
             const cls = diff < 0 ? 'overdue' : diff <= 2 ? 'soon' : diff <= 7 ? 'week' : '';
             const label = diff < 0 ? 'Vencido' : diff === 0 ? 'Hoy' : `${diff}d`;
-            const dateStr = fl.getDate() + '/' + (fl.getMonth()+1);
+            const dateStr = formatDate(fl, { year: false });
             rightHtml = `<div class="recorda-right">
               <span class="recorda-date">${dateStr}</span>
               <span class="recorda-badge ${cls}">${label}</span>
@@ -1506,10 +1759,10 @@ async function renderProyectos() {
             <div class="proj-item-top">
               <span class="proj-dot" style="background:${col.color}"></span>
               <span class="slab-item-name">${escH(p.nombre)}</span>
-              <span class="proj-chip" style="color:${col.color};border-color:${col.color}20">${col.label}</span>
+              <span class="proj-chip" style="color:${col.color};border-color:${col.color}20">${projLabel(col.id)}</span>
             </div>
             ${area || prog > 0 ? `<div class="proj-item-foot">
-              ${area ? `<span class="proj-area" style="color:${area.color}">${area.label}</span>` : '<span></span>'}
+              ${area ? `<span class="proj-area" style="color:${area.color}">${areaLabel(p.area)}</span>` : '<span></span>'}
               ${prog > 0 ? `<span class="proj-pct">${prog}%</span>` : ''}
             </div>` : ''}
             ${prog > 0 ? `<div class="proj-progress"><div class="proj-progress-fill" style="width:${prog}%;background:${col.color}40;--fill:${col.color}"></div></div>` : ''}
@@ -1574,7 +1827,7 @@ function proyectoCardHTML(p, color) {
     if (diff < 0)        fechaStr = `<span class="pcard-fecha overdue">Vencido</span>`;
     else if (diff === 0) fechaStr = `<span class="pcard-fecha today">Hoy</span>`;
     else if (diff <= 3)  fechaStr = `<span class="pcard-fecha soon">${diff}d</span>`;
-    else                 fechaStr = `<span class="pcard-fecha">${fl.getDate()}/${fl.getMonth()+1}</span>`;
+    else                 fechaStr = `<span class="pcard-fecha">${formatDate(fl, { year: false })}</span>`;
   }
   const progreso = p.progreso || 0;
   return `
@@ -1587,7 +1840,7 @@ function proyectoCardHTML(p, color) {
       ${p.descripcion ? `<div class="lcard-tipo">${escH(p.descripcion)}</div>` : ''}
       <div class="lcard-foot">
         ${area
-          ? `<span class="pcard-area"><span class="pcard-area-dot" style="background:${area.color}"></span><span style="color:${area.color}">${area.label}</span></span>`
+          ? `<span class="pcard-area"><span class="pcard-area-dot" style="background:${area.color}"></span><span style="color:${area.color}">${areaLabel(p.area)}</span></span>`
           : '<span></span>'}
         ${fechaStr}
       </div>
@@ -1656,7 +1909,7 @@ function renderPmEstados() {
     <button class="lm-estado-btn${pmEstado === col.id ? ' active' : ''}"
             style="${pmEstado === col.id ? `background:${col.color};border-color:${col.color};color:#fff` : ''}"
             onclick="selectPmEstado('${col.id}')">
-      ${col.label}
+      ${projLabel(col.id)}
     </button>
   `).join('');
 }
@@ -1672,7 +1925,7 @@ function renderPmAreas() {
             style="${pmArea === key ? `border-color:${a.color};color:${a.color}` : ''}"
             onclick="selectPmArea('${key}')">
       <span class="lm-area-dot" style="background:${a.color}"></span>
-      ${a.label}
+      ${areaLabel(key)}
     </button>
   `).join('');
 }
@@ -1953,7 +2206,7 @@ async function generateAISummary() {
       body: JSON.stringify({
         model: 'claude-haiku-4-5-20251001',
         max_tokens: 300,
-        system: `Sos el coach personal del usuario. Analizás su semana y dás feedback honesto pero compasivo en español rioplatense.
+        system: langDirective() + `Sos el coach personal del usuario. Analizás su semana y dás feedback honesto pero compasivo en español rioplatense.
 Respondé SOLO con JSON válido, sin markdown ni texto extra:
 {"headline":"frase de 4-5 palabras sobre la semana","insight":"observación específica y útil, máximo 40 palabras","tip":"acción concreta para mejorar, máximo 25 palabras","best_day":"nombre del día con más completación"}`,
         messages: [{
@@ -2233,7 +2486,7 @@ async function interpretFoquitoMessage(text) {
       body: JSON.stringify({
         model: 'claude-haiku-4-5-20251001',
         max_tokens: 2000,
-        system: `Sos Foquito, el asistente de agenda de la app .foco. Hablás en español rioplatense, de vos, cálido y breve (1-2 frases, sin emojis). Nunca reprochás ni hacés sentir mal a la persona.
+        system: langDirective() + `Sos Foquito, el asistente de agenda de la app .foco. Hablás en español rioplatense, de vos, cálido y breve (1-2 frases, sin emojis). Nunca reprochás ni hacés sentir mal a la persona.
 Hoy es ${DAYS_FULL[new Date().getDay()]} ${dateISO}.
 
 Agenda de los próximos días:
@@ -2421,7 +2674,7 @@ async function sendFoquitoMessage(rawText) {
 
   const dayLabel = dateISO === toISO(new Date())
     ? 'hoy'
-    : `el ${DAYS[date.getDay()]} ${date.getDate()}/${date.getMonth() + 1}`;
+    : `el ${DAYS[date.getDay()]} ${formatDate(date, { year: false })}`;
   const timeLabel = startTime ? ` a las ${startTime}` : '';
   const fallbackRespuesta = `Anotado: "${name}" ${dayLabel}${timeLabel}.`;
   addFoqBubble(fallbackRespuesta, 'foq');
@@ -2765,7 +3018,7 @@ async function interpretOnboardingMessage(text) {
       body: JSON.stringify({
         model: 'claude-haiku-4-5-20251001',
         max_tokens: 2000,
-        system: OB_SYSTEM_PROMPT,
+        system: langDirective() + OB_SYSTEM_PROMPT,
         messages: [..._obHistory, { role: 'user', content: text }]
       })
     });
@@ -2956,7 +3209,7 @@ async function generateWeeklyDigest() {
       body: JSON.stringify({
         model: 'claude-haiku-4-5-20251001',
         max_tokens: 300,
-        system: `Sos el coach personal del usuario. Analizás su semana y dás feedback honesto pero compasivo en español rioplatense.
+        system: langDirective() + `Sos el coach personal del usuario. Analizás su semana y dás feedback honesto pero compasivo en español rioplatense.
 Respondé SOLO con JSON válido, sin markdown:
 {"headline":"frase de 5 palabras sobre la semana","insight":"observación específica y útil, máximo 40 palabras","tip":"acción concreta para la próxima semana, máximo 25 palabras","best_day":"nombre del día con más completación"}`,
         messages: [{
@@ -3321,7 +3574,7 @@ function renderPanelDiaEditor(ev, dateISO) {
     ).join('')}</div>`;
   } else {
     const d = new Date(dateISO + 'T12:00:00');
-    valueEl.textContent = `${DAYS_FULL[d.getDay()]} ${d.getDate()}/${d.getMonth() + 1}`;
+    valueEl.textContent = `${DAYS_FULL[d.getDay()]} ${formatDate(d, { year: false })}`;
     editorEl.innerHTML = `<div class="panel-dia-date">
       <input type="date" class="panel-hora-inp" id="panel-dia-fecha-inp" value="${dateISO}" onchange="savePanelDiaFecha(this.value)"/>
     </div>`;
@@ -3613,23 +3866,24 @@ function fireConfetti() {
 // ── COMMAND PALETTE ──────────────────────────────────────────
 
 const CMD_ACTIONS = [
-  { label: 'Ir a hoy',          icon: '📅', hint: 'T', fn: () => { diaActual = new Date(); diaActual.setHours(0,0,0,0); setView('semana'); } },
-  { label: 'Día anterior',      icon: '‹',  hint: '←', fn: () => changeDia(-1) },
-  { label: 'Día siguiente',     icon: '›',  hint: '→', fn: () => changeDia(1) },
-  { label: 'Vista Hoy',         icon: '▦',  hint: '',  fn: () => setView('semana') },
-  { label: 'Vista Mes',         icon: '◉',  hint: '',  fn: () => setView('mes') },
-  { label: 'Vista Proyectos',   icon: '◈',  hint: '',  fn: () => setView('patrones') },
-  { label: 'Vista Sugerencias', icon: '✦',  hint: '',  fn: () => setView('sugerencias') },
-  { label: 'Vista Progreso',    icon: '◎',  hint: '',  fn: () => setView('equipo') },
-  { label: 'Revisión semanal',  icon: '✳',  hint: '',  fn: () => { closeCmd(); startWeeklyReview(); } },
-  { label: 'Objetivo semanal',  icon: '◈',  hint: '',  fn: () => { closeCmd(); openGoalEdit(); } },
-  { label: 'Pulso del día',     icon: '◉',  hint: '',  fn: () => { closeCmd(); showEstadoDia(); } },
-  { label: 'Palabra de semana', icon: '❋',  hint: '',  fn: () => { closeCmd(); showPalabra(); } },
-  { label: 'Nuevo evento',      icon: '+',  hint: 'N', fn: () => { closeCmd(); toggleFoquitoWidget(); } },
-  { label: 'Rehacer mi semana', icon: '↻',  hint: '',  fn: () => { closeCmd(); startFoquitoOnboarding(); } },
-  { label: 'Modo foco ambiente',icon: '✿',  hint: '',  fn: () => { closeCmd(); toggleAmbientMode(); } },
-  { label: 'Cambiar tema claro/oscuro', icon: '☾', hint: '', fn: () => { closeCmd(); toggleTheme(); } },
-  { label: 'Cerrar sesión',     icon: '↪',  hint: '',  fn: () => logout() },
+  { key: 'cmdIrHoy',        icon: '📅', hint: 'T', fn: () => { diaActual = new Date(); diaActual.setHours(0,0,0,0); setView('semana'); } },
+  { key: 'cmdDiaAnt',       icon: '‹',  hint: '←', fn: () => changeDia(-1) },
+  { key: 'cmdDiaSig',       icon: '›',  hint: '→', fn: () => changeDia(1) },
+  { key: 'cmdVistaHoy',     icon: '▦',  hint: '',  fn: () => setView('semana') },
+  { key: 'cmdVistaMes',     icon: '◉',  hint: '',  fn: () => setView('mes') },
+  { key: 'cmdVistaProyectos', icon: '◈', hint: '', fn: () => setView('patrones') },
+  { key: 'cmdVistaSugerencias', icon: '✦', hint: '', fn: () => setView('sugerencias') },
+  { key: 'cmdVistaProgreso', icon: '◎',  hint: '',  fn: () => setView('equipo') },
+  { key: 'cmdRevisionSemanal', icon: '✳', hint: '', fn: () => { closeCmd(); startWeeklyReview(); } },
+  { key: 'cmdObjetivoSemanal', icon: '◈', hint: '', fn: () => { closeCmd(); openGoalEdit(); } },
+  { key: 'cmdPulsoDia',     icon: '◉',  hint: '',  fn: () => { closeCmd(); showEstadoDia(); } },
+  { key: 'cmdPalabraSemana', icon: '❋', hint: '',  fn: () => { closeCmd(); showPalabra(); } },
+  { key: 'cmdNuevoEvento',  icon: '+',  hint: 'N', fn: () => { closeCmd(); toggleFoquitoWidget(); } },
+  { key: 'cmdRehacerSemana', icon: '↻', hint: '',  fn: () => { closeCmd(); startFoquitoOnboarding(); } },
+  { key: 'cmdModoFoco',     icon: '✿',  hint: '',  fn: () => { closeCmd(); toggleAmbientMode(); } },
+  { key: 'cmdCambiarTema',  icon: '☾',  hint: '',  fn: () => { closeCmd(); toggleTheme(); } },
+  { key: 'cmdCambiarIdioma', icon: '◐',  hint: '',  fn: () => { closeCmd(); toggleLanguage(); } },
+  { key: 'cmdCerrarSesion', icon: '↪',  hint: '',  fn: () => logout() },
 ];
 
 let cmdFocusIdx = 0;
@@ -3655,11 +3909,11 @@ function renderCmdResults(query) {
   const results = document.getElementById('cmd-results');
   if (!results) return;
   const q = query.toLowerCase();
-  const filtered = CMD_ACTIONS.filter(a => !q || a.label.toLowerCase().includes(q));
+  const filtered = CMD_ACTIONS.filter(a => !q || t(a.key).toLowerCase().includes(q));
   results.innerHTML = filtered.map((a, i) => `
     <div class="cmd-item${i === cmdFocusIdx ? ' focused' : ''}" data-idx="${CMD_ACTIONS.indexOf(a)}" onclick="execCmd(${CMD_ACTIONS.indexOf(a)})">
       <span class="cmd-item-icon">${a.icon}</span>
-      <span class="cmd-item-label">${a.label}</span>
+      <span class="cmd-item-label">${t(a.key)}</span>
       ${a.hint ? `<span class="cmd-item-hint">${a.hint}</span>` : ''}
     </div>
   `).join('');
@@ -3877,7 +4131,7 @@ async function generateReviewFicha() {
       body: JSON.stringify({
         model: 'claude-haiku-4-5-20251001',
         max_tokens: 400,
-        system: `Sos el coach personal del usuario. Recibís sus respuestas de revisión semanal y generás una "ficha de la semana" personalizada, honesta y concisa, en español rioplatense.
+        system: langDirective() + `Sos el coach personal del usuario. Recibís sus respuestas de revisión semanal y generás una "ficha de la semana" personalizada, honesta y concisa, en español rioplatense.
 Respondé SOLO con JSON válido sin markdown:
 {"titulo":"frase de 5-6 palabras que define la semana","patron":"patrón que observás en sus respuestas, máx 40 palabras","fortaleza":"algo concreto que hicieron bien, máx 30 palabras","reto":"desafío principal para la próxima semana, máx 30 palabras"}`,
         messages: [{
@@ -3979,7 +4233,7 @@ async function generateMonthlyInsight(digests) {
       body: JSON.stringify({
         model: 'claude-haiku-4-5-20251001',
         max_tokens: 350,
-        system: `Sos el coach de productividad. Analizás el último mes del usuario y generás un insight profundo que no podría ver sin mirar los datos longitudinalmente. En español rioplatense.
+        system: langDirective() + `Sos el coach de productividad. Analizás el último mes del usuario y generás un insight profundo que no podría ver sin mirar los datos longitudinalmente. En español rioplatense.
 Respondé SOLO con JSON válido sin markdown:
 {"titular":"observación de 6 palabras sobre el mes","patron":"patrón que emerge de las semanas, no obvio, máx 50 palabras","tendencia":"si va subiendo bajando o estable con contexto, máx 30 palabras","consejo":"una sola acción para el próximo mes, máx 25 palabras"}`,
         messages: [{ role: 'user', content: `Datos del último mes:\n${summary}` }]
@@ -4017,7 +4271,7 @@ function renderAreaPills(selectedArea) {
       <button class="area-pill${panelCurrentArea === key ? ' selected' : ''}"
               style="--area-color:${a.color}"
               onclick="selectPanelArea('${key}')">
-        ${a.label}
+        ${areaLabel(key)}
       </button>
     `).join('');
   }
@@ -4027,7 +4281,7 @@ function renderAreaPills(selectedArea) {
   const dotEl = document.getElementById('panel-row-area-dot');
   const textEl = document.getElementById('panel-row-area-text');
   if (dotEl) dotEl.style.background = areaInfo ? areaInfo.color : 'var(--text3)';
-  if (textEl) textEl.textContent = areaInfo ? areaInfo.label : 'Trabajo';
+  if (textEl) textEl.textContent = areaLabel(panelCurrentArea);
 }
 
 async function selectPanelArea(areaKey) {
@@ -4186,7 +4440,7 @@ async function generateCartaDomingo() {
       body: JSON.stringify({
         model: 'claude-haiku-4-5-20251001',
         max_tokens: 500,
-        system: `Sos un coach y mentor que escribe una carta personal al usuario cada domingo. Tenés acceso a su semana completa.
+        system: langDirective() + `Sos un coach y mentor que escribe una carta personal al usuario cada domingo. Tenés acceso a su semana completa.
 Escribís en español rioplatense, cálido pero honesto. La carta tiene:
 - Un saludo personalizado con el nombre
 - Una observación específica sobre la semana (NO genérica)
@@ -4368,7 +4622,7 @@ async function renderAreasTimeline() {
     if (!n) return '';
     return `
       <div class="area-row">
-        <span class="area-row-label">${area.label}</span>
+        <span class="area-row-label">${areaLabel(key)}</span>
         <div class="area-row-bar">
           <div class="area-row-fill" style="width:${pct}%;background:${area.color}"></div>
         </div>
@@ -4430,10 +4684,10 @@ function renderTuanaChart() {
       const start = new Date(end); start.setDate(end.getDate() - 6);
       const s = toISO(start), e2 = toISO(end);
       vals.push(done.filter(ev => ev.date >= s && ev.date <= e2).length);
-      labels.push(`${start.getDate()}/${start.getMonth()+1}`);
+      labels.push(formatDate(start, { year: false }));
     }
   } else {
-    const MN = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+    const MN = MONTHS_SHORT;
     const now = new Date();
     for (let i = 11; i >= 0; i--) {
       const d  = new Date(now.getFullYear(), now.getMonth() - i, 1);

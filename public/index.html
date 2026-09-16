@@ -38,28 +38,28 @@
 
   <div class="auth-box" id="auth-box-form">
     <div class="auth-logo">foco.</div>
-    <p class="auth-tagline">Organizá tu semana.</p>
+    <p class="auth-tagline" data-i18n="authTagline">Organizá tu semana.</p>
 
     <div id="google-btn" class="auth-google"></div>
 
-    <div class="auth-divider"><span></span>o con email<span></span></div>
+    <div class="auth-divider"><span></span><span data-i18n="authOr">o con email</span><span></span></div>
 
     <div id="field-name" style="display:none">
-      <input id="auth-name" type="text" class="auth-input" placeholder="Tu nombre"/>
+      <input id="auth-name" type="text" class="auth-input" placeholder="Tu nombre" data-i18n-ph="authNamePh"/>
     </div>
-    <input id="auth-email" type="email" class="auth-input" placeholder="Email"/>
-    <input id="auth-password" type="password" class="auth-input" placeholder="Contraseña"/>
+    <input id="auth-email" type="email" class="auth-input" placeholder="Email" data-i18n-ph="authEmailPh"/>
+    <input id="auth-password" type="password" class="auth-input" placeholder="Contraseña" data-i18n-ph="authPasswordPh"/>
 
-    <button class="auth-btn" id="auth-btn" onclick="handleAuth()">Entrar</button>
+    <button class="auth-btn" id="auth-btn" onclick="handleAuth()" data-i18n="authEnter">Entrar</button>
     <div class="auth-error" id="auth-error"></div>
 
-    <div class="auth-switch" id="auth-switch" onclick="switchTab('register')">¿No tenés cuenta? <span>Registrate</span></div>
+    <div class="auth-switch" id="auth-switch" onclick="switchTab('register')"><span data-i18n="authNoAccount">¿No tenés cuenta? </span><span data-i18n="authRegister">Registrate</span></div>
   </div>
 
   <div class="auth-box" id="auth-box-confirm" style="display:none">
     <div class="auth-logo">foco.</div>
-    <p class="auth-confirm-text">📩 Te mandamos un email para confirmar la cuenta. Confirmalo y después entrá con tu email y contraseña.</p>
-    <button class="auth-btn" onclick="backToLogin()">Volver a entrar</button>
+    <p class="auth-confirm-text" data-i18n="authConfirmText">📩 Te mandamos un email para confirmar la cuenta. Confirmalo y después entrá con tu email y contraseña.</p>
+    <button class="auth-btn" onclick="backToLogin()" data-i18n="authBackToLogin">Volver a entrar</button>
   </div>
 </div>
 
@@ -72,83 +72,83 @@
   <!-- EVENING CHECK-IN -->
   <div id="evening-screen" class="morning-screen" style="display:none">
     <div class="morning-box">
-      <div class="morning-greeting">Cerrando el día.</div>
-      <div class="morning-sub" id="evening-sub">Tomá 2 minutos.</div>
-      <div class="morning-section-label">¿Hiciste lo más importante de hoy?</div>
+      <div class="morning-greeting" data-i18n="eveningTitle">Cerrando el día.</div>
+      <div class="morning-sub" id="evening-sub" data-i18n="eveningSub">Tomá 2 minutos.</div>
+      <div class="morning-section-label" data-i18n="eveningQ1">¿Hiciste lo más importante de hoy?</div>
       <div class="evening-main-btns">
         <button class="evening-main-btn" data-v="yes" onclick="selectEveningMain('yes')">
           <div class="evening-dot" style="background:var(--success)"></div>
-          <span class="evening-btn-label">Sí</span>
+          <span class="evening-btn-label" data-i18n="optYes">Sí</span>
         </button>
         <button class="evening-main-btn" data-v="partial" onclick="selectEveningMain('partial')">
           <div class="evening-dot" style="background:#818CF8"></div>
-          <span class="evening-btn-label">Parcial</span>
+          <span class="evening-btn-label" data-i18n="optPartial">Parcial</span>
         </button>
         <button class="evening-main-btn" data-v="no" onclick="selectEveningMain('no')">
           <div class="evening-dot" style="background:var(--danger)"></div>
-          <span class="evening-btn-label">No</span>
+          <span class="evening-btn-label" data-i18n="optNo">No</span>
         </button>
       </div>
-      <div class="morning-section-label" style="margin-top:20px">¿Cómo cerrás el día?</div>
+      <div class="morning-section-label" style="margin-top:20px" data-i18n="eveningQ2">¿Cómo cerrás el día?</div>
       <div class="energy-btns">
         <button class="energy-btn" data-e="1" onclick="selectEveningEnergy(1)">
           <div style="width:8px;height:8px;border-radius:50%;background:var(--danger);margin:0 auto 4px"></div>
-          <span style="font-size:9px;color:var(--text-muted);font-family:'Geist',sans-serif">Mal</span>
+          <span style="font-size:9px;color:var(--text-muted);font-family:'Geist',sans-serif" data-i18n="energyBad">Mal</span>
         </button>
         <button class="energy-btn" data-e="2" onclick="selectEveningEnergy(2)">
           <div style="width:8px;height:8px;border-radius:50%;background:#818CF8;margin:0 auto 4px"></div>
-          <span style="font-size:9px;color:var(--text-muted);font-family:'Geist',sans-serif">Bajo</span>
+          <span style="font-size:9px;color:var(--text-muted);font-family:'Geist',sans-serif" data-i18n="energyLow">Bajo</span>
         </button>
         <button class="energy-btn" data-e="3" onclick="selectEveningEnergy(3)">
           <div style="width:8px;height:8px;border-radius:50%;background:#71717A;margin:0 auto 4px"></div>
-          <span style="font-size:9px;color:var(--text-muted);font-family:'Geist',sans-serif">Ok</span>
+          <span style="font-size:9px;color:var(--text-muted);font-family:'Geist',sans-serif" data-i18n="energyOk">Ok</span>
         </button>
         <button class="energy-btn" data-e="4" onclick="selectEveningEnergy(4)">
           <div style="width:8px;height:8px;border-radius:50%;background:#818CF8;margin:0 auto 4px"></div>
-          <span style="font-size:9px;color:var(--text-muted);font-family:'Geist',sans-serif">Bien</span>
+          <span style="font-size:9px;color:var(--text-muted);font-family:'Geist',sans-serif" data-i18n="energyGood">Bien</span>
         </button>
         <button class="energy-btn" data-e="5" onclick="selectEveningEnergy(5)">
           <div style="width:8px;height:8px;border-radius:50%;background:var(--success);margin:0 auto 4px"></div>
-          <span style="font-size:9px;color:var(--text-muted);font-family:'Geist',sans-serif">Genial</span>
+          <span style="font-size:9px;color:var(--text-muted);font-family:'Geist',sans-serif" data-i18n="energyGreat">Genial</span>
         </button>
       </div>
-      <div class="morning-section-label" style="margin-top:20px">¿Algo que no querés olvidar?</div>
-      <input class="morning-inp" id="evening-note" type="text" placeholder="Opcional..."/>
-      <button class="morning-cta" id="evening-cta" onclick="submitEveningCheckin()">Cerrar el día →</button>
+      <div class="morning-section-label" style="margin-top:20px" data-i18n="eveningQ3">¿Algo que no querés olvidar?</div>
+      <input class="morning-inp" id="evening-note" type="text" placeholder="Opcional..." data-i18n-ph="optionalPh"/>
+      <button class="morning-cta" id="evening-cta" onclick="submitEveningCheckin()" data-i18n="eveningCta">Cerrar el día →</button>
     </div>
   </div>
 
   <!-- MORNING BRIEF -->
   <div id="morning-screen" class="morning-screen" style="display:none">
     <div class="morning-box">
-      <div class="morning-greeting" id="morning-greeting">Buenos días.</div>
-      <div class="morning-sub" id="morning-sub">Cargando tu día...</div>
-      <div class="morning-section-label">¿Cómo llegás hoy?</div>
+      <div class="morning-greeting" id="morning-greeting" data-i18n="morningGreetingDefault">Buenos días.</div>
+      <div class="morning-sub" id="morning-sub" data-i18n="morningSubDefault">Cargando tu día...</div>
+      <div class="morning-section-label" data-i18n="morningQ1">¿Cómo llegás hoy?</div>
       <div class="energy-btns">
         <button class="energy-btn" data-e="1" onclick="selectMorningEnergy(1)">
           <div style="width:8px;height:8px;border-radius:50%;background:var(--danger);margin:0 auto 4px"></div>
-          <span style="font-size:9px;color:var(--text-muted);font-family:'Geist',sans-serif">Mal</span>
+          <span style="font-size:9px;color:var(--text-muted);font-family:'Geist',sans-serif" data-i18n="energyBad">Mal</span>
         </button>
         <button class="energy-btn" data-e="2" onclick="selectMorningEnergy(2)">
           <div style="width:8px;height:8px;border-radius:50%;background:#818CF8;margin:0 auto 4px"></div>
-          <span style="font-size:9px;color:var(--text-muted);font-family:'Geist',sans-serif">Bajo</span>
+          <span style="font-size:9px;color:var(--text-muted);font-family:'Geist',sans-serif" data-i18n="energyLow">Bajo</span>
         </button>
         <button class="energy-btn" data-e="3" onclick="selectMorningEnergy(3)">
           <div style="width:8px;height:8px;border-radius:50%;background:#71717A;margin:0 auto 4px"></div>
-          <span style="font-size:9px;color:var(--text-muted);font-family:'Geist',sans-serif">Ok</span>
+          <span style="font-size:9px;color:var(--text-muted);font-family:'Geist',sans-serif" data-i18n="energyOk">Ok</span>
         </button>
         <button class="energy-btn" data-e="4" onclick="selectMorningEnergy(4)">
           <div style="width:8px;height:8px;border-radius:50%;background:#818CF8;margin:0 auto 4px"></div>
-          <span style="font-size:9px;color:var(--text-muted);font-family:'Geist',sans-serif">Bien</span>
+          <span style="font-size:9px;color:var(--text-muted);font-family:'Geist',sans-serif" data-i18n="energyGood">Bien</span>
         </button>
         <button class="energy-btn" data-e="5" onclick="selectMorningEnergy(5)">
           <div style="width:8px;height:8px;border-radius:50%;background:var(--success);margin:0 auto 4px"></div>
-          <span style="font-size:9px;color:var(--text-muted);font-family:'Geist',sans-serif">Genial</span>
+          <span style="font-size:9px;color:var(--text-muted);font-family:'Geist',sans-serif" data-i18n="energyGreat">Genial</span>
         </button>
       </div>
-      <div class="morning-section-label" style="margin-top:20px">¿Cuál es la cosa más importante?</div>
-      <input class="morning-inp" id="morning-intention" type="text" placeholder="Lo más importante hoy es..."/>
-      <button class="morning-cta" id="morning-cta" onclick="submitMorningBrief()">Arrancar el día →</button>
+      <div class="morning-section-label" style="margin-top:20px" data-i18n="morningQ2">¿Cuál es la cosa más importante?</div>
+      <input class="morning-inp" id="morning-intention" type="text" placeholder="Lo más importante hoy es..." data-i18n-ph="morningIntentionPh"/>
+      <button class="morning-cta" id="morning-cta" onclick="submitMorningBrief()" data-i18n="morningCta">Arrancar el día →</button>
     </div>
   </div>
 
@@ -161,10 +161,13 @@
     <span id="live-clock" class="live-clock"></span>
 
     <div class="header-right">
-      <button class="theme-toggle-btn" id="theme-toggle-btn" onclick="toggleTheme()" title="Cambiar tema">
+      <button class="lang-toggle-btn" id="lang-toggle-btn" onclick="toggleLanguage()" title="Language / Idioma">
+        <span id="lang-toggle-label">ES</span>
+      </button>
+      <button class="theme-toggle-btn" id="theme-toggle-btn" onclick="toggleTheme()" title="Cambiar tema" data-i18n-title="themeToggleTitle">
         <span id="theme-toggle-icon">☾</span>
       </button>
-      <button class="notif-btn" id="notif-btn" onclick="toggleNotif()" title="Notificaciones">
+      <button class="notif-btn" id="notif-btn" onclick="toggleNotif()" title="Notificaciones" data-i18n-title="notifTitle">
         <div class="notif-dot" id="notif-dot"></div>
       </button>
       <div class="commitment-wrap" title="Commitment score">
@@ -182,7 +185,7 @@
 
   <!-- GOAL BAR -->
   <div id="goal-bar" class="goal-bar" onclick="openGoalEdit()" style="display:none">
-    <span class="goal-bar-label">foco semanal</span>
+    <span class="goal-bar-label" data-i18n="goalBarLabel">foco semanal</span>
     <span class="goal-bar-text" id="goal-bar-text"></span>
     <span class="goal-bar-edit">✎</span>
   </div>
@@ -192,9 +195,9 @@
 
     <!-- Selector Día / Semana / Mes — vive fuera de las 3 vistas para poder saltar entre ellas -->
     <div id="view-pills" class="view-pills">
-      <button class="view-pill active" id="pill-dia" onclick="setView('semana')">Día</button>
-      <button class="view-pill" id="pill-semana" onclick="setView('semana-grid')">Semana</button>
-      <button class="view-pill" id="pill-mes" onclick="setView('mes')">Mes</button>
+      <button class="view-pill active" id="pill-dia" onclick="setView('semana')" data-i18n="pillDay">Día</button>
+      <button class="view-pill" id="pill-semana" onclick="setView('semana-grid')" data-i18n="pillWeek">Semana</button>
+      <button class="view-pill" id="pill-mes" onclick="setView('mes')" data-i18n="pillMonth">Mes</button>
     </div>
 
     <!-- HOY -->
@@ -205,7 +208,7 @@
           <div class="hoy-header-top">
             <div>
               <div class="hoy-date" id="hoy-date">—</div>
-              <div class="hoy-title" id="hoy-title">Hoy</div>
+              <div class="hoy-title" id="hoy-title" data-i18n="hoyTitleDefault">Hoy</div>
             </div>
             <button class="hoy-add-btn" onclick="toggleFoquitoWidget()">+</button>
           </div>
@@ -216,7 +219,7 @@
         </div>
 
         <div class="hoy-section" id="hoy-section-foco">
-          <div class="hoy-section-hd">Tu foco</div>
+          <div class="hoy-section-hd" data-i18n="hoySectionFoco">Tu foco</div>
           <div class="hoy-list" id="hoy-list-foco"></div>
         </div>
 
@@ -242,7 +245,7 @@
           <span class="sg-week-label" id="sg-week-label">—</span>
           <button class="sg-nav-btn" onclick="changeGridWeek(1)">›</button>
         </div>
-        <button class="sg-today-btn" onclick="goToCurrentGridWeek()">Hoy</button>
+        <button class="sg-today-btn" onclick="goToCurrentGridWeek()" data-i18n="sgToday">Hoy</button>
       </div>
 
       <div class="sg-scrollx">
@@ -270,14 +273,14 @@
         <!-- Próximas fechas -->
         <div class="slab-section">
           <div class="slab-hd">
-            <span class="slab-title">Próximas fechas</span>
+            <span class="slab-title" data-i18n="slabProximas">Próximas fechas</span>
             <button class="slab-add-btn" onclick="toggleRecordaForm()">+</button>
           </div>
           <div class="recorda-form" id="recorda-form" style="display:none">
-            <input class="slab-input" id="recorda-nombre" placeholder="Ej: Parcial física"
+            <input class="slab-input" id="recorda-nombre" placeholder="Ej: Parcial física" data-i18n-ph="recordaNombrePh"
               onkeydown="if(event.key==='Enter')saveRecordatorio()" />
             <input class="slab-input slab-input-date" id="recorda-fecha" type="date" />
-            <button class="slab-save-btn" onclick="saveRecordatorio()">Guardar</button>
+            <button class="slab-save-btn" onclick="saveRecordatorio()" data-i18n="guardar">Guardar</button>
           </div>
           <div id="recordatorios-list"></div>
         </div>
@@ -285,13 +288,13 @@
         <!-- Notas rápidas -->
         <div class="slab-section">
           <div class="slab-hd">
-            <span class="slab-title">Notas</span>
+            <span class="slab-title" data-i18n="slabNotas">Notas</span>
             <button class="slab-add-btn" onclick="toggleNotaForm()">+</button>
           </div>
           <div class="nota-form" id="nota-form" style="display:none">
             <textarea class="slab-textarea" id="nota-texto"
-              placeholder="Escribí lo que no querés olvidar..."></textarea>
-            <button class="slab-save-btn" onclick="saveNota()">Guardar</button>
+              placeholder="Escribí lo que no querés olvidar..." data-i18n-ph="notaTextoPh"></textarea>
+            <button class="slab-save-btn" onclick="saveNota()" data-i18n="guardar">Guardar</button>
           </div>
           <div id="notas-list"></div>
         </div>
@@ -299,7 +302,7 @@
         <!-- Proyectos -->
         <div class="slab-section">
           <div class="slab-hd">
-            <span class="slab-title">Proyectos</span>
+            <span class="slab-title" data-i18n="slabProyectos">Proyectos</span>
             <button class="slab-add-btn" onclick="openProjModal(null)">+</button>
           </div>
           <div id="proyectos-simple-list"></div>
@@ -317,15 +320,7 @@
           <button class="mes-nav-btn" onclick="changeMes(1)">›</button>
         </div>
       </div>
-      <div class="mes-day-names">
-        <div class="mes-day-name">Lun</div>
-        <div class="mes-day-name">Mar</div>
-        <div class="mes-day-name">Mié</div>
-        <div class="mes-day-name">Jue</div>
-        <div class="mes-day-name">Vie</div>
-        <div class="mes-day-name">Sáb</div>
-        <div class="mes-day-name">Dom</div>
-      </div>
+      <div class="mes-day-names" id="mes-day-names"></div>
       <div class="mes-grid" id="mes-grid"></div>
     </div>
 
@@ -338,15 +333,15 @@
       <!-- "¿Cómo estás hoy?" es diario, no semanal — en rigor no va en esta
            vista. Moverlo a la vista Hoy queda fuera de este cambio (tocaría
            otra vista); se deja acá por ahora, sin duplicar. -->
-      <div class="sug-section sug-section--cyan">Hoy</div>
+      <div class="sug-section sug-section--cyan" data-i18n="sugHoy">Hoy</div>
 
       <div class="sug-card sug-card--cyan" id="sug-estado-card">
         <div class="sug-card-top">
           <div>
-            <div class="sug-title" id="sug-estado-title">¿Cómo estás hoy?</div>
-            <div class="sug-desc" id="sug-estado-desc">30 segundos. Tres preguntas.</div>
+            <div class="sug-title" id="sug-estado-title" data-i18n="sugEstadoTitle">¿Cómo estás hoy?</div>
+            <div class="sug-desc" id="sug-estado-desc" data-i18n="sugEstadoDesc">30 segundos. Tres preguntas.</div>
           </div>
-          <button class="sug-inline-btn" id="sug-estado-btn" onclick="showEstadoDia()">Registrar →</button>
+          <button class="sug-inline-btn" id="sug-estado-btn" onclick="showEstadoDia()" data-i18n="registrar">Registrar →</button>
         </div>
       </div>
 
@@ -354,43 +349,43 @@
       <div id="sug-conflicts"></div>
 
       <!-- BLOQUE 1: PULSO -->
-      <div class="sug-section">Pulso</div>
+      <div class="sug-section" data-i18n="sugPulso">Pulso</div>
 
       <div class="sug-hero" id="sug-resumen">
-        <div class="sug-hero-eyebrow">Esta semana</div>
+        <div class="sug-hero-eyebrow" data-i18n="sugEstaSemana">Esta semana</div>
         <div class="pulso-num" id="sug-done">—</div>
-        <div class="pulso-label">completadas esta semana</div>
+        <div class="pulso-label" data-i18n="sugCompletadas">completadas esta semana</div>
         <div class="proj-progress"><div class="proj-progress-fill" id="pulso-bar-fill" style="width:0%;background:var(--success-text)"></div></div>
       </div>
 
       <!-- BLOQUE 2: INSIGHT DE LA IA (protagonista) -->
-      <div class="sug-section">Insight de tu semana</div>
+      <div class="sug-section" data-i18n="sugInsight">Insight de tu semana</div>
 
       <div class="sug-card sug-insight-card" id="sug-insight-card">
         <div class="sug-insight-hd">
           <img src="/foquito-avatar.png" alt="" class="foq-avatar-img foq-avatar-sm"/>
-          <div class="sug-insight-title" id="sug-insight-title">Analizando tu semana...</div>
+          <div class="sug-insight-title" id="sug-insight-title" data-i18n="sugAnalizando">Analizando tu semana...</div>
         </div>
         <div class="sug-desc" id="sug-insight-text"></div>
         <div class="sug-insight-tip" id="sug-insight-tip" style="display:none"></div>
       </div>
 
       <!-- BLOQUE 3: CERRAR LA SEMANA -->
-      <div class="sug-section sug-section--purple">Cerrar la semana</div>
+      <div class="sug-section sug-section--purple" data-i18n="sugCerrarSemana">Cerrar la semana</div>
 
       <div class="sug-card sug-card--purple" id="sug-review">
         <div class="sug-card-top">
           <div>
-            <div class="sug-title">Revisión semanal</div>
-            <div class="sug-desc" id="sug-review-text">Cerrá la semana con una reflexión corta.</div>
+            <div class="sug-title" data-i18n="sugRevision">Revisión semanal</div>
+            <div class="sug-desc" id="sug-review-text" data-i18n="sugRevisionDesc">Cerrá la semana con una reflexión corta.</div>
           </div>
-          <button class="sug-inline-btn sug-inline-btn--purple" onclick="startWeeklyReview()">Comenzar →</button>
+          <button class="sug-inline-btn sug-inline-btn--purple" onclick="startWeeklyReview()" data-i18n="comenzar">Comenzar →</button>
         </div>
       </div>
 
       <!-- Pie — reemplaza el input "Preguntale a tu semana": Foquito flotante
            ya es el canal de chat, no hace falta un segundo input acá. -->
-      <div class="sug-foot-hint">¿Reorganizar algo? Pedíselo a Foquito.</div>
+      <div class="sug-foot-hint" data-i18n="sugFootHint">¿Reorganizar algo? Pedíselo a Foquito.</div>
 
     </div>
   </div>
@@ -406,7 +401,7 @@
           <rect x="10" y="10" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.5"/>
         </svg>
       </span>
-      <span>Hoy</span>
+      <span data-i18n="navHoy">Hoy</span>
     </button>
     <button class="nav-btn" id="nav-patrones" onclick="setView('patrones')">
       <span class="nav-icon">
@@ -416,7 +411,7 @@
           <rect x="13" y="1" width="4" height="6" rx="1.5" stroke="currentColor" stroke-width="1.5"/>
         </svg>
       </span>
-      <span>Proyectos</span>
+      <span data-i18n="navProyectos">Proyectos</span>
     </button>
     <button class="nav-btn" id="nav-sugerencias" onclick="setView('sugerencias')">
       <span class="nav-icon">
@@ -424,7 +419,7 @@
           <path d="M9 1v3M9 14v3M1 9h3M14 9h3M3.22 3.22l2.12 2.12M12.66 12.66l2.12 2.12M14.78 3.22l-2.12 2.12M5.34 12.66l-2.12 2.12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
         </svg>
       </span>
-      <span>Sugerencias</span>
+      <span data-i18n="navSugerencias">Sugerencias</span>
     </button>
     <button class="nav-btn" id="nav-equipo" onclick="setView('equipo')">
       <span class="nav-icon">
@@ -435,7 +430,7 @@
           <path d="M13 11c1.93 0 3.5 1.57 3.5 3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
         </svg>
       </span>
-      <span>Progreso</span>
+      <span data-i18n="navProgreso">Progreso</span>
     </button>
   </div>
 
@@ -451,8 +446,8 @@
       <img src="/foquito-avatar.png" alt="" class="foq-avatar-img foq-avatar-sm"/>
       <span>Foquito</span>
       <div class="foq-panel-hd-right">
-        <button id="foq-ob-skip-btn" class="foq-ob-skip-btn" style="display:none" onclick="skipFoquitoOnboarding()">Saltear</button>
-        <button class="foq-redo-btn" onclick="startFoquitoOnboarding()" title="Rehacer mi semana">↻</button>
+        <button id="foq-ob-skip-btn" class="foq-ob-skip-btn" style="display:none" onclick="skipFoquitoOnboarding()" data-i18n="foqSaltear">Saltear</button>
+        <button class="foq-redo-btn" onclick="startFoquitoOnboarding()" title="Rehacer mi semana" data-i18n-title="foqRedoTitle">↻</button>
         <button class="foq-panel-close" onclick="toggleFoquitoWidget()">×</button>
       </div>
     </div>
@@ -465,7 +460,7 @@
           <path d="M9 14v2.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
         </svg>
       </button>
-      <input id="foq-input" type="text" placeholder="Escribile a Foquito..."
+      <input id="foq-input" type="text" placeholder="Escribile a Foquito..." data-i18n-ph="foqInputPh"
         onkeydown="if(event.key==='Enter')sendFoquitoMessage()"/>
       <button type="button" class="foq-send-btn" id="foq-send-btn" onclick="sendFoquitoMessage()" title="Enviar">
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
@@ -480,47 +475,47 @@
   <div id="lead-backdrop" class="lead-backdrop" onclick="closeProjModal()" style="display:none"></div>
   <div id="lead-modal" class="lead-modal" style="display:none">
     <div class="lm-head">
-      <div class="lm-title" id="lm-title">Nuevo proyecto</div>
+      <div class="lm-title" id="lm-title" data-i18n="lmNewProject">Nuevo proyecto</div>
       <button class="lm-close" onclick="closeProjModal()">×</button>
     </div>
     <div class="lm-body">
       <div class="lm-field">
-        <label class="lm-lbl">Nombre</label>
-        <input class="lm-inp" id="lm-nombre" type="text" placeholder="Mi proyecto..."/>
+        <label class="lm-lbl" data-i18n="lmNombre">Nombre</label>
+        <input class="lm-inp" id="lm-nombre" type="text" placeholder="Mi proyecto..." data-i18n-ph="lmNombrePh"/>
       </div>
       <div class="lm-field">
-        <label class="lm-lbl">Descripción</label>
-        <input class="lm-inp" id="lm-desc" type="text" placeholder="¿De qué se trata?"/>
+        <label class="lm-lbl" data-i18n="lmDesc">Descripción</label>
+        <input class="lm-inp" id="lm-desc" type="text" placeholder="¿De qué se trata?" data-i18n-ph="lmDescPh"/>
       </div>
       <div class="lm-field">
-        <label class="lm-lbl">Área</label>
+        <label class="lm-lbl" data-i18n="lmArea">Área</label>
         <div class="lm-areas" id="lm-areas"></div>
       </div>
       <div class="lm-row2">
         <div class="lm-field">
-          <label class="lm-lbl">Fecha límite</label>
+          <label class="lm-lbl" data-i18n="lmFechaLimite">Fecha límite</label>
           <input class="lm-inp" id="lm-fecha" type="date"/>
         </div>
         <div class="lm-field">
-          <label class="lm-lbl">Progreso: <span id="lm-progreso-val">0%</span></label>
+          <label class="lm-lbl"><span data-i18n="lmProgreso">Progreso:</span> <span id="lm-progreso-val">0%</span></label>
           <input class="lm-progreso-slider" id="lm-progreso" type="range" min="0" max="100" value="0"
                  oninput="document.getElementById('lm-progreso-val').textContent = this.value + '%'"/>
         </div>
       </div>
       <div class="lm-field">
-        <label class="lm-lbl">Estado</label>
+        <label class="lm-lbl" data-i18n="lmEstado">Estado</label>
         <div class="lm-estados" id="lm-estados"></div>
       </div>
       <div class="lm-field">
-        <label class="lm-lbl">Notas</label>
-        <textarea class="lm-inp lm-ta" id="lm-notas" placeholder="Detalles, contexto, próximos pasos..."></textarea>
+        <label class="lm-lbl" data-i18n="lmNotas">Notas</label>
+        <textarea class="lm-inp lm-ta" id="lm-notas" placeholder="Detalles, contexto, próximos pasos..." data-i18n-ph="lmNotasPh"></textarea>
       </div>
     </div>
     <div class="lm-foot">
-      <button class="lm-del" id="lm-del" onclick="deleteProjModal()" style="display:none">Eliminar</button>
+      <button class="lm-del" id="lm-del" onclick="deleteProjModal()" style="display:none" data-i18n="eliminar">Eliminar</button>
       <div style="flex:1"></div>
-      <button class="lm-cancel" onclick="closeProjModal()">Cancelar</button>
-      <button class="lm-save" onclick="saveProjModal()">Guardar</button>
+      <button class="lm-cancel" onclick="closeProjModal()" data-i18n="cancelar">Cancelar</button>
+      <button class="lm-save" onclick="saveProjModal()" data-i18n="guardar">Guardar</button>
     </div>
   </div>
 
@@ -534,20 +529,20 @@
     <div class="digest-stats">
       <div class="digest-stat">
         <span class="digest-stat-n" id="digest-stat-done">—</span>
-        <span class="digest-stat-l">completadas</span>
+        <span class="digest-stat-l" data-i18n="digestCompletadas">completadas</span>
       </div>
       <div class="digest-stat">
         <span class="digest-stat-n" id="digest-stat-score" style="color:var(--accent)">—</span>
-        <span class="digest-stat-l">commitment</span>
+        <span class="digest-stat-l" data-i18n="digestCommitment">commitment</span>
       </div>
       <div class="digest-stat">
         <span class="digest-stat-n" id="digest-stat-total">—</span>
-        <span class="digest-stat-l">total</span>
+        <span class="digest-stat-l" data-i18n="digestTotal">total</span>
       </div>
     </div>
     <div class="digest-insight" id="digest-insight"></div>
     <div class="digest-tip" id="digest-tip"></div>
-    <button class="digest-close" onclick="closeDigest()">Cerrar</button>
+    <button class="digest-close" onclick="closeDigest()" data-i18n="cerrar">Cerrar</button>
   </div>
 </div>
 
@@ -557,33 +552,33 @@
     <div class="review-progress" id="review-progress">1 de 3</div>
 
     <div class="review-step" id="rv-1">
-      <div class="review-q">¿Qué fue lo más importante que lograste esta semana?</div>
-      <textarea class="review-textarea" id="rv-ans-1" placeholder="Escribí libremente..."></textarea>
-      <button class="morning-cta" onclick="reviewNext(1)">Siguiente →</button>
+      <div class="review-q" data-i18n="rvQ1">¿Qué fue lo más importante que lograste esta semana?</div>
+      <textarea class="review-textarea" id="rv-ans-1" placeholder="Escribí libremente..." data-i18n-ph="rvPh1"></textarea>
+      <button class="morning-cta" onclick="reviewNext(1)" data-i18n="siguiente">Siguiente →</button>
     </div>
 
     <div class="review-step" id="rv-2" style="display:none">
-      <div class="review-q">¿Qué no salió como esperabas? ¿Por qué?</div>
-      <textarea class="review-textarea" id="rv-ans-2" placeholder="Sin juicio, solo observar..."></textarea>
-      <button class="morning-cta" onclick="reviewNext(2)">Siguiente →</button>
+      <div class="review-q" data-i18n="rvQ2">¿Qué no salió como esperabas? ¿Por qué?</div>
+      <textarea class="review-textarea" id="rv-ans-2" placeholder="Sin juicio, solo observar..." data-i18n-ph="rvPh2"></textarea>
+      <button class="morning-cta" onclick="reviewNext(2)" data-i18n="siguiente">Siguiente →</button>
     </div>
 
     <div class="review-step" id="rv-3" style="display:none">
-      <div class="review-q">¿Qué vas a hacer diferente la próxima semana?</div>
-      <textarea class="review-textarea" id="rv-ans-3" placeholder="Una cosa concreta..."></textarea>
-      <button class="morning-cta" onclick="reviewNext(3)">Generar mi ficha →</button>
+      <div class="review-q" data-i18n="rvQ3">¿Qué vas a hacer diferente la próxima semana?</div>
+      <textarea class="review-textarea" id="rv-ans-3" placeholder="Una cosa concreta..." data-i18n-ph="rvPh3"></textarea>
+      <button class="morning-cta" onclick="reviewNext(3)" data-i18n="rvGenerar">Generar mi ficha →</button>
     </div>
 
     <div class="review-step" id="rv-loading" style="display:none">
-      <div style="color:var(--text4);font-size:13px;text-align:center;padding:48px 0;font-family:'Geist',sans-serif">
+      <div style="color:var(--text4);font-size:13px;text-align:center;padding:48px 0;font-family:'Geist',sans-serif" data-i18n="rvAnalizando">
         Claude está analizando tu semana...
       </div>
     </div>
 
     <div class="review-step" id="rv-result" style="display:none">
-      <div class="review-ficha-label">Tu ficha de la semana</div>
+      <div class="review-ficha-label" data-i18n="rvFichaLabel">Tu ficha de la semana</div>
       <div class="review-ficha" id="rv-ficha-content"></div>
-      <button class="digest-close" onclick="closeReview()" style="margin-top:8px">Cerrar</button>
+      <button class="digest-close" onclick="closeReview()" style="margin-top:8px" data-i18n="cerrar">Cerrar</button>
     </div>
   </div>
 </div>
@@ -595,7 +590,7 @@
     <div class="digest-headline" id="monthly-headline">—</div>
     <div class="digest-insight" id="monthly-insight-text"></div>
     <div class="digest-tip" id="monthly-tip"></div>
-    <button class="digest-close" onclick="closeMonthlyInsight()">Cerrar</button>
+    <button class="digest-close" onclick="closeMonthlyInsight()" data-i18n="cerrar">Cerrar</button>
   </div>
 </div>
 
@@ -603,23 +598,23 @@
 <div id="estado-overlay" class="digest-overlay" style="display:none">
   <div class="estado-box">
     <div class="estado-header">
-      <div class="estado-label-top">Pulso del día</div>
+      <div class="estado-label-top" data-i18n="estadoPulso">Pulso del día</div>
       <div class="estado-fecha" id="estado-fecha">—</div>
     </div>
     <div class="estado-field">
-      <div class="estado-field-label">¿Cómo estás?</div>
-      <textarea class="review-textarea" id="estado-como" placeholder="Hoy me siento..."></textarea>
+      <div class="estado-field-label" data-i18n="estadoComo">¿Cómo estás?</div>
+      <textarea class="review-textarea" id="estado-como" placeholder="Hoy me siento..." data-i18n-ph="estadoComoPh"></textarea>
     </div>
     <div class="estado-field">
-      <div class="estado-field-label">¿Qué te preocupa?</div>
-      <textarea class="review-textarea" id="estado-preocupa" placeholder="Me preocupa..." style="min-height:56px"></textarea>
+      <div class="estado-field-label" data-i18n="estadoPreocupa">¿Qué te preocupa?</div>
+      <textarea class="review-textarea" id="estado-preocupa" placeholder="Me preocupa..." style="min-height:56px" data-i18n-ph="estadoPreocupaPh"></textarea>
     </div>
     <div class="estado-field">
-      <div class="estado-field-label">¿De qué estás orgulloso/a hoy?</div>
-      <textarea class="review-textarea" id="estado-orgullo" placeholder="Me siento bien de..." style="min-height:56px"></textarea>
+      <div class="estado-field-label" data-i18n="estadoOrgullo">¿De qué estás orgulloso/a hoy?</div>
+      <textarea class="review-textarea" id="estado-orgullo" placeholder="Me siento bien de..." style="min-height:56px" data-i18n-ph="estadoOrgulloPh"></textarea>
     </div>
-    <button class="morning-cta" onclick="submitEstadoDia()">Guardar →</button>
-    <button class="digest-close" onclick="closeEstadoDia()" style="margin-top:-4px">Saltar</button>
+    <button class="morning-cta" onclick="submitEstadoDia()" data-i18n="guardarFlecha">Guardar →</button>
+    <button class="digest-close" onclick="closeEstadoDia()" style="margin-top:-4px" data-i18n="saltar">Saltar</button>
   </div>
 </div>
 
@@ -630,28 +625,28 @@
     <div class="carta-saludo" id="carta-saludo">—</div>
     <div class="carta-cuerpo" id="carta-cuerpo"></div>
     <div class="carta-firma">foco.</div>
-    <button class="digest-close" onclick="closeCarta()">Cerrar</button>
+    <button class="digest-close" onclick="closeCarta()" data-i18n="cerrar">Cerrar</button>
   </div>
 </div>
 
 <!-- PALABRA DE LA SEMANA -->
 <div id="palabra-overlay" class="digest-overlay" style="display:none">
   <div class="palabra-box">
-    <div class="palabra-prompt">¿Una palabra para esta semana?</div>
-    <div class="palabra-sub">Una sola. La que mejor la define.</div>
-    <input class="palabra-inp" id="palabra-inp" type="text" maxlength="20" placeholder="caos · foco · crecimiento · calma..."/>
+    <div class="palabra-prompt" data-i18n="palabraPrompt">¿Una palabra para esta semana?</div>
+    <div class="palabra-sub" data-i18n="palabraSub">Una sola. La que mejor la define.</div>
+    <input class="palabra-inp" id="palabra-inp" type="text" maxlength="20" placeholder="caos · foco · crecimiento · calma..." data-i18n-ph="palabraPh"/>
     <div class="palabras-previas" id="palabras-previas"></div>
-    <button class="morning-cta" onclick="submitPalabra()">Guardar →</button>
-    <button class="digest-close" onclick="closePalabra()" style="margin-top:-4px">Saltar</button>
+    <button class="morning-cta" onclick="submitPalabra()" data-i18n="guardarFlecha">Guardar →</button>
+    <button class="digest-close" onclick="closePalabra()" style="margin-top:-4px" data-i18n="saltar">Saltar</button>
   </div>
 </div>
 
 <!-- GOAL EDIT -->
 <div id="goal-edit-overlay" style="position:fixed;inset:0;z-index:699;display:none" onclick="closeGoalEdit()"></div>
 <div id="goal-edit-modal" class="goal-edit-modal" style="display:none">
-  <div class="goal-edit-title">Objetivo de la semana</div>
-  <input id="goal-edit-inp" class="auth-input" type="text" placeholder="Lo más importante esta semana es..."/>
-  <button class="morning-cta" style="margin-top:4px" onclick="saveGoalEdit()">Guardar →</button>
+  <div class="goal-edit-title" data-i18n="goalEditTitle">Objetivo de la semana</div>
+  <input id="goal-edit-inp" class="auth-input" type="text" placeholder="Lo más importante esta semana es..." data-i18n-ph="goalEditPh"/>
+  <button class="morning-cta" style="margin-top:4px" onclick="saveGoalEdit()" data-i18n="guardarFlecha">Guardar →</button>
 </div>
 
 <!-- PANEL OVERLAY -->
@@ -674,7 +669,7 @@
 
     <!-- Nota -->
     <textarea class="panel-details" id="panel-details"
-              placeholder="Agregar nota…"
+              placeholder="Agregar nota…" data-i18n-ph="panelDetailsPh"
               rows="1"
               oninput="autoresizeDetails(this)"
               onblur="savePanelDetails()"></textarea>
@@ -683,7 +678,7 @@
     <div class="panel-rows">
       <button class="panel-row" onclick="togglePanelRow('area')">
         <span class="panel-row-icon">◐</span>
-        <span class="panel-row-label">Área</span>
+        <span class="panel-row-label" data-i18n="panelArea">Área</span>
         <span class="panel-row-value">
           <span class="panel-row-dot" id="panel-row-area-dot"></span>
           <span id="panel-row-area-text">Trabajo</span>
@@ -696,8 +691,8 @@
 
       <button class="panel-row" onclick="togglePanelRow('hora')">
         <span class="panel-row-icon">◷</span>
-        <span class="panel-row-label">Hora</span>
-        <span class="panel-row-value" id="panel-row-hora-value">Sin hora</span>
+        <span class="panel-row-label" data-i18n="panelHora">Hora</span>
+        <span class="panel-row-value" id="panel-row-hora-value" data-i18n="panelSinHora">Sin hora</span>
         <span class="panel-row-chevron">›</span>
       </button>
       <div class="panel-row-expand" id="panel-hora-wrap" style="display:none">
@@ -705,13 +700,13 @@
           <input type="time" class="panel-hora-inp" id="panel-hora-inicio-inp"/>
           <span class="panel-hora-sep">–</span>
           <input type="time" class="panel-hora-inp" id="panel-hora-fin-inp"/>
-          <button class="panel-hora-save-btn" onclick="savePanelHora()">Guardar</button>
+          <button class="panel-hora-save-btn" onclick="savePanelHora()" data-i18n="guardar">Guardar</button>
         </div>
       </div>
 
       <button class="panel-row" onclick="togglePanelRow('dia')">
         <span class="panel-row-icon">◫</span>
-        <span class="panel-row-label">Día</span>
+        <span class="panel-row-label" data-i18n="panelDia">Día</span>
         <span class="panel-row-value" id="panel-row-dia-value">—</span>
         <span class="panel-row-chevron">›</span>
       </button>
@@ -721,26 +716,26 @@
 
       <button class="panel-row" onclick="togglePanelRow('recur')">
         <span class="panel-row-icon">↻</span>
-        <span class="panel-row-label">Repetir</span>
-        <span class="panel-row-value" id="panel-row-recur-value">Solo esta vez</span>
+        <span class="panel-row-label" data-i18n="panelRepetir">Repetir</span>
+        <span class="panel-row-value" id="panel-row-recur-value" data-i18n="panelSoloVez">Solo esta vez</span>
         <span class="panel-row-chevron">›</span>
       </button>
       <div class="panel-row-expand" id="panel-recur-wrap" style="display:none">
         <div class="panel-recur-pills">
-          <button class="recur-pill active" id="recur-once" onclick="setPanelRecurrence(false)">Solo esta vez</button>
-          <button class="recur-pill" id="recur-weekly" onclick="setPanelRecurrence(true)">Cada semana</button>
+          <button class="recur-pill active" id="recur-once" onclick="setPanelRecurrence(false)" data-i18n="panelSoloVez">Solo esta vez</button>
+          <button class="recur-pill" id="recur-weekly" onclick="setPanelRecurrence(true)" data-i18n="panelCadaSemana">Cada semana</button>
         </div>
       </div>
 
       <div class="panel-row panel-row-static">
         <span class="panel-row-icon">☆</span>
-        <span class="panel-row-label">Foco del día</span>
+        <span class="panel-row-label" data-i18n="panelFocoDia">Foco del día</span>
         <button class="ios-switch" id="panel-focus-toggle" onclick="setPanelFocus()"></button>
       </div>
 
       <button class="panel-row panel-row-danger" onclick="panelDeleteEvent()">
         <span class="panel-row-icon"></span>
-        <span class="panel-row-label">Eliminar</span>
+        <span class="panel-row-label" data-i18n="eliminar">Eliminar</span>
       </button>
     </div>
 
@@ -754,8 +749,8 @@
                 transform="rotate(-90 18 18)"/>
       </svg>
       <span class="panel-timer-count" id="panel-timer-count">25:00</span>
-      <button class="panel-timer-pause" id="panel-timer-pause" onclick="togglePause()">Pausar</button>
-      <button class="panel-timer-stop" onclick="stopPanelTimer()">Terminar</button>
+      <button class="panel-timer-pause" id="panel-timer-pause" onclick="togglePause()" data-i18n="panelPausar">Pausar</button>
+      <button class="panel-timer-stop" onclick="stopPanelTimer()" data-i18n="panelTerminar">Terminar</button>
     </div>
 
     <!-- Acciones: lado a lado -->
@@ -765,13 +760,13 @@
           <polyline points="2,7 5.5,10.5 12,3" stroke="currentColor" stroke-width="1.8"
                     stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
-        <span id="panel-done-label">Completar</span>
+        <span id="panel-done-label" data-i18n="panelCompletar">Completar</span>
       </button>
       <button class="panel-focus-btn" id="focus-start-btn" onclick="startSession()">
         <svg width="10" height="12" viewBox="0 0 10 12" fill="none" style="margin-right:6px;flex-shrink:0">
           <path d="M1 1l8 5-8 5V1z" fill="currentColor"/>
         </svg>
-        Iniciar foco
+        <span data-i18n="panelIniciarFoco">Iniciar foco</span>
       </button>
     </div>
   </div>
@@ -782,28 +777,28 @@
 <div id="recur-modal" class="recur-modal">
   <div class="recur-modal-header">
     <div class="recur-modal-event" id="recur-modal-title">—</div>
-    <div class="recur-modal-question">¿Repetir este evento?</div>
+    <div class="recur-modal-question" data-i18n="recurQuestion">¿Repetir este evento?</div>
   </div>
   <div class="recur-modal-options">
     <button class="recur-opt" onclick="confirmRecurrence('once')">
       <span class="recur-opt-icon">1</span>
       <div class="recur-opt-text">
-        <span class="recur-opt-label">Solo hoy</span>
-        <span class="recur-opt-desc">Se agrega una vez</span>
+        <span class="recur-opt-label" data-i18n="recurSoloHoy">Solo hoy</span>
+        <span class="recur-opt-desc" data-i18n="recurSoloHoyDesc">Se agrega una vez</span>
       </div>
     </button>
     <button class="recur-opt" onclick="confirmRecurrence('weekly')">
       <span class="recur-opt-icon">↻</span>
       <div class="recur-opt-text">
-        <span class="recur-opt-label">Cada semana</span>
-        <span class="recur-opt-desc">Se repite el mismo día</span>
+        <span class="recur-opt-label" data-i18n="panelCadaSemana">Cada semana</span>
+        <span class="recur-opt-desc" data-i18n="recurCadaSemanaDesc">Se repite el mismo día</span>
       </div>
     </button>
     <button class="recur-opt" onclick="confirmRecurrence('daily')">
       <span class="recur-opt-icon">∞</span>
       <div class="recur-opt-text">
-        <span class="recur-opt-label">Todos los días</span>
-        <span class="recur-opt-desc">Aparece cada día</span>
+        <span class="recur-opt-label" data-i18n="recurTodosDias">Todos los días</span>
+        <span class="recur-opt-desc" data-i18n="recurTodosDiasDesc">Aparece cada día</span>
       </div>
     </button>
   </div>
@@ -816,17 +811,17 @@
     <div class="recur-modal-question" id="confirm-modal-msg">¿Eliminar?</div>
   </div>
   <div class="confirm-modal-actions">
-    <button class="panel-focus-btn" onclick="resolveConfirm(false)">Cancelar</button>
-    <button class="confirm-danger-btn" onclick="resolveConfirm(true)">Eliminar</button>
+    <button class="panel-focus-btn" onclick="resolveConfirm(false)" data-i18n="cancelar">Cancelar</button>
+    <button class="confirm-danger-btn" onclick="resolveConfirm(true)" data-i18n="eliminar">Eliminar</button>
   </div>
 </div>
 
 <!-- COMMAND PALETTE -->
 <div id="cmd-overlay" class="cmd-overlay" onclick="closeCmd()"></div>
 <div id="cmd-palette" class="cmd-palette">
-  <input id="cmd-input" type="text" class="cmd-input" placeholder="¿Qué querés hacer? (Cmd+K)"/>
+  <input id="cmd-input" type="text" class="cmd-input" placeholder="¿Qué querés hacer? (Cmd+K)" data-i18n-ph="cmdPlaceholder"/>
   <div id="cmd-results" class="cmd-results"></div>
-  <div class="cmd-footer">↑↓ navegar · Enter seleccionar · Esc cerrar</div>
+  <div class="cmd-footer" data-i18n="cmdFooter">↑↓ navegar · Enter seleccionar · Esc cerrar</div>
 </div>
 
 <!-- TOAST CONTAINER -->

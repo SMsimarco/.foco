@@ -377,6 +377,25 @@ html, body {
 
 .theme-toggle-btn:hover { background: var(--border2); }
 
+.lang-toggle-btn {
+  background: none;
+  border: 1px solid var(--border2);
+  cursor: pointer;
+  padding: 4px 7px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  transition: background 0.12s;
+  color: var(--text-muted);
+  font-size: 10px;
+  font-weight: 600;
+  font-family: 'Geist', sans-serif;
+  letter-spacing: 0.3px;
+}
+
+.lang-toggle-btn:hover { background: var(--border2); color: var(--text); }
+
 .commitment-wrap {
   cursor: default;
 }
