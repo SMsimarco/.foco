@@ -1528,6 +1528,18 @@ html, body {
 
 .foq-ob-skip-btn:hover { color: var(--text); border-color: var(--accent); }
 
+.foq-redo-btn {
+  background: none;
+  border: none;
+  color: var(--text3);
+  font-size: 17px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 2px 5px;
+}
+
+.foq-redo-btn:hover { color: var(--accent); }
+
 .foq-panel-close {
   background: none;
   border: none;
