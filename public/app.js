@@ -2655,16 +2655,17 @@ document.addEventListener('DOMContentLoaded', () => {
 // system prompt de acá abajo en vez del normal mientras _foqOnboarding
 // esté prendido. Ver sendFoquitoMessage() para el branching.
 
-// Primer login = perfil sin onboarding_completed (requiere la columna,
-// ver SQL avisado aparte) Y sin eventos todavía. Un usuario viejo que
-// por lo que sea no tiene la columna en true pero ya tiene eventos
-// cargados no es "nuevo" — se marca completado sin mostrar nada.
+// Dispara si el perfil no tiene onboarding_completed Y no tiene ningún
+// evento recurrente todavía — no alcanza con tener eventos sueltos,
+// eso no es una "semana planificada". Los recurrentes se inyectan en
+// cada día/semana visible (ver loadWeek/loadDia), así que si existe
+// alguno va a estar en eventsCache sin importar qué día se esté viendo.
 function checkOnboarding() {
   if (!currentUser) return;
   if (currentProfile?.onboarding_completed) return;
 
-  const hasEvents = Object.values(eventsCache).some(evs => evs.length > 0);
-  if (hasEvents) { markOnboardingCompleted(); return; }
+  const hasRecurrente = Object.values(eventsCache).some(evs => evs.some(e => e.recurrente));
+  if (hasRecurrente) { markOnboardingCompleted(); return; }
 
   startFoquitoOnboarding();
 }
@@ -3512,6 +3513,7 @@ const CMD_ACTIONS = [
   { label: 'Pulso del día',     icon: '◉',  hint: '',  fn: () => { closeCmd(); showEstadoDia(); } },
   { label: 'Palabra de semana', icon: '❋',  hint: '',  fn: () => { closeCmd(); showPalabra(); } },
   { label: 'Nuevo evento',      icon: '+',  hint: 'N', fn: () => { closeCmd(); toggleFoquitoWidget(); } },
+  { label: 'Rehacer mi semana', icon: '↻',  hint: '',  fn: () => { closeCmd(); startFoquitoOnboarding(); } },
   { label: 'Modo foco ambiente',icon: '✿',  hint: '',  fn: () => { closeCmd(); toggleAmbientMode(); } },
   { label: 'Cambiar tema claro/oscuro', icon: '☾', hint: '', fn: () => { closeCmd(); toggleTheme(); } },
   { label: 'Cerrar sesión',     icon: '↪',  hint: '',  fn: () => logout() },
