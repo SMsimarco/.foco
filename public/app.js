@@ -2828,11 +2828,14 @@ function nextDateForWeekday(diaSemana) {
 }
 
 // Crea los eventos recurrentes que arma la entrevista de onboarding.
+// findDuplicateEvent evita re-crear todo si la entrevista se repite
+// (ej. reintentada tras un fallo de red/IA en una corrida anterior).
 async function createOnboardingEvents(acciones) {
   for (const a of acciones) {
     if (a.tipo !== 'crear' || !a.titulo) continue;
     const diaSemana = Number.isInteger(a.dia_semana) ? a.dia_semana : null;
     const dateISO = diaSemana !== null ? nextDateForWeekday(diaSemana) : toISO(new Date());
+    if (findDuplicateEvent(a.titulo, dateISO)) continue;
     await addEvent(dateISO, a.titulo, a.hora || null, null, !!a.recurrente, diaSemana, !!a.esFoco);
   }
 }
