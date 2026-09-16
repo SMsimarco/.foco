@@ -2682,6 +2682,14 @@ body.ambient #app::before {
   display: flex;
   gap: 6px;
 }
+
+.panel-dia-pills {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.panel-dia-date .panel-hora-inp { width: 100%; }
 .recur-pill {
   background: transparent;
   border: 1px solid var(--border2);

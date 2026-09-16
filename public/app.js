@@ -3183,6 +3183,8 @@ function openEventPanel(ev, dateISO) {
   updateDoneButton(!!ev.done);
   renderAreaPills(ev.area || 'trabajo');
 
+  renderPanelDiaEditor(ev, dateISO);
+
   const recOnce = document.getElementById('recur-once');
   const recWeekly = document.getElementById('recur-weekly');
   if (recOnce && recWeekly) {
@@ -3194,13 +3196,15 @@ function openEventPanel(ev, dateISO) {
 
   updateFocusButton(!!ev.is_focus);
 
-  // Las filas Área/Hora/Repetir arrancan colapsadas — se abren tocándolas
+  // Las filas Área/Hora/Día/Repetir arrancan colapsadas — se abren tocándolas
   const areaWrap = document.getElementById('panel-area-wrap');
   const recurWrap = document.getElementById('panel-recur-wrap');
   const horaWrap = document.getElementById('panel-hora-wrap');
+  const diaWrap = document.getElementById('panel-dia-wrap');
   if (areaWrap) areaWrap.style.display = 'none';
   if (recurWrap) recurWrap.style.display = 'none';
   if (horaWrap) horaWrap.style.display = 'none';
+  if (diaWrap) diaWrap.style.display = 'none';
 
   document.getElementById('event-panel').classList.add('open');
   document.getElementById('panel-overlay').classList.add('open');
@@ -3208,7 +3212,7 @@ function openEventPanel(ev, dateISO) {
 
 // Abre/cierra una fila de propiedad (Área o Repetir) — colapsa la otra si estaba abierta
 function togglePanelRow(name) {
-  const ids = { area: 'panel-area-wrap', recur: 'panel-recur-wrap', hora: 'panel-hora-wrap' };
+  const ids = { area: 'panel-area-wrap', recur: 'panel-recur-wrap', hora: 'panel-hora-wrap', dia: 'panel-dia-wrap' };
   Object.entries(ids).forEach(([key, id]) => {
     const el = document.getElementById(id);
     if (!el) return;
@@ -3301,6 +3305,51 @@ async function savePanelHora() {
   showToast('Hora actualizada', 'info');
 }
 
+// Recurrente: elegir día de semana (pills). Puntual: fecha exacta (date input).
+// Se re-renderiza también al tocar Repetir (setPanelRecurrence), porque cambia
+// qué tipo de editor corresponde.
+function renderPanelDiaEditor(ev, dateISO) {
+  const valueEl = document.getElementById('panel-row-dia-value');
+  const editorEl = document.getElementById('panel-dia-editor');
+  if (!valueEl || !editorEl) return;
+
+  if (ev.recurrente) {
+    const diaSemana = Number.isInteger(ev.dia_semana) ? ev.dia_semana : new Date(dateISO + 'T12:00:00').getDay();
+    valueEl.textContent = DAYS_FULL[diaSemana];
+    editorEl.innerHTML = `<div class="panel-dia-pills">${DAYS.map((d, i) =>
+      `<button class="recur-pill${i === diaSemana ? ' active' : ''}" onclick="setPanelDiaSemana(${i})">${d}</button>`
+    ).join('')}</div>`;
+  } else {
+    const d = new Date(dateISO + 'T12:00:00');
+    valueEl.textContent = `${DAYS_FULL[d.getDay()]} ${d.getDate()}/${d.getMonth() + 1}`;
+    editorEl.innerHTML = `<div class="panel-dia-date">
+      <input type="date" class="panel-hora-inp" id="panel-dia-fecha-inp" value="${dateISO}" onchange="savePanelDiaFecha(this.value)"/>
+    </div>`;
+  }
+}
+
+async function setPanelDiaSemana(diaSemana) {
+  if (!panelEvent) return;
+  const { error } = await db.from('events').update({ dia_semana: diaSemana }).eq('id', panelEvent.id);
+  if (error) { console.error(error); return; }
+
+  closeEventPanel();
+  await loadDia();
+  renderHoy();
+  showToast('Día actualizado', 'info');
+}
+
+async function savePanelDiaFecha(newDateISO) {
+  if (!panelEvent || !newDateISO || newDateISO === panelDateISO) return;
+  const { error } = await db.from('events').update({ date: newDateISO }).eq('id', panelEvent.id);
+  if (error) { console.error(error); return; }
+
+  closeEventPanel();
+  await loadDia();
+  renderHoy();
+  showToast('Día actualizado', 'info');
+}
+
 async function setPanelRecurrence(recurrente) {
   if (!panelEvent) return;
   const diaSemana = new Date(panelDateISO + 'T12:00:00').getDay();
@@ -3326,6 +3375,7 @@ async function setPanelRecurrence(recurrente) {
   const recurValueEl = document.getElementById('panel-row-recur-value');
   if (recurValueEl) recurValueEl.textContent = recurrente ? 'Cada semana' : 'Solo esta vez';
 
+  renderPanelDiaEditor(panelEvent, panelDateISO);
   renderHoy();
   showToast(recurrente ? 'Se repite cada semana' : 'Solo esta vez', 'success');
 }
