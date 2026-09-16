@@ -666,7 +666,7 @@
     <!-- Header compacto: título + meta + cerrar -->
     <div class="panel-header-row">
       <div class="panel-info">
-        <div class="panel-title" id="panel-title">—</div>
+        <input class="panel-title" id="panel-title" value="—" onblur="savePanelTitle()" onkeydown="if(event.key==='Enter')this.blur()"/>
         <div class="panel-meta" id="panel-meta">—</div>
       </div>
       <button class="panel-close-btn" onclick="closeEventPanel()">×</button>
@@ -692,6 +692,21 @@
       </button>
       <div class="panel-row-expand" id="panel-area-wrap" style="display:none">
         <div class="panel-area-pills" id="panel-area-pills"></div>
+      </div>
+
+      <button class="panel-row" onclick="togglePanelRow('hora')">
+        <span class="panel-row-icon">◷</span>
+        <span class="panel-row-label">Hora</span>
+        <span class="panel-row-value" id="panel-row-hora-value">Sin hora</span>
+        <span class="panel-row-chevron">›</span>
+      </button>
+      <div class="panel-row-expand" id="panel-hora-wrap" style="display:none">
+        <div class="panel-hora-edit">
+          <input type="time" class="panel-hora-inp" id="panel-hora-inicio-inp"/>
+          <span class="panel-hora-sep">–</span>
+          <input type="time" class="panel-hora-inp" id="panel-hora-fin-inp"/>
+          <button class="panel-hora-save-btn" onclick="savePanelHora()">Guardar</button>
+        </div>
       </div>
 
       <button class="panel-row" onclick="togglePanelRow('recur')">

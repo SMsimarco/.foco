@@ -714,6 +714,12 @@ async function addEvent(dateISO, title, startTime, endTime, recurrente = false, 
 
   if (error) { console.error(error); return; }
 
+  // Supabase devuelve columnas `time` como HH:MM:SS — loadWeek/loadDia
+  // recortan a HH:MM al leer, pero acá insertamos y cacheamos en el
+  // mismo paso sin pasar por esa lectura, así que hay que recortar igual.
+  data.start_time = data.start_time ? data.start_time.slice(0, 5) : data.start_time;
+  data.end_time   = data.end_time   ? data.end_time.slice(0, 5)   : data.end_time;
+
   if (!eventsCache[dateISO]) eventsCache[dateISO] = [];
   eventsCache[dateISO].push(data);
 
@@ -2247,6 +2253,7 @@ Analizá el mensaje del usuario (y la charla previa si la hay) y respondé SOLO 
 - Si es puntual y te dan fecha concreta o "hoy"/"mañana" → recurrente:false + fecha, dia_semana en null.
 - Si el pedido es una rutina pero falta el horario de alguna actividad, no inventes: usá la forma 5 (preguntar) por esa actividad antes de crear nada.
 - **El umbral para confirmar antes de crear es si hay algo RECURRENTE, no la cantidad:** si alguna actividad del pedido tiene recurrente:true (se repite todas las semanas), NO crees todavía aunque sea una sola — un recurrente mal interpretado ensucia todas las semanas futuras, no un día. Primero resumí en pocos bullets lo que entendiste (actividad, día, hora, si es recurrente) usando la forma 7 (conversar) y preguntá "¿Está bien así o cambio algo?". Recién cuando la persona confirme en su próximo mensaje, devolvé crear_multiple con esos eventos — no antes. Mismo criterio que la entrevista de onboarding.
+- Cualquier respuesta afirmativa cuenta como confirmación, no hace falta un "sí" textual: "dale", "dale perfecto", "quedó genial", "joya", "buenísimo", "así está bien", "de una", etc. son todas un sí — no vuelvas a preguntar lo mismo.
 - Si TODAS las actividades del pedido son puntuales (recurrente:false, fecha concreta, no se repiten), podés crear directo sin este paso extra, sin importar cuántas sean.
 
 3. Pide mover, cambiar de día u hora, o reprogramar una actividad que ya está en la agenda (buscala ahí por nombre y día):
@@ -2259,6 +2266,7 @@ Solo completá nueva_fecha/nueva_hora_* con lo que el usuario pidió cambiar —
 5. Pide anotar, mover o borrar algo pero falta un dato importante (sobre todo día u hora, o no identificás bien cuál actividad es si hay varias parecidas):
 {"accion":"preguntar","respuesta":"pregunta corta pidiendo justo lo que falta, una sola cosa por vez"}
 No inventes el dato que falta, preguntá.
+- Un período vago ("esta semana", "la semana que viene", "un día de estos", "en estos días") NO es un día concreto — no alcanza para crear. Preguntá qué día y a qué hora, no asumas ni completes con un día al azar.
 
 6. Dice que ya hizo, terminó o completó algo que está en la agenda (usá el nombre tal cual aparece ahí):
 {"accion":"marcar_hecho","nombre":"nombre exacto de la tarea en la agenda","respuesta":"festejo breve y genuino"}
@@ -2711,6 +2719,10 @@ repiten.
   la rutina que entendiste (día, hora y si es recurrente) y preguntá: "¿Está bien así
   o cambio algo?".
 - Recién cuando la persona confirme, devolvé las acciones para crear los eventos.
+- Cualquier respuesta afirmativa cuenta como confirmación, no hace falta un "sí"
+  textual: "dale", "dale perfecto", "quedó genial", "joya", "buenísimo", "así está
+  bien", "de una", etc. son todas un sí. No vuelvas a preguntar lo mismo ni pidas
+  que lo repita — si entendiste que confirmó, generá las acciones directo.
 
 # Recurrencia
 - Por defecto, lo que es rutina va como recurrente (se repite cada semana ese día).
@@ -3140,7 +3152,7 @@ function openEventPanel(ev, dateISO) {
   stopFocusTimer();
   hidePanelTimer();
 
-  document.getElementById('panel-title').textContent = ev.title;
+  document.getElementById('panel-title').value = ev.title;
 
   const d = new Date(dateISO + 'T12:00:00');
   const dayStr = DAYS_FULL[d.getDay()];
@@ -3149,6 +3161,13 @@ function openEventPanel(ev, dateISO) {
   // eventos que la grilla sí mostraba con hora (ej. "15:30" sin fin).
   const horaStr = ev.start_time ? `${ev.start_time}${ev.end_time ? ' – ' + ev.end_time : ''}` : 'Sin hora';
   document.getElementById('panel-meta').textContent = `${horaStr} · ${dayStr}`;
+
+  const horaValueEl = document.getElementById('panel-row-hora-value');
+  if (horaValueEl) horaValueEl.textContent = horaStr;
+  const horaInicioInp = document.getElementById('panel-hora-inicio-inp');
+  const horaFinInp = document.getElementById('panel-hora-fin-inp');
+  if (horaInicioInp) horaInicioInp.value = ev.start_time || '';
+  if (horaFinInp) horaFinInp.value = ev.end_time || '';
 
   const color = eventColor(ev.title, ev.area);
   document.getElementById('event-panel').style.setProperty('--event-color', color);
@@ -3175,11 +3194,13 @@ function openEventPanel(ev, dateISO) {
 
   updateFocusButton(!!ev.is_focus);
 
-  // Las filas Área/Repetir arrancan colapsadas — se abren tocándolas
+  // Las filas Área/Hora/Repetir arrancan colapsadas — se abren tocándolas
   const areaWrap = document.getElementById('panel-area-wrap');
   const recurWrap = document.getElementById('panel-recur-wrap');
+  const horaWrap = document.getElementById('panel-hora-wrap');
   if (areaWrap) areaWrap.style.display = 'none';
   if (recurWrap) recurWrap.style.display = 'none';
+  if (horaWrap) horaWrap.style.display = 'none';
 
   document.getElementById('event-panel').classList.add('open');
   document.getElementById('panel-overlay').classList.add('open');
@@ -3187,7 +3208,7 @@ function openEventPanel(ev, dateISO) {
 
 // Abre/cierra una fila de propiedad (Área o Repetir) — colapsa la otra si estaba abierta
 function togglePanelRow(name) {
-  const ids = { area: 'panel-area-wrap', recur: 'panel-recur-wrap' };
+  const ids = { area: 'panel-area-wrap', recur: 'panel-recur-wrap', hora: 'panel-hora-wrap' };
   Object.entries(ids).forEach(([key, id]) => {
     const el = document.getElementById(id);
     if (!el) return;
@@ -3239,6 +3260,45 @@ async function panelToggleDone() {
   panelEvent = (eventsCache[panelDateISO] || []).find(e => e.id === panelEvent.id);
   if (!panelEvent) { closeEventPanel(); return; }
   updateDoneButton(!!panelEvent.done);
+}
+
+async function savePanelTitle() {
+  if (!panelEvent) return;
+  const inp = document.getElementById('panel-title');
+  const title = inp.value.trim();
+  if (!title || title === panelEvent.title) { inp.value = panelEvent.title; return; }
+
+  const { error } = await db.from('events').update({ title }).eq('id', panelEvent.id);
+  if (error) { console.error(error); inp.value = panelEvent.title; return; }
+
+  panelEvent.title = title;
+  const cached = (eventsCache[panelDateISO] || []).find(e => e.id === panelEvent.id);
+  if (cached) cached.title = title;
+
+  refreshDiaOSemanaGrid(panelDateISO);
+}
+
+async function savePanelHora() {
+  if (!panelEvent) return;
+  const startTime = document.getElementById('panel-hora-inicio-inp').value || null;
+  const endTime = document.getElementById('panel-hora-fin-inp').value || null;
+
+  const { error } = await db.from('events').update({ start_time: startTime, end_time: endTime }).eq('id', panelEvent.id);
+  if (error) { console.error(error); return; }
+
+  panelEvent.start_time = startTime;
+  panelEvent.end_time = endTime;
+  const cached = (eventsCache[panelDateISO] || []).find(e => e.id === panelEvent.id);
+  if (cached) { cached.start_time = startTime; cached.end_time = endTime; }
+
+  const d = new Date(panelDateISO + 'T12:00:00');
+  const dayStr = DAYS_FULL[d.getDay()];
+  const horaStr = startTime ? `${startTime}${endTime ? ' – ' + endTime : ''}` : 'Sin hora';
+  document.getElementById('panel-meta').textContent = `${horaStr} · ${dayStr}`;
+  document.getElementById('panel-row-hora-value').textContent = horaStr;
+
+  refreshDiaOSemanaGrid(panelDateISO);
+  showToast('Hora actualizada', 'info');
 }
 
 async function setPanelRecurrence(recurrente) {
