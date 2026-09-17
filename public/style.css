@@ -2700,7 +2700,7 @@ body.ambient #app::before {
 /* Antes reusaba el bottom-sheet grande de .recur-modal (ancho completo,
    pegado abajo) — a pedido de Marco pasa a ser un modal chico centrado,
    más acorde a lo poco que tiene adentro (una pregunta + 2 botones). */
-.confirm-overlay { z-index: 303; }
+.confirm-overlay { z-index: 303; background: rgba(0,0,0,0.72); }
 .confirm-modal {
   position: fixed;
   bottom: auto;
