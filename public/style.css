@@ -720,20 +720,22 @@ html, body {
 }
 
 .hoy-date {
-  font-family: 'Instrument Serif', serif;
-  font-style: italic;
-  font-size: 15px;
+  font-size: 13px;
   font-weight: 500;
   color: var(--ios-text2);
   text-transform: capitalize;
 }
 
 .hoy-title {
-  /* Día es parte del trío Día/Semana/Mes (ver .mes-title / .sg-week-label) —
-     misma Instrument Serif itálica, quedaba afuera por error. */
-  font-family: 'Instrument Serif', serif;
-  font-style: italic;
-  font-weight: 400;
+  /* SF a propósito, NO Instrument Serif — commit 890f359 (2026-09-10) ya
+     migró esto de serif a SF por pedido explícito de Marco (se veía
+     inconsistente contra el resto, confirmado en foto de su iPhone real).
+     Si alguna vez parece "raro" comparado con Mes/Semana (que sí llevan
+     serif a propósito), esa es la razón — no es un bug, es la decisión
+     vigente. No revertir sin confirmar con Marco primero.
+  */
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
+  font-weight: 700;
   font-size: 34px;
   letter-spacing: -0.01em;
   color: var(--ios-text);
@@ -3870,9 +3872,11 @@ body.ambient #app::before {
 }
 .tuana-header { padding: 8px 0 4px; }
 .tuana-title {
-  /* Remanente viejo usaba la serif itálica del logo — Progreso no es parte
-     del trío Día/Semana/Mes (esos sí llevan Instrument Serif a propósito),
-     va con la tipografía del sistema como el resto de los títulos de vista. */
+  /* Remanente viejo usaba la serif itálica del logo — Progreso va con la
+     tipografía del sistema, como el resto de los títulos de vista. Ojo:
+     Mes y Semana (.mes-title/.sg-week-label) SÍ llevan Instrument Serif,
+     pero Día (.hoy-title) NO — se sacó a propósito en 890f359 (2026-09-10,
+     reconfirmado 2026-09-17), no es parte de ningún "trío" parejo. */
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
   font-weight: 600;
   font-size: 28px;
