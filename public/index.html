@@ -299,14 +299,16 @@
           <div id="notas-list"></div>
         </div>
 
-        <!-- Proyectos -->
-        <div class="slab-section">
-          <div class="slab-hd">
-            <span class="slab-title" data-i18n="slabProyectos">Proyectos</span>
-            <button class="slab-add-btn" onclick="openProjModal(null)">+</button>
-          </div>
-          <div id="proyectos-simple-list"></div>
+      </div>
+
+      <!-- Proyectos — tablero kanban, aparte de la fila de arriba porque
+           necesita ancho propio para las 4 columnas de estado -->
+      <div class="proj-board-section">
+        <div class="slab-hd">
+          <span class="slab-title" data-i18n="slabProyectos">Proyectos</span>
+          <button class="slab-add-btn" onclick="openProjModal(null)">+</button>
         </div>
+        <div class="kanban-board" id="proj-board"></div>
 
       </div>
     </div>
@@ -509,6 +511,15 @@
       <div class="lm-field">
         <label class="lm-lbl" data-i18n="lmNotas">Notas</label>
         <textarea class="lm-inp lm-ta" id="lm-notas" placeholder="Detalles, contexto, próximos pasos..." data-i18n-ph="lmNotasPh"></textarea>
+      </div>
+      <div class="lm-field" id="lm-checklist-wrap" style="display:none">
+        <label class="lm-lbl" data-i18n="lmChecklist">Checklist</label>
+        <div id="lm-checklist-list"></div>
+        <div class="lm-checklist-add">
+          <input class="lm-inp" id="lm-checklist-inp" type="text" placeholder="Agregar tarea..." data-i18n-ph="lmChecklistAddPh"
+                 onkeydown="if(event.key==='Enter'){event.preventDefault();addChecklistItem();}"/>
+          <button class="lm-checklist-add-btn" onclick="addChecklistItem()">+</button>
+        </div>
       </div>
     </div>
     <div class="lm-foot">

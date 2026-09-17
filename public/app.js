@@ -139,7 +139,8 @@ const I18N_UI = {
     sugRevision: 'Revisión semanal', sugRevisionDesc: 'Cerrá la semana con una reflexión corta.',
     comenzar: 'Comenzar →', sugFootHint: '¿Reorganizar algo? Pedíselo a Foquito.',
     foqSaltear: 'Saltear', foqRedoTitle: 'Rehacer mi semana', foqInputPh: 'Escribile a Foquito...',
-    lmNewProject: 'Nuevo proyecto', lmNombre: 'Nombre', lmNombrePh: 'Mi proyecto...',
+    lmNewProject: 'Nuevo proyecto', lmEditProject: 'Editar proyecto', lmNombre: 'Nombre', lmNombrePh: 'Mi proyecto...',
+    lmChecklist: 'Checklist', lmChecklistAddPh: 'Agregar tarea...', lmChecklistEmpty: 'Sin tareas todavía',
     lmDesc: 'Descripción', lmDescPh: '¿De qué se trata?', lmArea: 'Área',
     lmFechaLimite: 'Fecha límite', lmProgreso: 'Progreso:', lmEstado: 'Estado',
     lmNotas: 'Notas', lmNotasPh: 'Detalles, contexto, próximos pasos...',
@@ -211,7 +212,8 @@ const I18N_UI = {
     sugRevision: 'Weekly review', sugRevisionDesc: 'Close the week with a short reflection.',
     comenzar: 'Start →', sugFootHint: 'Want to reorganize something? Ask Foquito.',
     foqSaltear: 'Skip', foqRedoTitle: 'Redo my week', foqInputPh: 'Message Foquito...',
-    lmNewProject: 'New project', lmNombre: 'Name', lmNombrePh: 'My project...',
+    lmNewProject: 'New project', lmEditProject: 'Edit project', lmNombre: 'Name', lmNombrePh: 'My project...',
+    lmChecklist: 'Checklist', lmChecklistAddPh: 'Add item...', lmChecklistEmpty: 'No items yet',
     lmDesc: 'Description', lmDescPh: "What's it about?", lmArea: 'Area',
     lmFechaLimite: 'Due date', lmProgreso: 'Progress:', lmEstado: 'Status',
     lmNotas: 'Notes', lmNotasPh: 'Details, context, next steps...',
@@ -370,6 +372,7 @@ let draggedProjId = null;
 let projModalId = null;
 let pmEstado = 'idea';
 let pmArea = null;
+let checklistItems = [];
 
 // Tu año state
 let tuanaChartPeriod = 'mes';
@@ -1796,29 +1799,77 @@ async function renderProyectos() {
           </div>`).join('');
   }
 
-  // Proyectos
-  const projList = document.getElementById('proyectos-simple-list');
-  if (projList) {
-    projList.innerHTML = projs.length === 0
-      ? `<div class="slab-empty">${t('sinProyectosAun')}</div>`
-      : projs.map(p => {
-          const col = PROJ_COLS.find(c => c.id === p.estado) || PROJ_COLS[0];
-          const area = p.area && AREAS[p.area] ? AREAS[p.area] : null;
-          const prog = p.progreso || 0;
-          return `<div class="slab-item proj-item" onclick="openProjModal('${p.id}')">
-            <div class="proj-item-top">
-              <span class="proj-dot" style="background:${col.color}"></span>
-              <span class="slab-item-name">${escH(p.nombre)}</span>
-              <span class="proj-chip" style="color:${col.color};border-color:${col.color}20">${projLabel(col.id)}</span>
-            </div>
-            ${area || prog > 0 ? `<div class="proj-item-foot">
-              ${area ? `<span class="proj-area" style="color:${area.color}">${areaLabel(p.area)}</span>` : '<span></span>'}
-              ${prog > 0 ? `<span class="proj-pct">${prog}%</span>` : ''}
-            </div>` : ''}
-            ${prog > 0 ? `<div class="proj-progress"><div class="proj-progress-fill" style="width:${prog}%;background:${col.color}40;--fill:${col.color}"></div></div>` : ''}
-          </div>`;
-        }).join('');
-  }
+  renderProjBoard(projs);
+}
+
+// Tablero kanban de Proyectos — 4 columnas por estado (PROJ_COLS), usa
+// proyectoCardHTML() para las tarjetas. Guarda `projs` en modulo aparte
+// (projBoardCache) para que el drop del drag&drop no tenga que re-pedir
+// todo a Supabase, solo actualiza local + persiste el cambio puntual.
+let projBoardCache = [];
+
+function renderProjBoard(projs) {
+  projBoardCache = projs;
+  const board = document.getElementById('proj-board');
+  if (!board) return;
+
+  board.innerHTML = PROJ_COLS.map(col => {
+    const colProjs = projs.filter(p => p.estado === col.id);
+    return `
+      <div class="kanban-col" data-estado="${col.id}"
+           ondragover="onProjDragOver(event, this)"
+           ondragleave="onProjDragLeave(event, this)"
+           ondrop="onProjDrop(event, this, '${col.id}')">
+        <div class="kanban-col-hd">
+          <span class="kcol-dot" style="background:${col.color}"></span>
+          <span class="kcol-title">${projLabel(col.id)}</span>
+          <span class="kcol-count">${colProjs.length}</span>
+        </div>
+        <div class="kanban-cards">
+          ${colProjs.length
+            ? colProjs.map(p => proyectoCardHTML(p, col.color)).join('')
+            : `<div class="kcard-empty">${t('sinProyectosAun')}</div>`}
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function onProjDragStart(ev, id) {
+  draggedProjId = id;
+  ev.target.classList.add('dragging');
+  ev.dataTransfer.effectAllowed = 'move';
+}
+
+function onProjDragEnd(ev) {
+  ev.target.classList.remove('dragging');
+  document.querySelectorAll('.kanban-col.drag-over').forEach(c => c.classList.remove('drag-over'));
+  draggedProjId = null;
+}
+
+function onProjDragOver(ev, colEl) {
+  ev.preventDefault();
+  colEl.classList.add('drag-over');
+}
+
+function onProjDragLeave(ev, colEl) {
+  colEl.classList.remove('drag-over');
+}
+
+async function onProjDrop(ev, colEl, estado) {
+  ev.preventDefault();
+  colEl.classList.remove('drag-over');
+  const id = draggedProjId;
+  if (!id) return;
+
+  const p = projBoardCache.find(x => x.id === id);
+  if (!p || p.estado === estado) return;
+
+  p.estado = estado;
+  renderProjBoard(projBoardCache);
+
+  const { error } = await db.from('proyectos').update({ estado, updated_at: new Date().toISOString() }).eq('id', id).eq('user_id', currentUser.id);
+  if (error) { console.error(error); renderProyectos(); }
 }
 
 async function deleteProyecto(id) {
@@ -1874,8 +1925,8 @@ function proyectoCardHTML(p, color) {
   if (p.fecha_limite) {
     const fl = new Date(p.fecha_limite + 'T00:00:00');
     const diff = Math.ceil((fl - hoy) / 86400000);
-    if (diff < 0)        fechaStr = `<span class="pcard-fecha overdue">Vencido</span>`;
-    else if (diff === 0) fechaStr = `<span class="pcard-fecha today">Hoy</span>`;
+    if (diff < 0)        fechaStr = `<span class="pcard-fecha overdue">${t('vencido')}</span>`;
+    else if (diff === 0) fechaStr = `<span class="pcard-fecha today">${t('hoyTitleDefault')}</span>`;
     else if (diff <= 3)  fechaStr = `<span class="pcard-fecha soon">${diff}d</span>`;
     else                 fechaStr = `<span class="pcard-fecha">${formatDate(fl, { year: false })}</span>`;
   }
@@ -1885,7 +1936,9 @@ function proyectoCardHTML(p, color) {
          data-id="${escH(p.id)}"
          draggable="true"
          style="--cc:${color}"
-         onclick="openProjModal('${escH(p.id)}')">
+         onclick="openProjModal('${escH(p.id)}')"
+         ondragstart="onProjDragStart(event,'${escH(p.id)}')"
+         ondragend="onProjDragEnd(event)">
       <div class="lcard-name">${escH(p.nombre)}</div>
       ${p.descripcion ? `<div class="lcard-tipo">${escH(p.descripcion)}</div>` : ''}
       <div class="lcard-foot">
@@ -1933,7 +1986,7 @@ async function openProjModal(id, estadoDefault) {
     document.getElementById('lm-notas').value               = data.notas || '';
     pmEstado = data.estado || 'idea';
     pmArea   = data.area   || null;
-    title.textContent    = 'Editar proyecto';
+    title.textContent    = t('lmEditProject');
     delBtn.style.display = 'block';
   } else {
     document.getElementById('lm-nombre').value             = '';
@@ -1942,12 +1995,18 @@ async function openProjModal(id, estadoDefault) {
     document.getElementById('lm-progreso').value           = 0;
     document.getElementById('lm-progreso-val').textContent = '0%';
     document.getElementById('lm-notas').value              = '';
-    title.textContent    = 'Nuevo proyecto';
+    title.textContent    = t('lmNewProject');
     delBtn.style.display = 'none';
   }
 
   renderPmEstados();
   renderPmAreas();
+
+  // El checklist necesita un proyecto ya guardado (proyecto_id real) —
+  // en "Nuevo proyecto" no hay id todavía, se oculta.
+  const checklistWrap = document.getElementById('lm-checklist-wrap');
+  if (checklistWrap) checklistWrap.style.display = id ? 'flex' : 'none';
+  if (id) await loadChecklist(id); else checklistItems = [];
 
   document.getElementById('lead-backdrop').style.display = 'block';
   document.getElementById('lead-modal').style.display    = 'flex';
@@ -1989,6 +2048,65 @@ function closeProjModal() {
   document.getElementById('lead-backdrop').style.display = 'none';
   document.getElementById('lead-modal').style.display    = 'none';
   projModalId = null;
+  checklistItems = [];
+}
+
+// ── CHECKLIST (panel de detalle de proyecto) ──────────────────
+async function loadChecklist(proyectoId) {
+  const { data, error } = await db.from('proyecto_tareas')
+    .select('*').eq('proyecto_id', proyectoId).eq('user_id', currentUser.id)
+    .order('orden', { ascending: true }).order('created_at', { ascending: true });
+  if (error) { console.error(error); checklistItems = []; } else { checklistItems = data || []; }
+  renderChecklist();
+}
+
+function renderChecklist() {
+  const el = document.getElementById('lm-checklist-list');
+  if (!el) return;
+  el.innerHTML = checklistItems.length === 0
+    ? `<div class="lm-checklist-empty">${t('lmChecklistEmpty')}</div>`
+    : checklistItems.map(item => `
+        <div class="lm-checklist-item">
+          <button class="lm-checklist-check${item.done ? ' done' : ''}" onclick="toggleChecklistItem('${item.id}')">
+            ${item.done ? '✓' : ''}
+          </button>
+          <span class="lm-checklist-text${item.done ? ' done' : ''}">${escH(item.texto)}</span>
+          <button class="lm-checklist-del" onclick="deleteChecklistItem('${item.id}')">×</button>
+        </div>
+      `).join('');
+}
+
+async function addChecklistItem() {
+  const inp = document.getElementById('lm-checklist-inp');
+  const texto = inp.value.trim();
+  if (!texto || !projModalId) return;
+  inp.value = '';
+
+  const orden = checklistItems.length;
+  const { data, error } = await db.from('proyecto_tareas')
+    .insert({ proyecto_id: projModalId, user_id: currentUser.id, texto, orden })
+    .select().single();
+  if (error) { console.error(error); return; }
+
+  checklistItems.push(data);
+  renderChecklist();
+  inp.focus();
+}
+
+async function toggleChecklistItem(id) {
+  const item = checklistItems.find(i => i.id === id);
+  if (!item) return;
+  item.done = !item.done;
+  renderChecklist();
+  const { error } = await db.from('proyecto_tareas').update({ done: item.done }).eq('id', id).eq('user_id', currentUser.id);
+  if (error) { console.error(error); item.done = !item.done; renderChecklist(); }
+}
+
+async function deleteChecklistItem(id) {
+  checklistItems = checklistItems.filter(i => i.id !== id);
+  renderChecklist();
+  const { error } = await db.from('proyecto_tareas').delete().eq('id', id).eq('user_id', currentUser.id);
+  if (error) console.error(error);
 }
 
 async function saveProjModal() {

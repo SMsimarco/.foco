@@ -3074,13 +3074,16 @@ body.ambient #app::before {
   font-family: 'Geist', sans-serif;
 }
 
-/* Kanban columns layout */
+/* Fila de arriba: Recordatorios + Notas (el tablero de Proyectos, más
+   abajo en .proj-board-section, necesita su propio ancho para 4 columnas
+   y ya no vive acá adentro). */
 .slab-view {
+  flex: 0 0 auto;
   flex-direction: row !important;
   align-items: flex-start;
   overflow-x: auto;
   overflow-y: hidden;
-  padding: 14px 12px;
+  padding: 14px 12px 0;
   gap: 10px;
 }
 
@@ -3088,8 +3091,18 @@ body.ambient #app::before {
   flex: 0 0 200px;
   display: flex;
   flex-direction: column;
-  max-height: calc(100vh - 140px);
+  max-height: 260px;
 }
+
+.proj-board-section {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  padding: 14px 0 0;
+}
+
+.proj-board-section .slab-hd { padding: 0 16px 8px; }
 
 .slab-hd {
   flex-shrink: 0;
@@ -3519,7 +3532,7 @@ body.ambient #app::before {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: min(460px, 95vw);
+  width: min(520px, 95vw);
   background: var(--surface);
   border: 1px solid var(--border2);
   border-radius: 16px;
@@ -3567,8 +3580,86 @@ body.ambient #app::before {
   flex-direction: column;
   gap: 13px;
   overflow-y: auto;
-  max-height: 55vh;
+  max-height: 65vh;
 }
+
+/* ── Checklist (panel de detalle tipo Trello) ── */
+.lm-checklist-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 2px;
+}
+
+.lm-checklist-check {
+  width: 17px;
+  height: 17px;
+  border-radius: 5px;
+  border: 1.5px solid var(--border2);
+  background: none;
+  cursor: pointer;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  padding: 0;
+}
+.lm-checklist-check.done {
+  background: var(--success);
+  border-color: var(--success);
+}
+
+.lm-checklist-text {
+  flex: 1;
+  font-size: 13px;
+  color: var(--text);
+  font-family: 'Geist', sans-serif;
+  word-break: break-word;
+}
+.lm-checklist-text.done {
+  color: var(--text3);
+  text-decoration: line-through;
+}
+
+.lm-checklist-del {
+  background: none;
+  border: none;
+  color: var(--text4);
+  font-size: 14px;
+  cursor: pointer;
+  line-height: 1;
+  padding: 2px 4px;
+  flex-shrink: 0;
+}
+.lm-checklist-del:hover { color: var(--danger); }
+
+.lm-checklist-empty {
+  font-size: 12px;
+  color: var(--text4);
+  padding: 4px 2px;
+  font-family: 'Geist', sans-serif;
+}
+
+.lm-checklist-add {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+}
+.lm-checklist-add .lm-inp { flex: 1; }
+
+.lm-checklist-add-btn {
+  width: 38px;
+  flex-shrink: 0;
+  background: var(--border2);
+  border: none;
+  border-radius: 10px;
+  color: var(--text2);
+  font-size: 18px;
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s;
+}
+.lm-checklist-add-btn:hover { background: var(--accent); color: #fff; }
 
 .lm-field {
   display: flex;
