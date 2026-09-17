@@ -2710,7 +2710,11 @@ body.ambient #app::before {
   width: calc(100% - 64px);
   max-width: 300px;
   border-radius: 16px;
-  border-top: none;
+  /* Antes solo tenía border-top (heredado del bottom-sheet) — flotando
+     centrado sobre el overlay oscuro (rgba(0,0,0,.55)) y con --surface
+     casi negro en dark, sin borde propio quedaba invisible ahí. */
+  border: 1px solid var(--border2);
+  box-shadow: 0 12px 32px rgba(0,0,0,0.4);
   padding: 20px 18px;
   z-index: 304;
   opacity: 0;
