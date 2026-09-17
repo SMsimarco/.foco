@@ -137,6 +137,7 @@ html, body {
 
 /* ── AUTH ── */
 .auth-screen {
+  position: relative;
   height: 100vh;
   height: 100dvh;
   display: flex;
@@ -144,6 +145,12 @@ html, body {
   align-items: center;
   justify-content: center;
   background: var(--bg);
+}
+
+.auth-lang-toggle-btn {
+  position: absolute;
+  top: 16px;
+  right: 16px;
 }
 
 /* Cartel arriba del form — deja claro que el registro "pasa por

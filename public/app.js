@@ -287,38 +287,30 @@ function applyI18nDom() {
 
   const langLabel = document.getElementById('lang-toggle-label');
   if (langLabel) langLabel.textContent = appLang.toUpperCase();
+  const authLangLabel = document.getElementById('auth-lang-toggle-label');
+  if (authLangLabel) authLangLabel.textContent = appLang.toUpperCase();
   document.documentElement.lang = appLang;
 }
 
+// Elegís el idioma una vez (auth-screen, antes de tener cuenta) y ahí queda
+// — cambiarlo después es una acción rara de configuración, no algo que pasa
+// en caliente mientras usás la app. Por eso esto solo guarda + repinta los
+// textos estáticos (sirve para el auth-screen, donde recargar tiraría lo que
+// la persona ya tipeó en el form). El cambio post-login real está en
+// toggleLanguage(), que sí recarga — mucho más simple y confiable que
+// mantener a mano un re-render de cada vista posible + parchear el saludo
+// de Foquito en memoria.
 function setLanguage(lang) {
   if (lang !== 'es' && lang !== 'en') return;
   appLang = lang;
   localStorage.setItem('foco-lang', lang);
   applyLanguageArrays();
   applyI18nDom();
-  // Re-renderiza lo que ya se había pintado en el idioma viejo (nombres de
-  // día/mes, fechas) — solo si la app ya arrancó, si no hay nada que repintar.
-  if (typeof currentUser !== 'undefined' && currentUser) {
-    if (typeof renderHoy === 'function' && currentView === 'semana') renderHoy();
-    if (typeof renderMes === 'function' && currentView === 'mes') renderMes();
-    if (typeof renderSemanaGrid === 'function' && currentView === 'semana-grid') renderSemanaGrid();
-    if (typeof renderProyectos === 'function' && currentView === 'patrones') renderProyectos();
-    if (typeof renderEquipo === 'function' && currentView === 'equipo') renderEquipo();
-  }
-  // Si Foquito todavía no tuvo ida y vuelta (solo el saludo inicial, sin
-  // historial), regenerarlo en el idioma nuevo — una vez que hay charla
-  // real no se puede "traducir" retroactivo sin volver a llamar la IA.
-  if (_foqGreeted && typeof _foqHistory !== 'undefined' && _foqHistory.length === 0) {
-    const msgs = document.getElementById('foq-messages');
-    if (msgs && msgs.children.length === 1) {
-      msgs.children[0].textContent = getFoquitoGreeting();
-    }
-  }
-  showToast(lang === 'en' ? 'Language: English' : 'Idioma: Español', 'info');
 }
 
 function toggleLanguage() {
   setLanguage(appLang === 'es' ? 'en' : 'es');
+  location.reload();
 }
 
 // app.js va al final del <body> — el DOM ya existe, no hace falta esperar

@@ -32,6 +32,10 @@
 
 <!-- AUTH SCREEN -->
 <div id="auth-screen" class="auth-screen" style="display:none">
+  <button class="lang-toggle-btn auth-lang-toggle-btn" id="auth-lang-toggle-btn" onclick="setLanguage(appLang === 'es' ? 'en' : 'es')" title="Language / Idioma">
+    <span id="auth-lang-toggle-label">ES</span>
+  </button>
+
   <div class="auth-foq-hint" onclick="clickAuthFoquitoHint()" title="Registrate">
     <div class="auth-foq-bubble" id="auth-foq-msg"></div>
   </div>
