@@ -727,8 +727,11 @@ html, body {
 }
 
 .hoy-title {
-  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
-  font-weight: 700;
+  /* Día es parte del trío Día/Semana/Mes (ver .mes-title / .sg-week-label) —
+     misma Instrument Serif itálica, quedaba afuera por error. */
+  font-family: 'Instrument Serif', serif;
+  font-style: italic;
+  font-weight: 400;
   font-size: 34px;
   letter-spacing: -0.01em;
   color: var(--ios-text);
