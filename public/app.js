@@ -384,6 +384,15 @@ let tuanaChartLabels  = [];
 // entrevista dentro del chat real de Foquito (ver sendFoquitoMessage)
 let _foqOnboarding = false;
 let _obHistory = [];
+// Acciones que la IA ya arma pero todavía no confirmó el usuario — ver
+// handleOnboardingReply. El gate de "confirmá antes de crear" vive acá, en
+// código, no solo en el prompt: un dump grande (rutina semanal completa en
+// un solo mensaje) hace que Haiku a veces se salte el paso de resumir y
+// preguntar, y devuelva las acciones ya en el primer turno. No confiamos en
+// que el prompt alcance — nunca se persiste nada en el mismo turno que
+// llegan las acciones, siempre queda un turno de por medio.
+let _obPendingAcciones = null;
+const OB_AFFIRM_RE = /\b(s[ií]|dale|joya|buenisimo|buenísimo|de una|listo|perfecto|asi esta bien|así está bien|quedo genial|quedó genial|ok|okay|okey|obvio|exacto|correcto|genial)\b/i;
 
 // Morning brief state
 let morningEnergy = null;
@@ -1136,155 +1145,6 @@ async function deleteEvent(id, dateISO) {
   removeEventFromDOM(id, dateISO);
   if (ev) showToast(`"${ev.title}" eliminado`, 'error');
   return true;
-}
-
-// ── PARSER LENGUAJE NATURAL ─────────────────────────────────
-
-function parseNL(raw) {
-  let s = raw.trim();
-  let date = null, h1 = 9, m1 = 0, h2 = 10, m2 = 0;
-
-  // Eliminar verbos introductorios
-  s = s.replace(/^(tengo que|voy a|quiero|necesito|hago|tengo|anoto|agendo|pongo)\s+/i, '');
-
-  // "desde ahora" / "de ahora" → hora actual redondeada a 30min
-  if (/desde\s+ahora|de\s+ahora/i.test(s)) {
-    const now = new Date();
-    const nowH = now.getHours();
-    const nowM = now.getMinutes() < 30 ? 0 : 30;
-    s = s.replace(/desde\s+ahora|de\s+ahora/i,
-      `desde las ${nowH}:${String(nowM).padStart(2, '0')}`);
-  }
-
-  // Normalizar minutos en español → "HH:MM"
-  s = s.replace(/(\d{1,2})\s+y\s+media\b/gi, (_, h) => `${h}:30`);
-  s = s.replace(/(\d{1,2})\s+y\s+cuarto\b/gi, (_, h) => `${h}:15`);
-  s = s.replace(/(\d{1,2})\s+y\s+(\d{1,2})\b/gi, (_, h, m) => `${h}:${String(m).padStart(2,'0')}`);
-  // "18 30" → "18:30" solo si el segundo número es minutos válidos (01-59)
-  s = s.replace(/\b(\d{1,2})\s+(\d{2})\b/g, (full, h, m) =>
-    parseInt(m) >= 1 && parseInt(m) <= 59 ? `${h}:${m}` : full);
-
-  const MONTHS = {
-    enero:0,febrero:1,marzo:2,abril:3,mayo:4,junio:5,
-    julio:6,agosto:7,septiembre:8,octubre:9,noviembre:10,diciembre:11
-  };
-  const DAYMAP = {
-    'hoy':-2,'mañana':-1,'manana':-1,
-    'lun':1,'lunes':1,'mar':2,'martes':2,
-    'mié':3,'mie':3,'miercoles':3,'miércoles':3,
-    'jue':4,'jueves':4,'vie':5,'viernes':5,
-    'sáb':6,'sab':6,'sabado':6,'sábado':6,
-    'dom':0,'domingo':0
-  };
-
-  // Fecha específica "22 de junio"
-  const dm = s.match(/(\d{1,2})\s+de\s+([a-záéíóúñ]+)/i);
-  if (dm && MONTHS[dm[2].toLowerCase()] !== undefined) {
-    const d = new Date();
-    d.setMonth(MONTHS[dm[2].toLowerCase()]);
-    d.setDate(parseInt(dm[1]));
-    if (d < new Date()) d.setFullYear(d.getFullYear() + 1);
-    date = d;
-    s = s.replace(dm[0], ' ');
-  }
-
-  // Día relativo o nombre de día
-  // OJO: \b de JS es ASCII-only ([A-Za-z0-9_]) — una tilde como la de "mié"
-  // NO cuenta como carácter de palabra, entonces \bmié\b matchea adentro de
-  // "miércoles" (ve la é como fin de palabra y arranca de nuevo en la r).
-  // Como los keys cortos ('mié') se prueban antes que los largos
-  // ('miercoles'/'miércoles') en DAYMAP, el replace de abajo cortaba el
-  // título a la mitad ("Miércoles..." → "Rcoles..."). Fix: reemplazar el \b
-  // de cierre por un lookahead que además excluya letras acentuadas, así
-  // ningún key corto puede cortar en medio de una palabra más larga.
-  const finDePalabra = '(?![a-zA-ZÀ-ÿ])';
-  if (!date) {
-    for (const [key, val] of Object.entries(DAYMAP)) {
-      if (new RegExp('\\b' + key + finDePalabra, 'i').test(s)) {
-        const now = new Date();
-        if (val === -2) {
-          date = new Date();
-        } else if (val === -1) {
-          date = new Date();
-          date.setDate(date.getDate() + 1);
-        } else {
-          let diff = (val - now.getDay() + 7) % 7;
-          if (!diff) diff = 7;
-          date = new Date(now);
-          date.setDate(now.getDate() + diff);
-        }
-        // Saca también el artículo pegado antes ("el sábado" → no debe quedar "el" suelto)
-        s = s.replace(new RegExp('\\b(el|la|los|las)\\s+' + key + finDePalabra + '|\\b' + key + finDePalabra, 'i'), ' ');
-        break;
-      }
-    }
-  }
-
-  // Rango horario — orden importa: más específicos primero
-  const rangePatterns = [
-    // "desde las X hasta/a las Y" / "de las X a/hasta Y"
-    /(?:desde\s+(?:las?\s+)?|de\s+(?:las?\s+)?)(\d{1,2})(?::(\d{2}))?\s*h?s?\s+(?:hasta\s+(?:las?\s+)?|a\s+(?:las?\s+)?)(\d{1,2})(?::(\d{2}))?\s*h?s?/i,
-    // "a las X hasta las Y"
-    /a\s+las?\s+(\d{1,2})(?::(\d{2}))?\s*h?s?\s+hasta\s+(?:las?\s+)?(\d{1,2})(?::(\d{2}))?\s*h?s?/i,
-    // "X hasta Y" / "X:MM hasta Y" (números simples)
-    /(\d{1,2})(?::(\d{2}))?\s*h?s?\s+hasta\s+(?:las?\s+)?(\d{1,2})(?::(\d{2}))?\s*h?s?/i,
-    // "X a Y" (fallback)
-    /(\d{1,2})(?::(\d{2}))?\s*h?s?\s+a\s+(?:las?\s+)?(\d{1,2})(?::(\d{2}))?\s*h?s?/i,
-  ];
-
-  let rangeFound = false;
-  for (const p of rangePatterns) {
-    const m = s.match(p);
-    if (m) {
-      h1 = parseInt(m[1]); m1 = parseInt(m[2] || 0);
-      h2 = parseInt(m[3]); m2 = parseInt(m[4] || 0);
-      s = s.replace(m[0], ' ');
-      rangeFound = true;
-      break;
-    }
-  }
-
-  // Hora única
-  let horaFound = rangeFound;
-  if (!rangeFound) {
-    const sp = [
-      /a\s+las?\s+(\d{1,2})(?::(\d{2}))?\s*h?s?/i,
-      /hasta\s+las?\s+(\d{1,2})(?::(\d{2}))?\s*h?s?/i,
-      /(\d{1,2})(?::(\d{2}))?\s*hs/i,
-      /\b(\d{1,2}):(\d{2})\b/,       // "14:30" bare (ya normalizado del preprocessor)
-      /\b([01]?\d|2[0-3])\b(?!\s*\w)/ // hora sola al final o sin letras pegadas
-    ];
-    for (const p of sp) {
-      const m = s.match(p);
-      if (m) {
-        h1 = parseInt(m[1]); m1 = parseInt(m[2] || 0);
-        h2 = h1 + 1; m2 = m1;
-        s = s.replace(m[0], ' ');
-        horaFound = true;
-        break;
-      }
-    }
-  }
-
-  // Limpiar palabras de tiempo sobrantes
-  s = s
-    .replace(/\bdesde\b/gi, ' ').replace(/\bhasta\b/gi, ' ')
-    .replace(/\bdesde\s+las?\b/gi, ' ').replace(/\bhasta\s+las?\b/gi, ' ')
-    .replace(/\ba\s+las?\b/gi, ' ').replace(/\bde\s+las?\b/gi, ' ')
-    .replace(/\bahora\b/gi, ' ')
-    .replace(/\s+/g, ' ').trim();
-
-  if (!date) date = new Date();
-
-  return {
-    name: s ? s.charAt(0).toUpperCase() + s.slice(1) : 'Nuevo evento',
-    date,
-    // sin hora detectada → null (cae en "Cuando puedas" en vez de 9-10 default)
-    h1: horaFound ? Math.min(h1, 23) : null,
-    m1: horaFound ? m1 : null,
-    h2: horaFound ? Math.min(h2, 23) : null,
-    m2: horaFound ? m2 : null
-  };
 }
 
 // ── RENDER HOY ──────────────────────────────────────────────
@@ -2683,12 +2543,14 @@ async function interpretFoquitoMessage(text) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         model: 'claude-haiku-4-5-20251001',
-        max_tokens: 2000,
+        max_tokens: 4000,
         system: langDirective() + `Sos Foquito, el asistente de agenda de la app .foco. Hablás en español rioplatense, de vos, cálido y breve (1-2 frases, sin emojis). Nunca reprochás ni hacés sentir mal a la persona.
 Hoy es ${DAYS_FULL[new Date().getDay()]} ${dateISO}.
 
 Agenda de los próximos días:
 ${agendaText || 'sin tareas anotadas'}
+
+Antes de crear algo (forma 1 o 2): mirá la Agenda de arriba. Si ese día ya hay una actividad que es LA MISMA aunque esté escrita distinto — sinónimo, mayúsculas, abreviatura ("gym" y "gimnasio" son lo mismo, "facu" y "facultad" también, "laburo" y "trabajo" también — usá sentido común, no un diccionario fijo) — no la crees de nuevo: usá la forma 5 (preguntar) y decile que ya tiene "X" anotado ese día, preguntando si quiere otra o prefiere que actualices esa.
 
 Analizá el mensaje del usuario (y la charla previa si la hay) y respondé SOLO con JSON válido, sin markdown ni texto extra. Una de estas 7 formas exactas:
 
@@ -2857,24 +2719,13 @@ async function sendFoquitoMessage(rawText) {
     return;
   }
 
-  // Fallback local: la IA no respondió (sin internet, endpoint caído) o devolvió algo inesperado.
-  const { name, date, h1, m1, h2, m2 } = parseNL(text);
-  if (!name) {
-    addFoqBubble('No te entendí bien. ¿Me lo contás de otra forma?', 'foq');
-    return;
-  }
-
-  const dateISO = toISO(date);
-  const startTime = h1 !== null ? fmtTime(h1, m1) : null;
-  const endTime = h2 !== null ? fmtTime(h2, m2) : null;
-
-  await addEvent(dateISO, name, startTime, endTime, false, null, false);
-
-  const dayLabel = dateISO === toISO(new Date())
-    ? 'hoy'
-    : `el ${DAYS[date.getDay()]} ${formatDate(date, { year: false })}`;
-  const timeLabel = startTime ? ` a las ${startTime}` : '';
-  const fallbackRespuesta = `Anotado: "${name}" ${dayLabel}${timeLabel}.`;
+  // La IA no respondió (sin internet, endpoint caído, JSON inválido/truncado) o
+  // devolvió una acción no reconocida. Antes esto caía a un parser local que
+  // creaba un evento a ciegas con el texto crudo entero — meses de bugs tipo
+  // "anotó todo el mensaje como un solo evento" o "creó un evento llamado 'No'"
+  // salían de acá. Mejor avisar y que el usuario reintente, nunca crear sin
+  // estar seguros de qué pidió.
+  const fallbackRespuesta = 'Uy, no pude procesar eso. ¿Lo mandás de nuevo?';
   addFoqBubble(fallbackRespuesta, 'foq');
   pushFoqHistory(text, fallbackRespuesta);
 }
@@ -3140,10 +2991,19 @@ async function markOnboardingCompleted() {
 // Formato de respuesta {mensaje, acciones} es propio de la entrevista,
 // distinto del {accion,respuesta} del chat normal — no comparten parser,
 // pero sí el mismo panel, el mismo input y el mismo addFoqBubble.
-const OB_SYSTEM_PROMPT = `Sos Foquito, el asistente de la app .foco, y es la primera vez que hablás con esta
+// Función y no const porque necesita la agenda actual interpolada — "rehacer
+// mi semana" corre esta misma entrevista con eventos ya cargados, y sin la
+// agenda acá no hay forma de detectar que "gym" que está contando de nuevo
+// es lo mismo que el "Gimnasio" que ya tiene puesto.
+function buildObSystemPrompt(agendaText) {
+  return `Sos Foquito, el asistente de la app .foco, y es la primera vez que hablás con esta
 persona. Todavía no sabés nada de ella. Tu trabajo ahora es conocer su rutina semanal
 con una charla corta, y al final armarle su semana base cargando los eventos que se
 repiten.
+
+Agenda actual de los próximos días (puede tener eventos ya cargados si esto es un
+"rehacer semana"):
+${agendaText || 'sin eventos cargados todavía'}
 
 # Tono
 - Español rioplatense, de vos, cálido y cercano. Sos Foquito, no un consultor.
@@ -3166,6 +3026,11 @@ repiten.
   5. A qué le quiere dar prioridad esta etapa.
 
 # Cierre (importante)
+- Antes de meter algo en el resumen, revisá la Agenda actual de arriba: si ya hay algo
+  ese día que es LA MISMA actividad aunque esté escrita distinto (sinónimo, mayúsculas,
+  abreviatura — "gym" y "gimnasio" son lo mismo, "facu" y "facultad" también — usá
+  sentido común), no la agregues de nuevo. Marcala como ya existente en el resumen en
+  vez de listarla como nueva.
 - Cuando tengas lo necesario, NO crees nada todavía. Primero resumí en pocos bullets
   la rutina que entendiste (día, hora y si es recurrente) y preguntá: "¿Está bien así
   o cambio algo?".
@@ -3201,6 +3066,7 @@ Respondé SIEMPRE un JSON válido y nada fuera de él:
 - No des indicaciones médicas, de dieta ni de ayuno. Si aparecen señales de
   agotamiento fuerte o malestar emocional, sugerí hablarlo con alguien, no lo
   resuelvas con la rutina.`;
+}
 
 function pushObHistory(userText, assistantResult) {
   _obHistory.push({ role: 'user', content: userText }, { role: 'assistant', content: JSON.stringify(assistantResult) });
@@ -3215,8 +3081,8 @@ async function interpretOnboardingMessage(text) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         model: 'claude-haiku-4-5-20251001',
-        max_tokens: 2000,
-        system: langDirective() + OB_SYSTEM_PROMPT,
+        max_tokens: 4000,
+        system: langDirective() + buildObSystemPrompt(buildFoqAgendaText()),
         messages: [..._obHistory, { role: 'user', content: text }]
       })
     });
@@ -3272,8 +3138,25 @@ function skipFoquitoOnboarding() {
 async function endFoquitoOnboarding() {
   _foqOnboarding = false;
   _obHistory = [];
+  _obPendingAcciones = null;
   toggleObSkipButton(false);
   await markOnboardingCompleted();
+}
+
+// Resumen armado desde los datos estructurados de las acciones (no desde el
+// texto libre de la IA) — así lo que se le muestra al usuario para confirmar
+// es siempre exactamente lo que se va a guardar, sin depender de si Haiku
+// redactó bien el resumen.
+function buildOnboardingSummary(acciones) {
+  const lineas = acciones
+    .filter(a => a.tipo === 'crear' && a.titulo)
+    .map(a => {
+      const dia = Number.isInteger(a.dia_semana) ? DAYS_FULL[a.dia_semana] : 'sin día fijo';
+      const hora = a.hora ? ` a las ${a.hora}` : '';
+      const rec = a.recurrente ? ' (todas las semanas)' : '';
+      return `- ${a.titulo}: ${dia}${hora}${rec}`;
+    });
+  return `Esto es lo que entendí:\n${lineas.join('\n')}\n\n¿Confirmás así o cambio algo?`;
 }
 
 // dia_semana (0-6) sin fecha concreta se ancla a su próxima ocurrencia
@@ -3347,6 +3230,24 @@ async function handleOnboardingReply(text) {
     return;
   }
 
+  // Había un resumen esperando confirmación del turno anterior — se resuelve
+  // acá con regex propio, sin volver a llamarle a la IA: si el usuario
+  // confirma, se crea lo que ya se mostró (nunca lo que diga este turno de
+  // la IA, para que lo creado sea exactamente lo que la persona vio y
+  // aceptó). Cualquier otra respuesta se trata como corrección y sigue el
+  // flujo normal de abajo.
+  if (_obPendingAcciones) {
+    if (OB_AFFIRM_RE.test(text.trim())) {
+      const acciones = _obPendingAcciones;
+      _obPendingAcciones = null;
+      await createOnboardingEvents(acciones);
+      addFoqBubble('Listo, quedó armada tu semana.', 'foq');
+      await endFoquitoOnboarding();
+      return;
+    }
+    _obPendingAcciones = null;
+  }
+
   const result = await interpretOnboardingMessage(text);
 
   if (!result?.mensaje) {
@@ -3354,13 +3255,19 @@ async function handleOnboardingReply(text) {
     return;
   }
 
-  addFoqBubble(result.mensaje, 'foq');
   pushObHistory(text, result);
 
+  // Gate en código: nunca se persiste en el mismo turno que llegan las
+  // acciones, aunque la IA se haya saltado el paso de resumir y preguntar.
+  // Se muestra un resumen propio (de los datos, no del texto libre de la
+  // IA) y se espera confirmación explícita el turno que viene.
   if (Array.isArray(result.acciones) && result.acciones.length) {
-    await createOnboardingEvents(result.acciones);
-    await endFoquitoOnboarding();
+    _obPendingAcciones = result.acciones;
+    addFoqBubble(buildOnboardingSummary(result.acciones), 'foq');
+    return;
   }
+
+  addFoqBubble(result.mensaje, 'foq');
 }
 
 // ── WEEKLY DIGEST ───────────────────────────────────────────
