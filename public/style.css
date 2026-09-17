@@ -720,7 +720,9 @@ html, body {
 }
 
 .hoy-date {
-  font-size: 13px;
+  font-family: 'Instrument Serif', serif;
+  font-style: italic;
+  font-size: 15px;
   font-weight: 500;
   color: var(--ios-text2);
   text-transform: capitalize;
