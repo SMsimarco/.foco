@@ -879,6 +879,11 @@ async function loadWeek(offset = weekOffset) {
     .eq('user_id', currentUser.id)
     .eq('recurrente', true);
 
+  // done de un recurrente es por ocurrencia (fecha), no por fila — si no,
+  // marcar "Gym" done un día lo deja done en TODOS los días que lo inyectan
+  // (semana que viene incluida, mismo id de fila en todos lados).
+  const completionsSet = await fetchCompletionsSet(recData, start, end);
+
   (recData || []).forEach(ev => {
     ev.start_time = ev.start_time ? ev.start_time.slice(0, 5) : ev.start_time;
     ev.end_time   = ev.end_time   ? ev.end_time.slice(0, 5)   : ev.end_time;
@@ -888,11 +893,26 @@ async function loadWeek(offset = weekOffset) {
         const iso = toISO(d);
         if (!eventsCache[iso]) eventsCache[iso] = [];
         if (!eventsCache[iso].find(e => e.id === ev.id)) {
-          eventsCache[iso].push({ ...ev, date: iso });
+          eventsCache[iso].push({ ...ev, date: iso, done: completionsSet.has(`${ev.id}|${iso}`) });
         }
       }
     });
   });
+}
+
+// Trae qué ocurrencias (event_id + fecha) de eventos recurrentes están
+// completadas, en el rango [start, end]. Devuelve un Set de "id|fecha".
+async function fetchCompletionsSet(recData, start, end) {
+  const ids = (recData || []).map(ev => ev.id);
+  if (ids.length === 0) return new Set();
+  const { data, error } = await db
+    .from('event_completions')
+    .select('event_id, date')
+    .in('event_id', ids)
+    .gte('date', start)
+    .lte('date', end);
+  if (error) { console.error(error); return new Set(); }
+  return new Set((data || []).map(c => `${c.event_id}|${c.date}`));
 }
 
 // Carga los eventos del día mostrado en la vista Hoy (independiente de loadWeek,
@@ -918,6 +938,7 @@ async function loadDia() {
   });
 
   // Inyectar eventos recurrentes que correspondan a este día de semana
+  const completionsSet = await fetchCompletionsSet(recData, dateISO, dateISO);
   (recData || []).forEach(ev => {
     if (ev.dia_semana !== null && ev.dia_semana !== diaSemana) return;
     if (eventsCache[dateISO].find(e => e.id === ev.id)) return;
@@ -925,7 +946,8 @@ async function loadDia() {
       ...ev,
       date: dateISO,
       start_time: ev.start_time ? ev.start_time.slice(0, 5) : null,
-      end_time: ev.end_time ? ev.end_time.slice(0, 5) : null
+      end_time: ev.end_time ? ev.end_time.slice(0, 5) : null,
+      done: completionsSet.has(`${ev.id}|${dateISO}`)
     });
   });
 }
@@ -1051,8 +1073,19 @@ async function toggleDone(id, dateISO) {
     }
   }
 
-  const { error } = await db.from('events').update({ done: newDone }).eq('id', id);
-  if (error) { console.error(error); return; }
+  if (ev.recurrente) {
+    // Recurrente = 1 fila compartida por todas las ocurrencias — el done
+    // va aparte, por fecha, en event_completions (no en events.done).
+    const { error } = newDone
+      ? await db.from('event_completions')
+          .upsert({ event_id: id, date: dateISO, user_id: currentUser.id }, { onConflict: 'event_id,date' })
+      : await db.from('event_completions')
+          .delete().eq('event_id', id).eq('date', dateISO).eq('user_id', currentUser.id);
+    if (error) { console.error(error); return; }
+  } else {
+    const { error } = await db.from('events').update({ done: newDone }).eq('id', id);
+    if (error) { console.error(error); return; }
+  }
 
   ev.done = newDone;
   updateEventDoneInDOM(id, newDone, dateISO);
