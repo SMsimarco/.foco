@@ -2697,21 +2697,41 @@ body.ambient #app::before {
 }
 
 /* ── CONFIRMACIÓN GENÉRICA (delete de evento/proyecto/nota) ── */
-/* Reusa .recur-overlay/.recur-modal (mismo sheet centrado abajo), con su
-   propio z-index para quedar arriba del event-panel (z:300) y del recur-modal
-   (z:301/302) — la confirmación de borrado gana si se disparan juntos. */
+/* Antes reusaba el bottom-sheet grande de .recur-modal (ancho completo,
+   pegado abajo) — a pedido de Marco pasa a ser un modal chico centrado,
+   más acorde a lo poco que tiene adentro (una pregunta + 2 botones). */
 .confirm-overlay { z-index: 303; }
-.confirm-modal { z-index: 304; }
+.confirm-modal {
+  position: fixed;
+  bottom: auto;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%) scale(0.94);
+  width: calc(100% - 64px);
+  max-width: 300px;
+  border-radius: 16px;
+  border-top: none;
+  padding: 20px 18px;
+  z-index: 304;
+  opacity: 0;
+  transition: transform 0.2s cubic-bezier(.4,0,.2,1), opacity 0.2s;
+}
+.confirm-modal.open {
+  transform: translate(-50%, -50%) scale(1);
+  opacity: 1;
+}
+.confirm-modal .recur-modal-header { margin-bottom: 14px; text-align: center; }
 .confirm-modal-actions {
   display: flex;
   gap: 10px;
   margin-top: 4px;
 }
+.confirm-modal-actions .panel-focus-btn { height: 40px; }
 .confirm-danger-btn {
   flex: 1;
-  height: 46px;
+  height: 40px;
   border: none;
-  border-radius: 12px;
+  border-radius: 10px;
   background: var(--danger);
   color: var(--text);
   font-size: 13px;
