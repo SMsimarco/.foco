@@ -303,6 +303,15 @@ function setLanguage(lang) {
     if (typeof renderProyectos === 'function' && currentView === 'patrones') renderProyectos();
     if (typeof renderEquipo === 'function' && currentView === 'equipo') renderEquipo();
   }
+  // Si Foquito todavía no tuvo ida y vuelta (solo el saludo inicial, sin
+  // historial), regenerarlo en el idioma nuevo — una vez que hay charla
+  // real no se puede "traducir" retroactivo sin volver a llamar la IA.
+  if (_foqGreeted && typeof _foqHistory !== 'undefined' && _foqHistory.length === 0) {
+    const msgs = document.getElementById('foq-messages');
+    if (msgs && msgs.children.length === 1) {
+      msgs.children[0].textContent = getFoquitoGreeting();
+    }
+  }
   showToast(lang === 'en' ? 'Language: English' : 'Idioma: Español', 'info');
 }
 
