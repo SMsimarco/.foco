@@ -573,18 +573,28 @@ const VAPID_PUBLIC_KEY = 'BFsTfVDGrFgb523bGBTe-kNZned8b0dojS1DcVp_GIAK-58MJHf0fL
 // Cartel de Foquito arriba del login/registro — sin sesión todavía, así
 // que es texto fijo random (no hay agenda ni nombre para personalizar
 // como el saludo post-login de getFoquitoGreeting).
-const AUTH_FOQ_MESSAGES = [
-  'Che, soy Foquito. Registrate y armamos tu semana juntos.',
-  'Contame tu rutina y te la organizo — pero primero necesito que entres.',
-  '¿Nueva persona por acá? Creá tu cuenta y arrancamos ya.',
-  'Yo me encargo de tu agenda. Vos solo tenés que registrarte.',
-  'Che, dale — registrate y en dos minutos ya tenés tu semana armada.'
-];
+const AUTH_FOQ_MESSAGES = {
+  es: [
+    'Che, soy Foquito. Registrate y armamos tu semana juntos.',
+    'Contame tu rutina y te la organizo — pero primero necesito que entres.',
+    '¿Nueva persona por acá? Creá tu cuenta y arrancamos ya.',
+    'Yo me encargo de tu agenda. Vos solo tenés que registrarte.',
+    'Che, dale — registrate y en dos minutos ya tenés tu semana armada.'
+  ],
+  en: [
+    "Hey, I'm Foquito. Sign up and we'll build your week together.",
+    "Tell me your routine and I'll organize it — but first I need you to sign in.",
+    'New around here? Create your account and we start now.',
+    "I'll take care of your schedule. You just have to sign up.",
+    "Come on — sign up and in two minutes your week is ready."
+  ]
+};
 
 function initAuthFoquitoHint() {
   const el = document.getElementById('auth-foq-msg');
   if (!el) return;
-  el.textContent = AUTH_FOQ_MESSAGES[Math.floor(Math.random() * AUTH_FOQ_MESSAGES.length)];
+  const pool = AUTH_FOQ_MESSAGES[appLang];
+  el.textContent = pool[Math.floor(Math.random() * pool.length)];
 }
 
 function clickAuthFoquitoHint() {
@@ -1053,7 +1063,11 @@ async function toggleDone(id, dateISO) {
 }
 
 function pickFoquitoCelebration() {
-  const frases = [
+  const frases = appLang === 'en' ? [
+    'You closed out the whole day. Fully earned, total pride.',
+    'Everything done. That\'s how it\'s done, perfect day.',
+    'There it is, you finished everything today. You showed up.'
+  ] : [
     'Cerraste el día entero. Con toda la razón del mundo, orgullo total.',
     'Todo hecho. Así se hace, día redondo.',
     'Ahí está, terminaste todo lo de hoy. Te la bancaste.'
@@ -2348,56 +2362,86 @@ function setFoquitoState(state) {
 // Nombre de pila aparece la mayoría de las veces (no siempre, para que no
 // suene repetitivo) — este saludo es literalmente "cuando entrás" (primer
 // open del panel de la sesión, ver toggleFoquitoWidget/initFoquitoDesktop).
+// Pools ES/EN — el idioma de Foquito acá sigue a appLang (no depende de
+// en qué idioma escriba la persona, a diferencia del chat con Claude que
+// entiende cualquier input; este saludo es texto fijo local, sin IA).
 function getFoquitoGreeting() {
   const dateISO = toISO(new Date());
   const dayEvs = eventsCache[dateISO] || [];
   const nombre = (currentProfile?.display_name || '').split(' ')[0];
   const usarNombre = !!nombre && Math.random() < 0.6;
   const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+  const en = appLang === 'en';
 
   if (!dayEvs.length) {
-    return pick(usarNombre ? [
+    return pick(usarNombre ? (en ? [
+      `Hey ${nombre}, I'm Foquito. Tell me what you've got to do and I'll note it down.`,
+      `${nombre}, starting from zero today. Say the word and I'll schedule it.`,
+      `Hey ${nombre}. What's the plan for today?`
+    ] : [
       `Hola ${nombre}, soy Foquito. Contame qué tenés que hacer y te lo anoto.`,
       `${nombre}, arrancamos de cero hoy. Decime algo y lo agendo.`,
       `Hola ${nombre}. ¿Qué tenés pensado para hoy?`
+    ]) : (en ? [
+      "Hey, I'm Foquito. Tell me what you've got to do, by text or voice, and I'll note it down.",
+      "Starting from zero today. Say the word and I'll schedule it.",
+      "What's the plan for today? I'll note it down."
     ] : [
       'Hola, soy Foquito. Contame qué tenés que hacer, por texto o por audio, y te lo anoto.',
       'Arrancamos de cero hoy. Decime algo y lo agendo.',
       '¿Qué tenés pensado para hoy? Te lo anoto.'
-    ]);
+    ]));
   }
 
   const done = dayEvs.filter(e => e.done).length;
   const total = dayEvs.length;
 
   if (done === total) {
-    return pick(usarNombre ? [
+    return pick(usarNombre ? (en ? [
+      `You already closed out today, ${nombre}. Want to add something for tomorrow?`,
+      `${nombre}, full day done. Should we leave something ready for tomorrow?`
+    ] : [
       `Ya cerraste todo por hoy, ${nombre}. ¿Sumamos algo para mañana?`,
       `${nombre}, día completo. ¿Dejamos algo listo para mañana?`
+    ]) : (en ? [
+      'You already closed out today. Want to add something for tomorrow?',
+      'Full day done. Should we leave something ready for tomorrow?'
     ] : [
       'Ya cerraste todo por hoy. ¿Sumamos algo para mañana?',
       'Día completo. ¿Dejamos algo listo para mañana?'
-    ]);
+    ]));
   }
 
   const hour = new Date().getHours();
   if (hour >= 18 && done === 0) {
-    return pick(usarNombre ? [
+    return pick(usarNombre ? (en ? [
+      `Come on ${nombre}, there's still time. Which one should we start with?`,
+      `${nombre}, there's still time. Want to start with something short?`
+    ] : [
       `Vamos ${nombre}, que todavía se puede. ¿Con cuál arrancamos?`,
       `${nombre}, todavía hay tiempo. ¿Arrancamos con algo corto?`
+    ]) : (en ? [
+      "Come on, there's still time. Which one should we start with?",
+      "There's still time. Want to start with something short?"
     ] : [
       'Vamos que todavía se puede. ¿Con cuál arrancamos?',
       'Todavía hay tiempo. ¿Arrancamos con algo corto?'
-    ]);
+    ]));
   }
 
-  return pick(usarNombre ? [
+  return pick(usarNombre ? (en ? [
+    `You're at ${done} of ${total} today, ${nombre}. Tell me what else we're adding.`,
+    `${nombre}, ${done} of ${total} done. Keep going?`
+  ] : [
     `Vas ${done} de ${total} hoy, ${nombre}. Contame qué más anotamos.`,
     `${nombre}, ${done} de ${total} hecho. ¿Seguimos?`
+  ]) : (en ? [
+    `You're at ${done} of ${total} today. Tell me what else we're adding.`,
+    `${done} of ${total} done. Keep going?`
   ] : [
     `Vas ${done} de ${total} hoy. Contame qué más anotamos.`,
     `${done} de ${total} hecho. ¿Seguimos?`
-  ]);
+  ]));
 }
 
 // En desktop (>=1024px) el panel de Foquito queda fijo y siempre visible por CSS
