@@ -1148,7 +1148,8 @@ async function toggleDone(id, dateISO) {
 
   if (newDone) {
     const dayEvs = eventsCache[dateISO] || [];
-    if (dayEvs.length > 0 && dayEvs.every(e => e.done)) {
+    const diaCompleto = dayEvs.length > 0 && dayEvs.every(e => e.done);
+    if (diaCompleto) {
       setTimeout(fireConfetti, 120);
       showToast('¡Día completado!', 'success');
       if (_foqCelebratedDate !== dateISO) {
@@ -1157,6 +1158,11 @@ async function toggleDone(id, dateISO) {
         addFoqBubble(pickFoquitoCelebration(), 'foq');
         setTimeout(() => setFoquitoState(null), 4000);
       }
+    } else {
+      // Completar UNA tarea (no el día entero, ese caso ya lo maneja
+      // "celebrating" arriba) — gesto corto de aprobación, sin bubble.
+      setFoquitoState('approving');
+      setTimeout(() => setFoquitoState(null), 1500);
     }
   }
 }
@@ -4412,6 +4418,11 @@ Respondé SOLO con JSON válido sin markdown:
 
   document.getElementById('rv-loading').style.display = 'none';
   document.getElementById('rv-result').style.display = 'flex';
+
+  // Cerrar la reflexión semanal es un momento más íntimo que completar
+  // una tarea suelta — gesto de cariño en vez de aprobación genérica.
+  setFoquitoState('love');
+  setTimeout(() => setFoquitoState(null), 4000);
 }
 
 function closeReview() {
