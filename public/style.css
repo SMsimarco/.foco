@@ -1485,10 +1485,13 @@ html, body {
   flex-shrink: 0;
 }
 
-/* Estados de Foquito — hasta tener las variantes de expresión separadas,
-   "reacciona" con un gesto simple sobre la misma imagen */
-#foq-fab.state-happy { animation: foqBounce 0.5s cubic-bezier(.34,1.56,.64,1); }
-#foq-fab.state-thinking .foq-avatar-img { animation: foqPulse 1s ease-in-out infinite; }
+/* Estados de Foquito — cada uno cambia el PNG (ver FOQ_STATE_IMAGES en
+   app.js) y además un gesto simple sobre esa imagen. */
+#foq-fab.state-happy,
+#foq-fab.state-celebrating { animation: foqBounce 0.5s cubic-bezier(.34,1.56,.64,1); }
+#foq-fab.state-thinking .foq-avatar-img,
+#foq-fab.state-reading .foq-avatar-img { animation: foqPulse 1s ease-in-out infinite; }
+#foq-fab.state-sleepy .foq-avatar-img { animation: foqSleepy 2.4s ease-in-out infinite; }
 
 @keyframes foqBounce {
   0%, 100% { transform: scale(1); }
@@ -1498,6 +1501,11 @@ html, body {
 @keyframes foqPulse {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.55; }
+}
+
+@keyframes foqSleepy {
+  0%, 100% { opacity: 1; transform: translateY(0); }
+  50% { opacity: 0.7; transform: translateY(2px); }
 }
 
 #foq-panel {
@@ -2759,6 +2767,22 @@ body.ambient #app::before {
   transition: opacity .15s;
 }
 .confirm-danger-btn:hover { opacity: 0.88; }
+.quickadd-save-btn {
+  flex: 1;
+  height: 40px;
+  border: none;
+  border-radius: 10px;
+  background: var(--accent);
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 600;
+  font-family: 'Geist', sans-serif;
+  cursor: pointer;
+  transition: opacity .15s;
+}
+.quickadd-save-btn:hover { opacity: 0.88; }
+#quickadd-modal .slab-input { margin-top: 2px; }
+.sg-day-col { cursor: pointer; }
 
 /* ── REPETICIÓN (event panel) ── */
 .panel-recur-pills {

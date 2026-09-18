@@ -144,7 +144,8 @@ const I18N_UI = {
     lmDesc: 'Descripción', lmDescPh: '¿De qué se trata?', lmArea: 'Área',
     lmFechaLimite: 'Fecha límite', lmProgreso: 'Progreso:', lmEstado: 'Estado',
     lmNotas: 'Notas', lmNotasPh: 'Detalles, contexto, próximos pasos...',
-    eliminar: 'Eliminar', cancelar: 'Cancelar',
+    eliminar: 'Eliminar', cancelar: 'Cancelar', agregar: 'Agregar',
+    quickaddPregunta: '¿Qué evento?', quickaddPh: 'Ej: Gimnasio',
     digestCompletadas: 'completadas', digestCommitment: 'commitment', digestTotal: 'total', cerrar: 'Cerrar',
     rvQ1: '¿Qué fue lo más importante que lograste esta semana?', rvPh1: 'Escribí libremente...',
     siguiente: 'Siguiente →', rvQ2: '¿Qué no salió como esperabas? ¿Por qué?', rvPh2: 'Sin juicio, solo observar...',
@@ -217,7 +218,8 @@ const I18N_UI = {
     lmDesc: 'Description', lmDescPh: "What's it about?", lmArea: 'Area',
     lmFechaLimite: 'Due date', lmProgreso: 'Progress:', lmEstado: 'Status',
     lmNotas: 'Notes', lmNotasPh: 'Details, context, next steps...',
-    eliminar: 'Delete', cancelar: 'Cancel',
+    eliminar: 'Delete', cancelar: 'Cancel', agregar: 'Add',
+    quickaddPregunta: 'What event?', quickaddPh: 'E.g: Gym',
     digestCompletadas: 'completed', digestCommitment: 'commitment', digestTotal: 'total', cerrar: 'Close',
     rvQ1: 'What was the most important thing you accomplished this week?', rvPh1: 'Write freely...',
     siguiente: 'Next →', rvQ2: "What didn't go as expected? Why?", rvPh2: 'No judgment, just observe...',
@@ -979,6 +981,57 @@ async function loadMonth() {
 
 let _pendingEvent = null;
 
+// Click en hueco vacío de la grilla (Semana o Día) — toma fecha+hora de la
+// columna/posición clickeada y pide solo el título antes de reusar el mismo
+// flujo de promptAndAddEvent/confirmRecurrence que ya dispara el chat.
+let _quickAddCtx = null;
+
+function handleGridColClick(e) {
+  const col = e.target.closest('.sg-day-col');
+  if (!col || e.target.closest('.sg-block')) return;
+
+  const dateISO = col.dataset.date;
+  const horaBase = Number(col.dataset.horaBase);
+  if (!dateISO || Number.isNaN(horaBase)) return;
+
+  const rect = col.getBoundingClientRect();
+  let minutesFromBase = ((e.clientY - rect.top) / ALTO_HORA) * 60;
+  minutesFromBase = Math.round(minutesFromBase / 15) * 15;
+  const totalMin = Math.max(0, horaBase * 60 + minutesFromBase);
+
+  const toHHMM = m => `${String(Math.floor(m / 60) % 24).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`;
+  openQuickAdd(dateISO, toHHMM(totalMin), toHHMM(totalMin + 60));
+}
+
+function openQuickAdd(dateISO, startTime, endTime) {
+  _quickAddCtx = { dateISO, startTime, endTime };
+
+  const d = new Date(dateISO + 'T12:00:00');
+  document.getElementById('quickadd-meta').textContent = `${DAYS_FULL[d.getDay()]} · ${startTime}`;
+
+  const inp = document.getElementById('quickadd-title');
+  inp.value = '';
+  document.getElementById('quickadd-modal').classList.add('open');
+  document.getElementById('quickadd-overlay').classList.add('open');
+  setTimeout(() => inp.focus(), 50);
+}
+
+function closeQuickAdd() {
+  document.getElementById('quickadd-modal').classList.remove('open');
+  document.getElementById('quickadd-overlay').classList.remove('open');
+  _quickAddCtx = null;
+}
+
+function confirmQuickAdd() {
+  if (!_quickAddCtx) return;
+  const title = document.getElementById('quickadd-title').value.trim();
+  if (!title) return;
+
+  const { dateISO, startTime, endTime } = _quickAddCtx;
+  closeQuickAdd();
+  promptAndAddEvent(dateISO, title, startTime, endTime);
+}
+
 function promptAndAddEvent(dateISO, title, startTime, endTime, isFocus = false) {
   if (!title.trim()) return;
   _pendingEvent = { dateISO, title, startTime, endTime, isFocus };
@@ -1100,7 +1153,7 @@ async function toggleDone(id, dateISO) {
       showToast('¡Día completado!', 'success');
       if (_foqCelebratedDate !== dateISO) {
         _foqCelebratedDate = dateISO;
-        setFoquitoState('happy');
+        setFoquitoState('celebrating');
         addFoqBubble(pickFoquitoCelebration(), 'foq');
         setTimeout(() => setFoquitoState(null), 4000);
       }
@@ -1296,6 +1349,8 @@ function renderDiaGrid(dateISO, dayEvents) {
   const colEl = document.getElementById('dg-day-col');
   if (colEl) {
     colEl.style.height = alturaTotal + 'px';
+    colEl.dataset.date = dateISO;
+    colEl.dataset.horaBase = horaBase;
     colEl.innerHTML = renderGridColumnHTML(dateISO, horaBase, horaTope, isToday(diaActual));
   }
 }
@@ -1492,7 +1547,7 @@ function renderSemanaGrid() {
   if (daysEl) {
     daysEl.innerHTML = week.map(d => {
       const dateISO = toISO(d);
-      return `<div class="sg-day-col" style="height:${alturaTotal}px">${renderGridColumnHTML(dateISO, horaBase, horaTope, isToday(d))}</div>`;
+      return `<div class="sg-day-col" data-date="${dateISO}" data-hora-base="${horaBase}" style="height:${alturaTotal}px">${renderGridColumnHTML(dateISO, horaBase, horaTope, isToday(d))}</div>`;
     }).join('');
   }
 }
@@ -2241,6 +2296,7 @@ async function generateAISummary() {
   titleEl.textContent = 'Analizando tu semana...';
   textEl.textContent = '';
   tipEl.style.display = 'none';
+  setFoquitoState('reading');
 
   const allEvs = week.flatMap(d => eventsCache[toISO(d)] || []);
   const done = allEvs.filter(e => e.done).length;
@@ -2297,6 +2353,8 @@ Respondé SOLO con JSON válido, sin markdown ni texto extra:
   } catch {
     titleEl.textContent = 'Tu semana';
     textEl.textContent = 'No se pudo conectar con la IA.';
+  } finally {
+    setFoquitoState(null);
   }
 }
 
@@ -2362,11 +2420,32 @@ let _foqOpen = false;
 let _foqCelebratedDate = null;
 
 // Cara de Foquito reacciona al momento: idle (default), happy (festejo), thinking (procesando voz)
+// Un PNG por estado (mismo estilo del avatar base) — si el archivo no está
+// todavía en /public, el onerror pisa el src con el avatar default en vez
+// de dejar el ícono roto.
+const FOQ_STATE_IMAGES = {
+  happy: '/foquito-happy.png',
+  thinking: '/foquito-thinking.png',
+  sleepy: '/foquito-sleepy.png',
+  celebrating: '/foquito-celebrating.png',
+  reading: '/foquito-reading.png',
+  love: '/foquito-love.png',
+  approving: '/foquito-approving.png'
+};
+const FOQ_STATES = Object.keys(FOQ_STATE_IMAGES);
+
 function setFoquitoState(state) {
   const fab = document.getElementById('foq-fab');
   if (!fab) return;
-  fab.classList.remove('state-happy', 'state-thinking');
+  fab.classList.remove(...FOQ_STATES.map(s => 'state-' + s));
   if (state) fab.classList.add('state-' + state);
+
+  const img = fab.querySelector('.foq-avatar-img');
+  if (!img) return;
+  const src = (state && FOQ_STATE_IMAGES[state]) || '/foquito-avatar.png';
+  if (img.src.endsWith(src)) return;
+  img.onerror = () => { img.onerror = null; img.src = '/foquito-avatar.png'; };
+  img.src = src;
 }
 
 // Saludo cambia según cómo viene el día, y no es siempre el mismo texto
@@ -2458,10 +2537,21 @@ function getFoquitoGreeting() {
 
 // En desktop (>=1024px) el panel de Foquito queda fijo y siempre visible por CSS
 // (ver style.css), sin pasar por toggleFoquitoWidget — solo falta el saludo inicial.
+// Saludo + estado sleepy si es de noche (23-6hs) — mismo criterio de horario
+// "de descansar" que ya usa el mockup de referencia de Foquito.
+function showFoquitoGreeting() {
+  addFoqBubble(getFoquitoGreeting(), 'foq');
+  const hour = new Date().getHours();
+  if (hour >= 23 || hour < 6) {
+    setFoquitoState('sleepy');
+    setTimeout(() => setFoquitoState(null), 4000);
+  }
+}
+
 function initFoquitoDesktop() {
   if (!_foqGreeted && window.matchMedia('(min-width: 1024px)').matches) {
     _foqGreeted = true;
-    addFoqBubble(getFoquitoGreeting(), 'foq');
+    showFoquitoGreeting();
   }
 }
 
@@ -2473,7 +2563,7 @@ function toggleFoquitoWidget() {
   if (_foqOpen) {
     if (!_foqGreeted) {
       _foqGreeted = true;
-      addFoqBubble(getFoquitoGreeting(), 'foq');
+      showFoquitoGreeting();
     }
     document.getElementById('foq-input')?.focus();
   }
@@ -2913,10 +3003,11 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
-    // Escape — cerrar panel y command palette
+    // Escape — cerrar panel, command palette y quick-add
     if (e.key === 'Escape') {
       closeCmd();
       if (document.getElementById('event-panel')?.classList.contains('open')) closeEventPanel();
+      if (document.getElementById('quickadd-modal')?.classList.contains('open')) closeQuickAdd();
       return;
     }
 
@@ -2939,6 +3030,9 @@ document.addEventListener('DOMContentLoaded', () => {
         break;
     }
   });
+
+  // Click en hueco vacío de la grilla horaria (Semana o Día) — agregar evento
+  document.addEventListener('click', handleGridColClick);
 
   // Command palette — input listener
   const cmdInp = document.getElementById('cmd-input');

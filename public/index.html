@@ -832,6 +832,21 @@
   </div>
 </div>
 
+<!-- MODAL AGREGAR EVENTO (click en hueco vacío del calendario) -->
+<div id="quickadd-overlay" class="recur-overlay confirm-overlay" onclick="closeQuickAdd()"></div>
+<div id="quickadd-modal" class="recur-modal confirm-modal">
+  <div class="recur-modal-header">
+    <div class="recur-modal-event" id="quickadd-meta">—</div>
+    <div class="recur-modal-question" data-i18n="quickaddPregunta">¿Qué evento?</div>
+  </div>
+  <input class="slab-input" id="quickadd-title" data-i18n-ph="quickaddPh" placeholder="Ej: Gimnasio"
+    onkeydown="if(event.key==='Enter'){event.preventDefault();confirmQuickAdd();}" />
+  <div class="confirm-modal-actions" style="margin-top:12px">
+    <button class="panel-focus-btn" onclick="closeQuickAdd()" data-i18n="cancelar">Cancelar</button>
+    <button class="quickadd-save-btn" onclick="confirmQuickAdd()" data-i18n="agregar">Agregar</button>
+  </div>
+</div>
+
 <!-- COMMAND PALETTE -->
 <div id="cmd-overlay" class="cmd-overlay" onclick="closeCmd()"></div>
 <div id="cmd-palette" class="cmd-palette">
