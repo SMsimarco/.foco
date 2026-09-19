@@ -2456,6 +2456,20 @@ function setFoquitoState(state) {
     img.onerror = () => { img.onerror = null; img.src = '/foquito-avatar.png'; };
     img.src = src;
   });
+
+  // Burbuja grande arriba a la derecha — la reacción que de verdad se ve
+  // (el icono del header/FAB es chico y pasa desapercibido).
+  const reaction = document.getElementById('foq-reaction');
+  const reactionImg = document.getElementById('foq-reaction-img');
+  if (reaction && reactionImg) {
+    if (state) {
+      reactionImg.onerror = () => { reactionImg.onerror = null; reactionImg.src = '/foquito-avatar.png'; };
+      reactionImg.src = src;
+      reaction.classList.add('show');
+    } else {
+      reaction.classList.remove('show');
+    }
+  }
 }
 
 // Saludo cambia según cómo viene el día, y no es siempre el mismo texto

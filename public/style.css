@@ -2024,6 +2024,38 @@ html, body {
 }
 
 .toast.show { transform: translateX(0); opacity: 1; }
+
+/* Reacción grande de Foquito — arriba a la derecha, sobre todo (10000,
+   por encima de los toasts). Oculta por default, pop-in/out al cambiar
+   de estado (ver setFoquitoState en app.js). */
+#foq-reaction {
+  position: fixed;
+  top: 56px;
+  right: 12px;
+  z-index: 10000;
+  width: 84px;
+  height: 84px;
+  border-radius: 50%;
+  background: var(--card-blur);
+  border: 1px solid var(--border2);
+  box-shadow: 0 8px 28px rgba(0,0,0,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px;
+  opacity: 0;
+  transform: scale(0.4) translateY(-8px);
+  transition: transform 0.32s cubic-bezier(.34,1.56,.64,1), opacity 0.22s;
+  pointer-events: none;
+}
+#foq-reaction.show { opacity: 1; transform: scale(1) translateY(0); }
+#foq-reaction img { width: 100%; height: 100%; object-fit: contain; }
+
+@media (min-width: 1024px) {
+  /* Panel de chat mide 380px fijo ahí — la corremos para que caiga del
+     lado del calendario, no tapada atrás/adentro del panel. */
+  #foq-reaction { top: 20px; right: 392px; }
+}
 .toast-success { border-color: rgba(16,185,129,0.45); color: var(--success-text); }
 .toast-error   { border-color: rgba(244,63,94,0.45);  color: var(--danger-text); }
 .toast-info    { border-color: rgba(var(--accent-rgb), 0.35);  color: var(--text2); }
