@@ -2440,18 +2440,22 @@ const FOQ_STATE_IMAGES = {
 };
 const FOQ_STATES = Object.keys(FOQ_STATE_IMAGES);
 
+// Actualiza TODOS los avatares visibles de Foquito, no solo el FAB — en
+// desktop (>=1024px) el FAB queda display:none (ver style.css) y el que
+// se ve es el ícono del header de #foq-panel, siempre abierto ahí.
 function setFoquitoState(state) {
-  const fab = document.getElementById('foq-fab');
-  if (!fab) return;
-  fab.classList.remove(...FOQ_STATES.map(s => 'state-' + s));
-  if (state) fab.classList.add('state-' + state);
-
-  const img = fab.querySelector('.foq-avatar-img');
-  if (!img) return;
+  const fabImg = document.querySelector('#foq-fab .foq-avatar-img');
+  const panelImg = document.getElementById('foq-panel-avatar');
   const src = (state && FOQ_STATE_IMAGES[state]) || '/foquito-avatar.png';
-  if (img.src.endsWith(src)) return;
-  img.onerror = () => { img.onerror = null; img.src = '/foquito-avatar.png'; };
-  img.src = src;
+
+  [fabImg, panelImg].forEach(img => {
+    if (!img) return;
+    img.classList.remove(...FOQ_STATES.map(s => 'state-' + s));
+    if (state) img.classList.add('state-' + state);
+    if (img.src.endsWith(src)) return;
+    img.onerror = () => { img.onerror = null; img.src = '/foquito-avatar.png'; };
+    img.src = src;
+  });
 }
 
 // Saludo cambia según cómo viene el día, y no es siempre el mismo texto

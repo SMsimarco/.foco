@@ -1486,12 +1486,16 @@ html, body {
 }
 
 /* Estados de Foquito — cada uno cambia el PNG (ver FOQ_STATE_IMAGES en
-   app.js) y además un gesto simple sobre esa imagen. */
-#foq-fab.state-happy,
-#foq-fab.state-celebrating { animation: foqBounce 0.5s cubic-bezier(.34,1.56,.64,1); }
-#foq-fab.state-thinking .foq-avatar-img,
-#foq-fab.state-reading .foq-avatar-img { animation: foqPulse 1s ease-in-out infinite; }
-#foq-fab.state-sleepy .foq-avatar-img { animation: foqSleepy 2.4s ease-in-out infinite; }
+   app.js) y además un gesto simple sobre esa imagen. Clases van directo
+   en el <img> (setFoquitoState) para que funcionen igual en el FAB
+   (mobile) y en el header de #foq-panel (desktop, FAB queda oculto). */
+.foq-avatar-img.state-happy,
+.foq-avatar-img.state-celebrating,
+.foq-avatar-img.state-approving,
+.foq-avatar-img.state-love { animation: foqBounce 0.5s cubic-bezier(.34,1.56,.64,1); }
+.foq-avatar-img.state-thinking,
+.foq-avatar-img.state-reading { animation: foqPulse 1s ease-in-out infinite; }
+.foq-avatar-img.state-sleepy { animation: foqSleepy 2.4s ease-in-out infinite; }
 
 @keyframes foqBounce {
   0%, 100% { transform: scale(1); }
