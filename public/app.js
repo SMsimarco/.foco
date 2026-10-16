@@ -139,6 +139,13 @@ const I18N_UI = {
     sugRevision: 'Revisión semanal', sugRevisionDesc: 'Cerrá la semana con una reflexión corta.',
     comenzar: 'Comenzar →', sugFootHint: '¿Reorganizar algo? Pedíselo a Foquito.',
     foqSaltear: 'Saltear', foqRedoTitle: 'Rehacer mi semana', foqInputPh: 'Escribile a Foquito...',
+    projTodos: 'Todos', projProximo: 'Próximo', projProximoPaso: 'Próximo paso', projDe: 'de', projTareasMin: 'tareas',
+    projTareas: 'Tareas', projCronograma: 'Cronograma', projIncluye: 'Incluye', projExcluye: 'No incluye',
+    projCliente: 'Cliente', projMonto: 'Monto', projPlazo: 'Plazo', projContactos: 'Contactos', projVia: 'Vía',
+    projAbrirTablero: 'Abrir tablero', projEditar: 'Editar', projCambiarEstado: 'Cambiar estado', projLink: 'Link del tablero',
+    projColor: 'Color', projUnoPorLinea: 'uno por línea', projCronoAyuda: 'cuándo | qué | estado (pendiente, ahora, listo)',
+    projClientePh: 'Para quién es', projViaPh: 'Directo, Qenti, Antic...', projMontoPh: 'USD 1.000 · 50/50', projPlazoPh: '6 semanas',
+    projProximoPh: 'Lo siguiente que tiene que pasar',
     lmNewProject: 'Nuevo proyecto', lmEditProject: 'Editar proyecto', lmNombre: 'Nombre', lmNombrePh: 'Mi proyecto...',
     lmChecklist: 'Checklist', lmChecklistAddPh: 'Agregar tarea...', lmChecklistEmpty: 'Sin tareas todavía',
     lmDesc: 'Descripción', lmDescPh: '¿De qué se trata?', lmArea: 'Área',
@@ -213,6 +220,13 @@ const I18N_UI = {
     sugRevision: 'Weekly review', sugRevisionDesc: 'Close the week with a short reflection.',
     comenzar: 'Start →', sugFootHint: 'Want to reorganize something? Ask Foquito.',
     foqSaltear: 'Skip', foqRedoTitle: 'Redo my week', foqInputPh: 'Message Foquito...',
+    projTodos: 'All', projProximo: 'Next', projProximoPaso: 'Next step', projDe: 'of', projTareasMin: 'tasks',
+    projTareas: 'Tasks', projCronograma: 'Timeline', projIncluye: 'Includes', projExcluye: 'Not included',
+    projCliente: 'Client', projMonto: 'Amount', projPlazo: 'Timeframe', projContactos: 'Contacts', projVia: 'Via',
+    projAbrirTablero: 'Open board', projEditar: 'Edit', projCambiarEstado: 'Change status', projLink: 'Board link',
+    projColor: 'Color', projUnoPorLinea: 'one per line', projCronoAyuda: 'when | what | status (pendiente, ahora, listo)',
+    projClientePh: 'Who it is for', projViaPh: 'Direct, agency...', projMontoPh: 'USD 1,000 · 50/50', projPlazoPh: '6 weeks',
+    projProximoPh: 'The next thing that has to happen',
     lmNewProject: 'New project', lmEditProject: 'Edit project', lmNombre: 'Name', lmNombrePh: 'My project...',
     lmChecklist: 'Checklist', lmChecklistAddPh: 'Add item...', lmChecklistEmpty: 'No items yet',
     lmDesc: 'Description', lmDescPh: "What's it about?", lmArea: 'Area',
@@ -362,10 +376,10 @@ let notifOn = true;
 let authMode = 'login';
 
 // Proyectos state
-let draggedProjId = null;
 let projModalId = null;
 let pmEstado = 'idea';
 let pmArea = null;
+let pmColor = null;
 let checklistItems = [];
 
 // Tu año state
@@ -1748,74 +1762,288 @@ async function renderProyectos() {
   renderProjBoard(projs);
 }
 
-// Tablero kanban de Proyectos — 4 columnas por estado (PROJ_COLS), usa
-// proyectoCardHTML() para las tarjetas. Guarda `projs` en modulo aparte
-// (projBoardCache) para que el drop del drag&drop no tenga que re-pedir
-// todo a Supabase, solo actualiza local + persiste el cambio puntual.
+// Tablero de Proyectos — igual al tablero de seguimiento: arriba un resumen
+// con una tarjeta por proyecto (estado, cliente, monto, próximo paso y
+// avance de tareas) y, al tocar una, la vista completa del proyecto: datos,
+// próximo paso, tareas para tildar, cronograma, qué incluye y qué no, notas.
+// Guarda `projs` en módulo (projBoardCache) para re-renderizar sin volver a
+// pedir todo a Supabase.
 let projBoardCache = [];
+let projTareasCount = {};   // { proyecto_id: [hechas, total] }
+let projFilter = 'todos';
+let projDetailId = null;
+let projDetailTareas = [];
 
-function renderProjBoard(projs) {
+const PROJ_COLORS = ['#6366F1', '#06B6D4', '#10B981', '#F59E0B', '#F43F5E', '#A78BFA', '#3B82F6', '#71717A'];
+const CRONO_ESTADOS = ['pendiente', 'ahora', 'listo'];
+
+function projColor(p) {
+  if (p.color) return p.color;
+  const col = PROJ_COLS.find(c => c.id === p.estado);
+  return col ? col.color : 'var(--accent)';
+}
+
+function projEstadoChip(p) {
+  const col = PROJ_COLS.find(c => c.id === p.estado);
+  const color = col ? col.color : '#71717A';
+  return `<span class="ptab-chip" style="--chip:${color}">${escH(projLabel(p.estado))}</span>`;
+}
+
+function projAvance(p) {
+  const c = projTareasCount[p.id];
+  if (c && c[1] > 0) return { hechas: c[0], total: c[1], pct: Math.round(c[0] / c[1] * 100) };
+  return { hechas: 0, total: 0, pct: p.progreso || 0 };
+}
+
+function asList(v) {
+  if (Array.isArray(v)) return v.filter(Boolean);
+  if (typeof v === 'string' && v.trim()) return v.split('\n').map(s => s.trim()).filter(Boolean);
+  return [];
+}
+
+async function loadProjTareasCount() {
+  const { data, error } = await db.from('proyecto_tareas')
+    .select('proyecto_id, done').eq('user_id', currentUser.id);
+  projTareasCount = {};
+  if (error) { console.error(error); return; }
+  (data || []).forEach(r => {
+    const c = projTareasCount[r.proyecto_id] || (projTareasCount[r.proyecto_id] = [0, 0]);
+    c[1]++; if (r.done) c[0]++;
+  });
+}
+
+async function renderProjBoard(projs) {
   projBoardCache = projs;
+  if (currentUser) await loadProjTareasCount();
+  if (projDetailId && projs.some(p => p.id === projDetailId)) {
+    await openProjDetail(projDetailId);
+  } else {
+    projDetailId = null;
+    renderProjGrid();
+  }
+}
+
+function renderProjGrid() {
   const board = document.getElementById('proj-board');
   if (!board) return;
+  const projs = projBoardCache;
+  document.querySelector('.proj-board-section')?.classList.remove('is-detail');
 
-  board.innerHTML = PROJ_COLS.map(col => {
-    const colProjs = projs.filter(p => p.estado === col.id);
-    return `
-      <div class="kanban-col" data-estado="${col.id}"
-           ondragover="onProjDragOver(event, this)"
-           ondragleave="onProjDragLeave(event, this)"
-           ondrop="onProjDrop(event, this, '${col.id}')">
-        <div class="kanban-col-hd">
-          <span class="kcol-dot" style="background:${col.color}"></span>
-          <span class="kcol-title">${projLabel(col.id)}</span>
-          <span class="kcol-count">${colProjs.length}</span>
+  const filtros = [{ id: 'todos', label: t('projTodos'), n: projs.length }]
+    .concat(PROJ_COLS.map(c => ({ id: c.id, label: projLabel(c.id), n: projs.filter(p => p.estado === c.id).length, color: c.color })));
+  const visibles = projFilter === 'todos' ? projs : projs.filter(p => p.estado === projFilter);
+
+  board.innerHTML = `
+    <div class="ptab-filters">
+      ${filtros.map(f => `
+        <button class="ptab-filter${projFilter === f.id ? ' active' : ''}" onclick="setProjFilter('${f.id}')">
+          ${f.color ? `<span class="ptab-dot" style="background:${f.color}"></span>` : ''}${escH(f.label)} <span class="ptab-n">${f.n}</span>
+        </button>`).join('')}
+    </div>
+    <div class="ptab-grid">
+      ${visibles.length
+        ? visibles.map(proyectoCardHTML).join('')
+        : `<div class="ptab-empty">${t('sinProyectosAun')}</div>`}
+    </div>`;
+}
+
+function setProjFilter(id) {
+  projFilter = id;
+  renderProjGrid();
+}
+
+function proyectoCardHTML(p) {
+  const color = projColor(p);
+  const av = projAvance(p);
+  const sub = [p.cliente, p.monto].filter(Boolean).map(escH).join(' · ') || (p.descripcion ? escH(p.descripcion) : '');
+  let fechaStr = '';
+  if (p.fecha_limite) {
+    const hoy = new Date(); hoy.setHours(0,0,0,0);
+    const fl = new Date(p.fecha_limite + 'T00:00:00');
+    const diff = Math.ceil((fl - hoy) / 86400000);
+    if (diff < 0)        fechaStr = `<span class="pcard-fecha overdue">${t('vencido')}</span>`;
+    else if (diff === 0) fechaStr = `<span class="pcard-fecha today">${t('hoyTitleDefault')}</span>`;
+    else if (diff <= 3)  fechaStr = `<span class="pcard-fecha soon">${diff}d</span>`;
+    else                 fechaStr = `<span class="pcard-fecha">${formatDate(fl, { year: false })}</span>`;
+  }
+  return `
+    <button class="ptab-card" style="--pc:${color}" onclick="openProjDetail('${escH(p.id)}')">
+      <div class="ptab-card-hd">
+        <span class="ptab-card-name">${escH(p.nombre)}</span>
+        ${projEstadoChip(p)}
+      </div>
+      ${sub ? `<div class="ptab-card-sub">${sub}</div>` : ''}
+      ${p.proximo_paso ? `<div class="ptab-card-next"><b>${t('projProximo')}:</b> ${escH(p.proximo_paso)}</div>` : ''}
+      <div class="ptab-card-foot">
+        <span>${av.total ? `${av.hechas} ${t('projDe')} ${av.total} ${t('projTareasMin')}` : (av.pct ? av.pct + '%' : '')}</span>
+        ${fechaStr}
+        <span class="ptab-bar"><i style="width:${av.pct}%"></i></span>
+      </div>
+    </button>`;
+}
+
+// ── Vista completa de un proyecto ──
+async function openProjDetail(id) {
+  const p = projBoardCache.find(x => x.id === id);
+  if (!p) return;
+  projDetailId = id;
+  const { data, error } = await db.from('proyecto_tareas')
+    .select('*').eq('proyecto_id', id).eq('user_id', currentUser.id)
+    .order('orden', { ascending: true }).order('created_at', { ascending: true });
+  projDetailTareas = error ? [] : (data || []);
+  renderProjDetail();
+  document.getElementById('proj-board')?.scrollTo?.(0, 0);
+}
+
+function closeProjDetail() {
+  projDetailId = null;
+  renderProjGrid();
+}
+
+function renderProjDetail() {
+  const board = document.getElementById('proj-board');
+  const p = projBoardCache.find(x => x.id === projDetailId);
+  if (!board || !p) return;
+  document.querySelector('.proj-board-section')?.classList.add('is-detail');
+  const color = projColor(p);
+  const hechas = projDetailTareas.filter(x => x.done).length;
+  const total = projDetailTareas.length;
+  const pct = total ? Math.round(hechas / total * 100) : (p.progreso || 0);
+  const facts = [
+    [t('projCliente'), p.cliente], [t('projMonto'), p.monto], [t('projPlazo'), p.plazo],
+    [t('projContactos'), asList(p.contactos).join(', ')]
+  ].filter(f => f[1]);
+  const crono = Array.isArray(p.cronograma) ? p.cronograma : [];
+  const incluye = asList(p.incluye), excluye = asList(p.excluye), notas = asList(p.notas);
+  const list = items => `<ul>${items.map(x => `<li>${escH(x)}</li>`).join('')}</ul>`;
+
+  board.innerHTML = `
+    <div class="pdet" style="--pc:${color}">
+      <button class="pdet-back" onclick="closeProjDetail()">‹ ${t('slabProyectos')}</button>
+
+      <div class="pdet-hd">
+        <div class="pdet-hd-main">
+          ${p.via ? `<div class="pdet-eyebrow">${escH(p.via)}</div>` : ''}
+          <h2 class="pdet-title"><span class="ptab-dot" style="background:${color}"></span>${escH(p.nombre)}</h2>
+          ${p.descripcion ? `<p class="pdet-lead">${escH(p.descripcion)}</p>` : ''}
         </div>
-        <div class="kanban-cards">
-          ${colProjs.length
-            ? colProjs.map(p => proyectoCardHTML(p, col.color)).join('')
-            : `<div class="kcard-empty">${t('sinProyectosAun')}</div>`}
+        <div class="pdet-actions">
+          ${projEstadoChip(p)}
+          ${p.link_tablero ? `<a class="pdet-btn" href="${escH(p.link_tablero)}" target="_blank" rel="noopener">${t('projAbrirTablero')} ↗</a>` : ''}
+          <button class="pdet-btn" onclick="openProjModal('${escH(p.id)}')">${t('projEditar')}</button>
         </div>
       </div>
-    `;
-  }).join('');
+
+      ${facts.length ? `<div class="pdet-facts">${facts.map(f => `<div class="pdet-fact"><span>${escH(f[0])}</span><b>${escH(f[1])}</b></div>`).join('')}</div>` : ''}
+
+      ${p.proximo_paso ? `<div class="pdet-next"><span>${t('projProximoPaso')}</span><b>${escH(p.proximo_paso)}</b></div>` : ''}
+
+      <div class="pdet-cols">
+        <div class="pdet-panel">
+          <div class="pdet-panel-hd"><span>${t('projTareas')}</span><span class="ptab-n">${hechas} ${t('projDe')} ${total}</span></div>
+          <span class="ptab-bar wide"><i style="width:${pct}%"></i></span>
+          <div class="pdet-checks">
+            ${total ? projDetailTareas.map(it => `
+              <div class="pdet-check${it.done ? ' done' : ''}">
+                <button class="lm-checklist-check${it.done ? ' done' : ''}" onclick="toggleDetailTarea('${it.id}')">${it.done ? '✓' : ''}</button>
+                <span class="pdet-check-txt">${escH(it.texto)}</span>
+                <button class="lm-checklist-del" onclick="deleteDetailTarea('${it.id}')">×</button>
+              </div>`).join('') : `<div class="lm-checklist-empty">${t('lmChecklistEmpty')}</div>`}
+          </div>
+          <div class="lm-checklist-add">
+            <input class="lm-inp" id="pdet-tarea-inp" type="text" placeholder="${escH(t('lmChecklistAddPh'))}"
+                   onkeydown="if(event.key==='Enter'){event.preventDefault();addDetailTarea();}"/>
+            <button class="lm-checklist-add-btn" onclick="addDetailTarea()">+</button>
+          </div>
+        </div>
+
+        ${crono.length ? `
+        <div class="pdet-panel">
+          <div class="pdet-panel-hd"><span>${t('projCronograma')}</span></div>
+          <ul class="pdet-crono">
+            ${crono.map((c, i) => `
+              <li class="${escH(c.estado || 'pendiente')}">
+                <button class="pdet-crono-dot" title="${escH(t('projCambiarEstado'))}" onclick="cycleCronoEstado(${i})"></button>
+                <div><div class="pdet-crono-when">${escH(c.cuando || '')}</div><div>${escH(c.que || '')}</div></div>
+              </li>`).join('')}
+          </ul>
+        </div>` : ''}
+      </div>
+
+      ${(incluye.length || excluye.length || notas.length) ? `
+      <div class="pdet-cols three">
+        ${incluye.length ? `<div class="pdet-panel pdet-inc"><div class="pdet-panel-hd"><span>${t('projIncluye')}</span></div>${list(incluye)}</div>` : ''}
+        ${excluye.length ? `<div class="pdet-panel pdet-exc"><div class="pdet-panel-hd"><span>${t('projExcluye')}</span></div>${list(excluye)}</div>` : ''}
+        ${notas.length ? `<div class="pdet-panel"><div class="pdet-panel-hd"><span>${t('lmNotas')}</span></div>${list(notas)}</div>` : ''}
+      </div>` : ''}
+    </div>`;
 }
 
-function onProjDragStart(ev, id) {
-  draggedProjId = id;
-  ev.target.classList.add('dragging');
-  ev.dataTransfer.effectAllowed = 'move';
+function syncDetailCount() {
+  projTareasCount[projDetailId] = [projDetailTareas.filter(x => x.done).length, projDetailTareas.length];
 }
 
-function onProjDragEnd(ev) {
-  ev.target.classList.remove('dragging');
-  document.querySelectorAll('.kanban-col.drag-over').forEach(c => c.classList.remove('drag-over'));
-  draggedProjId = null;
+async function toggleDetailTarea(id) {
+  const it = projDetailTareas.find(x => x.id === id);
+  if (!it) return;
+  it.done = !it.done; syncDetailCount(); renderProjDetail();
+  const { error } = await db.from('proyecto_tareas').update({ done: it.done }).eq('id', id).eq('user_id', currentUser.id);
+  if (error) { console.error(error); it.done = !it.done; syncDetailCount(); renderProjDetail(); }
 }
 
-function onProjDragOver(ev, colEl) {
-  ev.preventDefault();
-  colEl.classList.add('drag-over');
+async function addDetailTarea() {
+  const inp = document.getElementById('pdet-tarea-inp');
+  const texto = inp?.value.trim();
+  if (!texto || !projDetailId) return;
+  const { data, error } = await db.from('proyecto_tareas')
+    .insert({ proyecto_id: projDetailId, user_id: currentUser.id, texto, orden: projDetailTareas.length })
+    .select().single();
+  if (error) { console.error(error); return; }
+  projDetailTareas.push(data); syncDetailCount(); renderProjDetail();
+  document.getElementById('pdet-tarea-inp')?.focus();
 }
 
-function onProjDragLeave(ev, colEl) {
-  colEl.classList.remove('drag-over');
+async function deleteDetailTarea(id) {
+  projDetailTareas = projDetailTareas.filter(x => x.id !== id);
+  syncDetailCount(); renderProjDetail();
+  const { error } = await db.from('proyecto_tareas').delete().eq('id', id).eq('user_id', currentUser.id);
+  if (error) console.error(error);
 }
 
-async function onProjDrop(ev, colEl, estado) {
-  ev.preventDefault();
-  colEl.classList.remove('drag-over');
-  const id = draggedProjId;
-  if (!id) return;
+async function cycleCronoEstado(i) {
+  const p = projBoardCache.find(x => x.id === projDetailId);
+  if (!p || !Array.isArray(p.cronograma) || !p.cronograma[i]) return;
+  const cur = CRONO_ESTADOS.indexOf(p.cronograma[i].estado || 'pendiente');
+  p.cronograma = p.cronograma.map((c, j) => j === i ? { ...c, estado: CRONO_ESTADOS[(cur + 1) % CRONO_ESTADOS.length] } : c);
+  renderProjDetail();
+  const { error } = await db.from('proyectos').update({ cronograma: p.cronograma, updated_at: new Date().toISOString() })
+    .eq('id', p.id).eq('user_id', currentUser.id);
+  if (error) console.error(error);
+}
 
-  const p = projBoardCache.find(x => x.id === id);
-  if (!p || p.estado === estado) return;
+// Cronograma en el modal: una línea por hito → "cuándo | qué | estado"
+// (estado opcional: pendiente, ahora o listo).
+function cronoToText(c) {
+  return (Array.isArray(c) ? c : []).map(x => [x.cuando || '', x.que || '', x.estado && x.estado !== 'pendiente' ? x.estado : ''].filter((v, i) => i < 2 || v).join(' | ')).join('\n');
+}
+function textToCrono(txt) {
+  return txt.split('\n').map(l => l.trim()).filter(Boolean).map(l => {
+    const parts = l.split('|').map(s => s.trim());
+    if (parts.length === 1) return { cuando: '', que: parts[0], estado: 'pendiente' };
+    const est = (parts[2] || '').toLowerCase();
+    return { cuando: parts[0], que: parts[1], estado: CRONO_ESTADOS.includes(est) ? est : 'pendiente' };
+  });
+}
 
-  p.estado = estado;
-  renderProjBoard(projBoardCache);
-
-  const { error } = await db.from('proyectos').update({ estado, updated_at: new Date().toISOString() }).eq('id', id).eq('user_id', currentUser.id);
-  if (error) { console.error(error); renderProyectos(); }
+function renderPmColors() {
+  const el = document.getElementById('lm-colors');
+  if (!el) return;
+  el.innerHTML = PROJ_COLORS.map(c => `
+    <button class="lm-color${pmColor === c ? ' active' : ''}" style="background:${c}" onclick="selectPmColor('${c}')" aria-label="${c}"></button>`).join('');
+}
+function selectPmColor(c) {
+  pmColor = pmColor === c ? null : c;
+  renderPmColors();
 }
 
 async function deleteProyecto(id) {
@@ -1864,44 +2092,6 @@ async function saveNota() {
   renderProyectos();
 }
 
-function proyectoCardHTML(p, color) {
-  const area = p.area && AREAS[p.area] ? AREAS[p.area] : null;
-  const hoy = new Date(); hoy.setHours(0,0,0,0);
-  let fechaStr = '';
-  if (p.fecha_limite) {
-    const fl = new Date(p.fecha_limite + 'T00:00:00');
-    const diff = Math.ceil((fl - hoy) / 86400000);
-    if (diff < 0)        fechaStr = `<span class="pcard-fecha overdue">${t('vencido')}</span>`;
-    else if (diff === 0) fechaStr = `<span class="pcard-fecha today">${t('hoyTitleDefault')}</span>`;
-    else if (diff <= 3)  fechaStr = `<span class="pcard-fecha soon">${diff}d</span>`;
-    else                 fechaStr = `<span class="pcard-fecha">${formatDate(fl, { year: false })}</span>`;
-  }
-  const progreso = p.progreso || 0;
-  return `
-    <div class="lead-card"
-         data-id="${escH(p.id)}"
-         draggable="true"
-         style="--cc:${color}"
-         onclick="openProjModal('${escH(p.id)}')"
-         ondragstart="onProjDragStart(event,'${escH(p.id)}')"
-         ondragend="onProjDragEnd(event)">
-      <div class="lcard-name">${escH(p.nombre)}</div>
-      ${p.descripcion ? `<div class="lcard-tipo">${escH(p.descripcion)}</div>` : ''}
-      <div class="lcard-foot">
-        ${area
-          ? `<span class="pcard-area"><span class="pcard-area-dot" style="background:${area.color}"></span><span style="color:${area.color}">${areaLabel(p.area)}</span></span>`
-          : '<span></span>'}
-        ${fechaStr}
-      </div>
-      ${progreso > 0 ? `
-        <div class="pcard-progress-bar">
-          <div class="pcard-progress-fill" style="width:${progreso}%;background:${color}"></div>
-        </div>
-      ` : ''}
-    </div>
-  `;
-}
-
 function escH(s) {
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
@@ -1932,6 +2122,8 @@ async function openProjModal(id, estadoDefault) {
     document.getElementById('lm-notas').value               = data.notas || '';
     pmEstado = data.estado || 'idea';
     pmArea   = data.area   || null;
+    pmColor  = data.color  || null;
+    setProjExtraFields(data);
     title.textContent    = t('lmEditProject');
     delBtn.style.display = 'block';
   } else {
@@ -1941,12 +2133,15 @@ async function openProjModal(id, estadoDefault) {
     document.getElementById('lm-progreso').value           = 0;
     document.getElementById('lm-progreso-val').textContent = '0%';
     document.getElementById('lm-notas').value              = '';
+    pmColor = null;
+    setProjExtraFields({});
     title.textContent    = t('lmNewProject');
     delBtn.style.display = 'none';
   }
 
   renderPmEstados();
   renderPmAreas();
+  renderPmColors();
 
   // El checklist necesita un proyecto ya guardado (proyecto_id real) —
   // en "Nuevo proyecto" no hay id todavía, se oculta.
@@ -1988,6 +2183,22 @@ function renderPmAreas() {
 function selectPmArea(key) {
   pmArea = pmArea === key ? null : key;
   renderPmAreas();
+}
+
+// Campos del tablero (cliente, monto, próximo paso, listas, cronograma)
+const PROJ_TEXT_FIELDS = ['cliente', 'via', 'monto', 'plazo', 'proximo_paso', 'link_tablero'];
+const PROJ_LIST_FIELDS = ['incluye', 'excluye', 'contactos'];
+function setProjExtraFields(d) {
+  PROJ_TEXT_FIELDS.forEach(f => { const el = document.getElementById('lm-' + f); if (el) el.value = d[f] || ''; });
+  PROJ_LIST_FIELDS.forEach(f => { const el = document.getElementById('lm-' + f); if (el) el.value = asList(d[f]).join('\n'); });
+  const cr = document.getElementById('lm-cronograma'); if (cr) cr.value = cronoToText(d.cronograma);
+}
+function getProjExtraFields() {
+  const out = {};
+  PROJ_TEXT_FIELDS.forEach(f => { const el = document.getElementById('lm-' + f); if (el) out[f] = el.value.trim() || null; });
+  PROJ_LIST_FIELDS.forEach(f => { const el = document.getElementById('lm-' + f); if (el) out[f] = asList(el.value); });
+  const cr = document.getElementById('lm-cronograma'); if (cr) out.cronograma = textToCrono(cr.value);
+  return out;
 }
 
 function closeProjModal() {
@@ -2067,6 +2278,8 @@ async function saveProjModal() {
     area:          pmArea  || null,
     notas:         document.getElementById('lm-notas').value.trim()   || null,
     estado:        pmEstado,
+    color:         pmColor || null,
+    ...getProjExtraFields(),
     updated_at:    new Date().toISOString()
   };
 
@@ -2084,6 +2297,7 @@ async function deleteProjModal() {
   if (!projModalId) return;
   if (!await askConfirm('¿Eliminar este proyecto?')) return;
   await db.from('proyectos').delete().eq('id', projModalId).eq('user_id', currentUser.id);
+  if (projDetailId === projModalId) projDetailId = null;
   closeProjModal();
   renderProyectos();
 }

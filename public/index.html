@@ -305,14 +305,14 @@
 
       </div>
 
-      <!-- Proyectos — tablero kanban, aparte de la fila de arriba porque
-           necesita ancho propio para las 4 columnas de estado -->
+      <!-- Proyectos — tablero: resumen con una tarjeta por proyecto y, al
+           tocar una, la vista completa del proyecto (ver renderProjBoard) -->
       <div class="proj-board-section">
         <div class="slab-hd">
           <span class="slab-title" data-i18n="slabProyectos">Proyectos</span>
           <button class="slab-add-btn" onclick="openProjModal(null)">+</button>
         </div>
-        <div class="kanban-board" id="proj-board"></div>
+        <div class="ptab" id="proj-board"></div>
 
       </div>
     </div>
@@ -493,6 +493,30 @@
         <label class="lm-lbl" data-i18n="lmDesc">Descripción</label>
         <input class="lm-inp" id="lm-desc" type="text" placeholder="¿De qué se trata?" data-i18n-ph="lmDescPh"/>
       </div>
+      <div class="lm-row2">
+        <div class="lm-field">
+          <label class="lm-lbl" data-i18n="projCliente">Cliente</label>
+          <input class="lm-inp" id="lm-cliente" type="text" placeholder="Para quién es" data-i18n-ph="projClientePh"/>
+        </div>
+        <div class="lm-field">
+          <label class="lm-lbl" data-i18n="projVia">Vía</label>
+          <input class="lm-inp" id="lm-via" type="text" placeholder="Directo, Qenti, Antic..." data-i18n-ph="projViaPh"/>
+        </div>
+      </div>
+      <div class="lm-row2">
+        <div class="lm-field">
+          <label class="lm-lbl" data-i18n="projMonto">Monto</label>
+          <input class="lm-inp" id="lm-monto" type="text" placeholder="USD 1.000 · 50/50" data-i18n-ph="projMontoPh"/>
+        </div>
+        <div class="lm-field">
+          <label class="lm-lbl" data-i18n="projPlazo">Plazo</label>
+          <input class="lm-inp" id="lm-plazo" type="text" placeholder="6 semanas" data-i18n-ph="projPlazoPh"/>
+        </div>
+      </div>
+      <div class="lm-field">
+        <label class="lm-lbl" data-i18n="projProximoPaso">Próximo paso</label>
+        <input class="lm-inp" id="lm-proximo_paso" type="text" placeholder="Lo siguiente que tiene que pasar" data-i18n-ph="projProximoPh"/>
+      </div>
       <div class="lm-field">
         <label class="lm-lbl" data-i18n="lmArea">Área</label>
         <div class="lm-areas" id="lm-areas"></div>
@@ -515,6 +539,32 @@
       <div class="lm-field">
         <label class="lm-lbl" data-i18n="lmNotas">Notas</label>
         <textarea class="lm-inp lm-ta" id="lm-notas" placeholder="Detalles, contexto, próximos pasos..." data-i18n-ph="lmNotasPh"></textarea>
+      </div>
+      <div class="lm-field">
+        <label class="lm-lbl"><span data-i18n="projIncluye">Incluye</span> · <span data-i18n="projUnoPorLinea">uno por línea</span></label>
+        <textarea class="lm-inp lm-ta" id="lm-incluye"></textarea>
+      </div>
+      <div class="lm-field">
+        <label class="lm-lbl"><span data-i18n="projExcluye">No incluye</span> · <span data-i18n="projUnoPorLinea">uno por línea</span></label>
+        <textarea class="lm-inp lm-ta" id="lm-excluye"></textarea>
+      </div>
+      <div class="lm-field">
+        <label class="lm-lbl"><span data-i18n="projCronograma">Cronograma</span> · <span data-i18n="projCronoAyuda">cuándo | qué | estado (pendiente, ahora, listo)</span></label>
+        <textarea class="lm-inp lm-ta" id="lm-cronograma" placeholder="13/10 | Arranque | listo"></textarea>
+      </div>
+      <div class="lm-field">
+        <label class="lm-lbl"><span data-i18n="projContactos">Contactos</span> · <span data-i18n="projUnoPorLinea">uno por línea</span></label>
+        <textarea class="lm-inp lm-ta" id="lm-contactos"></textarea>
+      </div>
+      <div class="lm-row2">
+        <div class="lm-field">
+          <label class="lm-lbl" data-i18n="projLink">Link del tablero</label>
+          <input class="lm-inp" id="lm-link_tablero" type="url" placeholder="https://..."/>
+        </div>
+        <div class="lm-field">
+          <label class="lm-lbl" data-i18n="projColor">Color</label>
+          <div class="lm-colors" id="lm-colors"></div>
+        </div>
       </div>
       <div class="lm-field" id="lm-checklist-wrap" style="display:none">
         <label class="lm-lbl" data-i18n="lmChecklist">Checklist</label>
