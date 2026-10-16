@@ -270,50 +270,78 @@
       </div>
     </div>
 
-    <!-- PIPELINE -->
+    <!-- PROYECTOS — tablero: arriba la próxima fecha con cuenta regresiva y
+         cuánto falta para cada cosa, al lado los pendientes, abajo los
+         proyectos para tocar. Al tocar uno se abre su vista completa. -->
     <div id="view-patrones" style="display:none">
-      <div class="slab-view">
+      <div class="phub" id="phub-scroll">
 
-        <!-- Próximas fechas -->
-        <div class="slab-section">
-          <div class="slab-hd">
-            <span class="slab-title" data-i18n="slabProximas">Próximas fechas</span>
-            <button class="slab-add-btn" onclick="toggleRecordaForm()">+</button>
+        <section class="phub-home" id="phub-home">
+          <div class="phub-intro">
+            <div class="pdet-eyebrow" id="phub-today"></div>
+            <h2 class="phub-title" data-i18n="phubTitle">Todos tus proyectos en un lugar</h2>
+            <p class="pdet-lead" data-i18n="phubLead">Tocá un proyecto para ver su tablero completo.</p>
           </div>
-          <div class="recorda-form" id="recorda-form" style="display:none">
-            <input class="slab-input" id="recorda-nombre" placeholder="Ej: Parcial física" data-i18n-ph="recordaNombrePh"
-              onkeydown="if(event.key==='Enter')saveRecordatorio()" />
-            <input class="slab-input slab-input-date" id="recorda-fecha" type="date" />
-            <button class="slab-save-btn" onclick="saveRecordatorio()" data-i18n="guardar">Guardar</button>
+
+          <div class="phub-hero">
+            <div class="phub-next">
+              <div class="phub-next-hd">
+                <span class="phub-eyebrow" data-i18n="phubProxima">Próxima fecha</span>
+                <button class="phub-add" onclick="toggleRecordaForm()">+ <span data-i18n="phubFecha">Fecha</span></button>
+              </div>
+              <div class="recorda-form phub-form" id="recorda-form" style="display:none">
+                <input class="slab-input" id="recorda-nombre" placeholder="Ej: Parcial física" data-i18n-ph="recordaNombrePh"
+                  onkeydown="if(event.key==='Enter')saveRecordatorio()" />
+                <div class="phub-form-row">
+                  <input class="slab-input slab-input-date" id="recorda-fecha" type="date" />
+                  <input class="slab-input slab-input-date" id="recorda-hora" type="time" />
+                </div>
+                <button class="slab-save-btn" onclick="saveRecordatorio()" data-i18n="guardar">Guardar</button>
+              </div>
+              <h3 class="phub-next-title" id="phub-next-title">—</h3>
+              <div class="phub-clock" aria-live="polite">
+                <div><b id="phub-cd-d">–</b><span data-i18n="phubD">días</span></div>
+                <div><b id="phub-cd-h">–</b><span data-i18n="phubH">horas</span></div>
+                <div><b id="phub-cd-m">–</b><span data-i18n="phubM">min</span></div>
+              </div>
+              <div class="phub-agenda" id="phub-agenda"></div>
+            </div>
+
+            <div class="pdet-panel phub-pend-panel">
+              <div class="pdet-panel-hd"><span data-i18n="phubPendientes">Pendientes</span><span class="ptab-n" id="phub-pend-count"></span></div>
+              <span class="ptab-bar wide"><i id="phub-pend-bar" style="width:0"></i></span>
+              <div class="pdet-checks" id="phub-pend"></div>
+            </div>
           </div>
-          <div id="recordatorios-list"></div>
-        </div>
 
-        <!-- Notas rápidas -->
-        <div class="slab-section">
-          <div class="slab-hd">
-            <span class="slab-title" data-i18n="slabNotas">Notas</span>
-            <button class="slab-add-btn" onclick="toggleNotaForm()">+</button>
+          <div class="phub-sec-hd">
+            <span class="phub-sec-title" data-i18n="phubActivos">Proyectos activos</span>
+            <span class="ptab-n" id="phub-count"></span>
+            <button class="slab-add-btn" onclick="openProjModal(null)" title="Nuevo proyecto">+</button>
           </div>
-          <div class="nota-form" id="nota-form" style="display:none">
-            <textarea class="slab-textarea" id="nota-texto"
-              placeholder="Escribí lo que no querés olvidar..." data-i18n-ph="notaTextoPh"></textarea>
-            <button class="slab-save-btn" onclick="saveNota()" data-i18n="guardar">Guardar</button>
+          <div class="ptab-grid" id="phub-grid"></div>
+
+          <div class="pdet-panel" id="phub-done" hidden>
+            <div class="pdet-panel-hd"><span data-i18n="phubEntregados">Entregados</span></div>
+            <div class="phub-done-list" id="phub-done-list"></div>
           </div>
-          <div id="notas-list"></div>
-        </div>
 
-      </div>
+          <div class="pdet-panel phub-notas">
+            <div class="pdet-panel-hd">
+              <span data-i18n="slabNotas">Notas</span>
+              <button class="slab-add-btn" onclick="toggleNotaForm()">+</button>
+            </div>
+            <div class="nota-form" id="nota-form" style="display:none">
+              <textarea class="slab-textarea" id="nota-texto"
+                placeholder="Escribí lo que no querés olvidar..." data-i18n-ph="notaTextoPh"></textarea>
+              <button class="slab-save-btn" onclick="saveNota()" data-i18n="guardar">Guardar</button>
+            </div>
+            <div id="notas-list"></div>
+          </div>
+        </section>
 
-      <!-- Proyectos — tablero: resumen con una tarjeta por proyecto y, al
-           tocar una, la vista completa del proyecto (ver renderProjBoard) -->
-      <div class="proj-board-section">
-        <div class="slab-hd">
-          <span class="slab-title" data-i18n="slabProyectos">Proyectos</span>
-          <button class="slab-add-btn" onclick="openProjModal(null)">+</button>
-        </div>
-        <div class="ptab" id="proj-board"></div>
-
+        <!-- Vista completa de un proyecto (renderProjDetail) -->
+        <section class="ptab" id="proj-board" hidden></section>
       </div>
     </div>
 

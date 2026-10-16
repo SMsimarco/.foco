@@ -4552,29 +4552,71 @@ body.ambient #app::before {
 /* ── TABLERO DE PROYECTOS ──
    Resumen con una tarjeta por proyecto + vista completa de cada uno
    (datos, próximo paso, tareas, cronograma, incluye / no incluye, notas). */
-.ptab {
+.phub {
   flex: 1;
   min-height: 0;
   overflow-y: auto;
-  padding: 4px 16px 32px;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
+  padding: 18px 16px 40px;
 }
-#view-patrones:has(.proj-board-section.is-detail) .slab-view { display: none; }
-.proj-board-section.is-detail > .slab-hd { display: none; }
+.phub-home, .ptab { display: flex; flex-direction: column; gap: 16px; max-width: 1100px; margin: 0 auto; width: 100%; }
+.phub-home[hidden], .ptab[hidden] { display: none; }
+.phub-title {
+  font-family: 'Instrument Serif', serif; font-style: italic; font-weight: 400;
+  font-size: 32px; line-height: 1.1; color: var(--text); margin-top: 2px;
+}
+.phub-intro .pdet-lead { margin-top: 4px; }
 
-.ptab-filters { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; flex-shrink: 0; }
-.ptab-filters::-webkit-scrollbar { display: none; }
-.ptab-filter {
-  display: inline-flex; align-items: center; gap: 6px; white-space: nowrap;
-  padding: 6px 11px; border-radius: 20px; border: 1px solid var(--border2);
-  background: transparent; color: var(--text-muted); font-size: 12px; font-weight: 500; cursor: pointer;
-  transition: border-color .15s, color .15s;
+.phub-hero { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); gap: 12px; }
+.phub-next {
+  border-radius: 18px; padding: 20px; color: #fff; display: flex; flex-direction: column; gap: 14px;
+  background: linear-gradient(110deg, #0891B2, var(--accent) 60%, #7C3AED);
+  box-shadow: 0 10px 30px rgba(var(--accent-rgb), .22);
 }
-.ptab-filter:hover { color: var(--text); }
-.ptab-filter.active { background: var(--text); color: var(--bg); border-color: var(--text); }
-.ptab-filter.active .ptab-n { color: inherit; opacity: .7; }
+.phub-next-hd { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.phub-eyebrow { font-size: 10.5px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; opacity: .85; }
+.phub-add {
+  border: 1px solid rgba(255,255,255,.35); background: rgba(255,255,255,.12); color: #fff; cursor: pointer;
+  border-radius: 20px; padding: 4px 10px; font-size: 11.5px; font-weight: 500; font-family: 'Geist', sans-serif;
+}
+.phub-add:hover { background: rgba(255,255,255,.22); }
+.phub-form { background: rgba(255,255,255,.12) !important; border: 0 !important; border-radius: 12px; }
+.phub-form .slab-input { background: rgba(255,255,255,.92); color: #1C1917; border-color: transparent; }
+.phub-form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.phub-next-title { font-size: 21px; font-weight: 500; line-height: 1.25; color: #fff; }
+.phub-clock { display: flex; gap: 22px; }
+.phub-clock div { display: flex; flex-direction: column; }
+.phub-clock b { font-size: 32px; line-height: 1; font-weight: 500; font-variant-numeric: tabular-nums; }
+.phub-clock span { font-size: 10px; letter-spacing: .07em; text-transform: uppercase; opacity: .8; margin-top: 5px; }
+.phub-agenda { display: flex; flex-direction: column; gap: 4px; font-size: 13px; }
+.phub-ag { position: relative; display: grid; grid-template-columns: 92px minmax(0, 1fr) auto; gap: 10px; align-items: baseline; padding: 3px 0; }
+.phub-ag b { font-weight: 500; white-space: nowrap; }
+.phub-ag-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.phub-ag-falta { font-size: 11.5px; font-weight: 500; white-space: nowrap; padding: 2px 8px; border-radius: 20px; background: rgba(255,255,255,.16); }
+.phub-ag.past { opacity: .55; }
+.phub-ag.past .phub-ag-name, .phub-ag.past b { text-decoration: line-through; }
+.phub-ag.link { cursor: pointer; }
+.phub-ag.link:hover .phub-ag-name { text-decoration: underline; }
+.phub-ag-del {
+  position: absolute; right: -14px; top: 2px; background: none; border: 0; color: #fff; opacity: 0; cursor: pointer; font-size: 14px; padding: 0 2px;
+}
+.phub-ag:hover .phub-ag-del { opacity: .8; }
+
+.phub-tag {
+  display: inline-flex; align-items: center; gap: 5px; margin-left: 6px; vertical-align: 1px;
+  font-size: 10.5px; color: var(--text-muted); background: var(--border); border: 0; border-radius: 20px;
+  padding: 2px 8px; cursor: pointer; font-family: 'Geist', sans-serif; white-space: nowrap;
+}
+.phub-tag:hover { color: var(--text); }
+.phub-tag.big { font-size: 12px; padding: 6px 11px; margin: 0; color: var(--text); background: var(--surface); border: 1px solid var(--border2); }
+.phub-done-list { display: flex; flex-wrap: wrap; gap: 6px; }
+.phub-pend-panel .pdet-check .lm-checklist-check { margin-top: 2px; }
+
+.phub-sec-hd { display: flex; align-items: center; gap: 10px; margin-top: 6px; }
+.phub-sec-title { font-size: 15px; font-weight: 500; color: var(--text); }
+.phub-sec-hd .slab-add-btn { margin-left: auto; }
+.phub-notas #notas-list { padding: 0; }
+
+.ptab-n { color: inherit; opacity: .7; }
 .ptab-n { font-size: 11px; color: var(--text-muted); font-variant-numeric: tabular-nums; }
 .ptab-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; display: inline-block; }
 
@@ -4681,7 +4723,10 @@ body.ambient #app::before {
 .lm-color.active { border-color: var(--text); }
 
 @media (max-width: 760px) {
-  .ptab { padding: 4px 12px 28px; }
+  .phub { padding: 14px 12px 32px; }
+  .phub-hero { grid-template-columns: minmax(0, 1fr); }
+  .phub-title { font-size: 28px; }
+  .phub-ag { grid-template-columns: 78px minmax(0, 1fr) auto; }
   .pdet-facts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .pdet-cols, .pdet-cols.three { grid-template-columns: minmax(0, 1fr); }
   .pdet-title { font-size: 26px; }

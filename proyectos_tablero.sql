@@ -10,6 +10,8 @@ alter table proyectos add column if not exists plazo         text;
 alter table proyectos add column if not exists proximo_paso  text;
 alter table proyectos add column if not exists link_tablero  text;
 alter table proyectos add column if not exists color         text;
+-- hora opcional para las "Próximas fechas" (ej. 11:00), muestra la cuenta regresiva exacta
+alter table proyectos add column if not exists hora          text;
 alter table proyectos add column if not exists incluye       jsonb not null default '[]'::jsonb;
 alter table proyectos add column if not exists excluye       jsonb not null default '[]'::jsonb;
 alter table proyectos add column if not exists contactos     jsonb not null default '[]'::jsonb;

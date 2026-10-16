@@ -146,6 +146,11 @@ const I18N_UI = {
     projColor: 'Color', projUnoPorLinea: 'uno por línea', projCronoAyuda: 'cuándo | qué | estado (pendiente, ahora, listo)',
     projClientePh: 'Para quién es', projViaPh: 'Directo, Qenti, Antic...', projMontoPh: 'USD 1.000 · 50/50', projPlazoPh: '6 semanas',
     projProximoPh: 'Lo siguiente que tiene que pasar',
+    phubTitle: 'Todos tus proyectos en un lugar', phubLead: 'Tocá un proyecto para ver su tablero completo.',
+    phubProxima: 'Próxima fecha', phubFecha: 'Fecha', phubSinFechas: 'Sin fechas próximas', phubPendientes: 'Pendientes',
+    phubSinPendientes: 'Nada pendiente', phubActivos: 'Proyectos activos', phubEnMarcha: 'en marcha', phubEntregados: 'Entregados',
+    phubEntrega: 'Entrega', phubPaso: 'pasó', phubEn: 'en', phubManana: 'mañana', phubDias: 'días',
+    phubD: 'días', phubH: 'horas', phubM: 'min', phubNuevo: 'Nuevo proyecto',
     lmNewProject: 'Nuevo proyecto', lmEditProject: 'Editar proyecto', lmNombre: 'Nombre', lmNombrePh: 'Mi proyecto...',
     lmChecklist: 'Checklist', lmChecklistAddPh: 'Agregar tarea...', lmChecklistEmpty: 'Sin tareas todavía',
     lmDesc: 'Descripción', lmDescPh: '¿De qué se trata?', lmArea: 'Área',
@@ -227,6 +232,11 @@ const I18N_UI = {
     projColor: 'Color', projUnoPorLinea: 'one per line', projCronoAyuda: 'when | what | status (pendiente, ahora, listo)',
     projClientePh: 'Who it is for', projViaPh: 'Direct, agency...', projMontoPh: 'USD 1,000 · 50/50', projPlazoPh: '6 weeks',
     projProximoPh: 'The next thing that has to happen',
+    phubTitle: 'All your projects in one place', phubLead: 'Tap a project to see its full board.',
+    phubProxima: 'Next date', phubFecha: 'Date', phubSinFechas: 'No upcoming dates', phubPendientes: 'To do',
+    phubSinPendientes: 'Nothing pending', phubActivos: 'Active projects', phubEnMarcha: 'active', phubEntregados: 'Delivered',
+    phubEntrega: 'Due', phubPaso: 'past', phubEn: 'in', phubManana: 'tomorrow', phubDias: 'days',
+    phubD: 'days', phubH: 'hours', phubM: 'min', phubNuevo: 'New project',
     lmNewProject: 'New project', lmEditProject: 'Edit project', lmNombre: 'Name', lmNombrePh: 'My project...',
     lmChecklist: 'Checklist', lmChecklistAddPh: 'Add item...', lmChecklistEmpty: 'No items yet',
     lmDesc: 'Description', lmDescPh: "What's it about?", lmArea: 'Area',
@@ -1720,32 +1730,8 @@ async function renderProyectos() {
   const notas    = all.filter(p => p.estado === 'nota').reverse();
   const projs    = all.filter(p => !['recordatorio','nota'].includes(p.estado));
 
-  // Recordatorios
-  const recList = document.getElementById('recordatorios-list');
-  if (recList) {
-    recList.innerHTML = recordatorios.length === 0
-      ? `<div class="slab-empty">${t('sinFechasProximas')}</div>`
-      : recordatorios.map(r => {
-          const hoy = new Date(); hoy.setHours(0,0,0,0);
-          let rightHtml = '';
-          if (r.fecha_limite) {
-            const fl = new Date(r.fecha_limite + 'T00:00:00');
-            const diff = Math.ceil((fl - hoy) / 86400000);
-            const cls = diff < 0 ? 'overdue' : diff <= 2 ? 'soon' : diff <= 7 ? 'week' : '';
-            const label = diff < 0 ? t('vencido') : diff === 0 ? t('hoyTitleDefault') : `${diff}d`;
-            const dateStr = formatDate(fl, { year: false });
-            rightHtml = `<div class="recorda-right">
-              <span class="recorda-date">${dateStr}</span>
-              <span class="recorda-badge ${cls}">${label}</span>
-            </div>`;
-          }
-          return `<div class="slab-item">
-            <button class="slab-del" onclick="event.stopPropagation();deleteProyecto('${r.id}')">×</button>
-            <span class="slab-item-name">${escH(r.nombre)}</span>
-            ${rightHtml}
-          </div>`;
-        }).join('');
-  }
+  // Las fechas se muestran en el panel grande del tablero (renderProjAgenda)
+  projRecordatorios = recordatorios;
 
   // Notas
   const notasList = document.getElementById('notas-list');
@@ -1770,7 +1756,9 @@ async function renderProyectos() {
 // pedir todo a Supabase.
 let projBoardCache = [];
 let projTareasCount = {};   // { proyecto_id: [hechas, total] }
-let projFilter = 'todos';
+let projRecordatorios = [];
+let projTareasAll = [];
+let phubTimer = null;
 let projDetailId = null;
 let projDetailTareas = [];
 
@@ -1801,12 +1789,14 @@ function asList(v) {
   return [];
 }
 
-async function loadProjTareasCount() {
+async function loadProjTareas() {
   const { data, error } = await db.from('proyecto_tareas')
-    .select('proyecto_id, done').eq('user_id', currentUser.id);
+    .select('id, proyecto_id, texto, done, orden, created_at').eq('user_id', currentUser.id)
+    .order('orden', { ascending: true }).order('created_at', { ascending: true });
+  projTareasAll = error ? [] : (data || []);
+  if (error) console.error(error);
   projTareasCount = {};
-  if (error) { console.error(error); return; }
-  (data || []).forEach(r => {
+  projTareasAll.forEach(r => {
     const c = projTareasCount[r.proyecto_id] || (projTareasCount[r.proyecto_id] = [0, 0]);
     c[1]++; if (r.done) c[0]++;
   });
@@ -1814,42 +1804,138 @@ async function loadProjTareasCount() {
 
 async function renderProjBoard(projs) {
   projBoardCache = projs;
-  if (currentUser) await loadProjTareasCount();
+  if (currentUser) await loadProjTareas();
   if (projDetailId && projs.some(p => p.id === projDetailId)) {
     await openProjDetail(projDetailId);
   } else {
     projDetailId = null;
-    renderProjGrid();
+    renderProjHome();
   }
 }
 
-function renderProjGrid() {
-  const board = document.getElementById('proj-board');
-  if (!board) return;
-  const projs = projBoardCache;
-  document.querySelector('.proj-board-section')?.classList.remove('is-detail');
-
-  const filtros = [{ id: 'todos', label: t('projTodos'), n: projs.length }]
-    .concat(PROJ_COLS.map(c => ({ id: c.id, label: projLabel(c.id), n: projs.filter(p => p.estado === c.id).length, color: c.color })));
-  const visibles = projFilter === 'todos' ? projs : projs.filter(p => p.estado === projFilter);
-
-  board.innerHTML = `
-    <div class="ptab-filters">
-      ${filtros.map(f => `
-        <button class="ptab-filter${projFilter === f.id ? ' active' : ''}" onclick="setProjFilter('${f.id}')">
-          ${f.color ? `<span class="ptab-dot" style="background:${f.color}"></span>` : ''}${escH(f.label)} <span class="ptab-n">${f.n}</span>
-        </button>`).join('')}
-    </div>
-    <div class="ptab-grid">
-      ${visibles.length
-        ? visibles.map(proyectoCardHTML).join('')
-        : `<div class="ptab-empty">${t('sinProyectosAun')}</div>`}
-    </div>`;
+function showProjHome(on) {
+  const home = document.getElementById('phub-home');
+  const det  = document.getElementById('proj-board');
+  if (home) home.hidden = !on;
+  if (det)  det.hidden  = on;
+  document.getElementById('phub-scroll')?.scrollTo?.(0, 0);
 }
 
-function setProjFilter(id) {
-  projFilter = id;
-  renderProjGrid();
+// ── Inicio del tablero: fechas, pendientes y proyectos ──
+function renderProjHome() {
+  showProjHome(true);
+  const hoy = new Date();
+  const todayEl = document.getElementById('phub-today');
+  if (todayEl) todayEl.textContent = `${DAYS_FULL[hoy.getDay()]} ${hoy.getDate()} · ${MONTHS_FULL[hoy.getMonth()]}`;
+
+  renderProjAgenda();
+  if (!phubTimer) phubTimer = setInterval(() => { if (currentView === 'patrones' && !projDetailId) renderProjAgenda(); }, 30000);
+
+  // Pendientes de todos los proyectos activos, en el orden de los proyectos
+  const activos = projBoardCache.filter(p => p.estado !== 'hecho');
+  const orden = Object.fromEntries(activos.map((p, i) => [p.id, i]));
+  const deActivos = projTareasAll.filter(x => x.proyecto_id in orden);
+  const pend = deActivos.filter(x => !x.done)
+    .sort((a, b) => orden[a.proyecto_id] - orden[b.proyecto_id] || (a.orden || 0) - (b.orden || 0))
+    .slice(0, 8);
+  const hechas = deActivos.filter(x => x.done).length;
+  const pendEl = document.getElementById('phub-pend');
+  if (pendEl) {
+    document.getElementById('phub-pend-count').textContent = `${hechas} ${t('projDe')} ${deActivos.length}`;
+    document.getElementById('phub-pend-bar').style.width = (deActivos.length ? hechas / deActivos.length * 100 : 0) + '%';
+    pendEl.innerHTML = pend.length ? pend.map(it => {
+      const p = projBoardCache.find(x => x.id === it.proyecto_id);
+      return `<div class="pdet-check">
+        <button class="lm-checklist-check" onclick="toggleHomeTarea('${it.id}')"></button>
+        <span class="pdet-check-txt">${escH(it.texto)}
+          <button class="phub-tag" onclick="openProjDetail('${escH(p.id)}')"><span class="ptab-dot" style="background:${projColor(p)}"></span>${escH(p.nombre)}</button>
+        </span>
+      </div>`;
+    }).join('') : `<div class="lm-checklist-empty">${t('phubSinPendientes')}</div>`;
+  }
+
+  // Proyectos activos + entregados
+  const grid = document.getElementById('phub-grid');
+  if (grid) grid.innerHTML = activos.length
+    ? activos.map(proyectoCardHTML).join('')
+    : `<div class="ptab-empty">${t('sinProyectosAun')}</div>`;
+  const cnt = document.getElementById('phub-count');
+  if (cnt) cnt.textContent = `${activos.length} ${t('phubEnMarcha')}`;
+  const hechos = projBoardCache.filter(p => p.estado === 'hecho');
+  const doneWrap = document.getElementById('phub-done');
+  if (doneWrap) {
+    doneWrap.hidden = !hechos.length;
+    document.getElementById('phub-done-list').innerHTML = hechos.map(p =>
+      `<button class="phub-tag big" onclick="openProjDetail('${escH(p.id)}')"><span class="ptab-dot" style="background:${projColor(p)}"></span>${escH(p.nombre)}</button>`).join('');
+  }
+}
+
+async function toggleHomeTarea(id) {
+  const it = projTareasAll.find(x => x.id === id);
+  if (!it) return;
+  it.done = true;
+  const c = projTareasCount[it.proyecto_id]; if (c) c[0]++;
+  renderProjHome();
+  const { error } = await db.from('proyecto_tareas').update({ done: true }).eq('id', id).eq('user_id', currentUser.id);
+  if (error) { console.error(error); it.done = false; if (c) c[0]--; renderProjHome(); }
+}
+
+// Fechas: las "Próximas fechas" (recordatorios, con hora opcional) y las
+// fechas límite de los proyectos. La primera que viene va grande, con
+// cuenta regresiva; el resto, con cuánto falta para cada una.
+function agendaItems() {
+  const items = [];
+  projRecordatorios.forEach(r => { if (r.fecha_limite) items.push({ id: r.id, nombre: r.nombre, fecha: r.fecha_limite, hora: r.hora || null, tipo: 'rec' }); });
+  projBoardCache.forEach(p => { if (p.fecha_limite && p.estado !== 'hecho') items.push({ id: p.id, nombre: `${t('phubEntrega')} · ${p.nombre}`, fecha: p.fecha_limite, hora: null, tipo: 'proj', color: projColor(p) }); });
+  items.forEach(it => {
+    it.at = new Date(`${it.fecha}T${it.hora || '00:00'}:00`);
+    it.fin = it.hora ? it.at : new Date(`${it.fecha}T23:59:59`);
+  });
+  const hoy0 = new Date(); hoy0.setHours(0, 0, 0, 0);
+  return items.filter(it => it.fin >= hoy0).sort((a, b) => a.at - b.at);
+}
+
+function faltaLabel(it, now) {
+  const hoy0 = new Date(now); hoy0.setHours(0, 0, 0, 0);
+  const dias = Math.round((new Date(`${it.fecha}T00:00:00`) - hoy0) / 86400000);
+  if (it.fin < now) return t('phubPaso');
+  if (it.hora && dias <= 0) {
+    const min = Math.max(0, Math.round((it.at - now) / 60000));
+    return min < 60 ? `${t('phubEn')} ${min} min` : `${t('phubEn')} ${Math.floor(min / 60)} h`;
+  }
+  if (dias <= 0) return t('hoyTitleDefault');
+  if (dias === 1) return t('phubManana');
+  return `${t('phubEn')} ${dias} ${t('phubDias')}`;
+}
+
+function renderProjAgenda() {
+  const list = document.getElementById('phub-agenda');
+  if (!list) return;
+  const now = new Date();
+  const items = agendaItems();
+  const next = items.find(it => it.fin >= now);
+  const title = document.getElementById('phub-next-title');
+  const [D, H, M] = ['phub-cd-d', 'phub-cd-h', 'phub-cd-m'].map(id => document.getElementById(id));
+  if (next) {
+    title.textContent = next.nombre;
+    const min = Math.max(0, Math.floor((next.at - now) / 60000));
+    D.textContent = Math.floor(min / 1440); H.textContent = Math.floor(min % 1440 / 60); M.textContent = min % 60;
+  } else {
+    title.textContent = t('phubSinFechas');
+    D.textContent = H.textContent = M.textContent = '0';
+  }
+  list.innerHTML = items.slice(0, 6).map(it => {
+    const past = it.fin < now;
+    const mes = it.at.getMonth() !== now.getMonth() ? ' ' + MONTHS_SHORT[it.at.getMonth()].toLowerCase() : '';
+    const cuando = `${DAYS[it.at.getDay()]} ${it.at.getDate()}${mes}${it.hora ? ' · ' + it.hora : ''}`;
+    const open = it.tipo === 'proj' ? `onclick="openProjDetail('${escH(it.id)}')"` : '';
+    return `<div class="phub-ag${past ? ' past' : ''}${it.tipo === 'proj' ? ' link' : ''}" ${open}>
+      <b>${escH(cuando)}</b>
+      <span class="phub-ag-name">${escH(it.nombre)}</span>
+      <span class="phub-ag-falta">${escH(faltaLabel(it, now))}</span>
+      ${it.tipo === 'rec' ? `<button class="phub-ag-del" onclick="event.stopPropagation();deleteProyecto('${escH(it.id)}')" aria-label="Borrar">×</button>` : ''}
+    </div>`;
+  }).join('');
 }
 
 function proyectoCardHTML(p) {
@@ -1892,19 +1978,19 @@ async function openProjDetail(id) {
     .order('orden', { ascending: true }).order('created_at', { ascending: true });
   projDetailTareas = error ? [] : (data || []);
   renderProjDetail();
-  document.getElementById('proj-board')?.scrollTo?.(0, 0);
+  showProjHome(false);
 }
 
 function closeProjDetail() {
   projDetailId = null;
-  renderProjGrid();
+  renderProjHome();
+  renderProyectos();
 }
 
 function renderProjDetail() {
   const board = document.getElementById('proj-board');
   const p = projBoardCache.find(x => x.id === projDetailId);
   if (!board || !p) return;
-  document.querySelector('.proj-board-section')?.classList.add('is-detail');
   const color = projColor(p);
   const hechas = projDetailTareas.filter(x => x.done).length;
   const total = projDetailTareas.length;
@@ -1981,6 +2067,7 @@ function renderProjDetail() {
 
 function syncDetailCount() {
   projTareasCount[projDetailId] = [projDetailTareas.filter(x => x.done).length, projDetailTareas.length];
+  projTareasAll = projTareasAll.filter(x => x.proyecto_id !== projDetailId).concat(projDetailTareas);
 }
 
 async function toggleDetailTarea(id) {
@@ -2070,12 +2157,14 @@ async function saveRecordatorio() {
   const nombre = document.getElementById('recorda-nombre').value.trim();
   if (!nombre) return;
   const fecha = document.getElementById('recorda-fecha').value || null;
+  const hora  = document.getElementById('recorda-hora')?.value || null;
   await db.from('proyectos').insert({
-    user_id: currentUser.id, nombre, fecha_limite: fecha,
+    user_id: currentUser.id, nombre, fecha_limite: fecha, hora,
     estado: 'recordatorio', updated_at: new Date().toISOString()
   });
   document.getElementById('recorda-nombre').value = '';
   document.getElementById('recorda-fecha').value  = '';
+  if (document.getElementById('recorda-hora')) document.getElementById('recorda-hora').value = '';
   document.getElementById('recorda-form').style.display = 'none';
   renderProyectos();
 }
