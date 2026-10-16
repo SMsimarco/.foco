@@ -3,3 +3,4 @@ node_modules/
 database.sqlite
 personal-patterns/
 .vercel
+foco-cargar-proyectos.sql
