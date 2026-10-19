@@ -2744,6 +2744,15 @@ let _foqRecording = false;
 let _foqOpen = false;
 let _foqCelebratedDate = null;
 
+// Sólo presentación: el chat y el borrador permanecen intactos al cerrar.
+function syncFoquitoVisibility() {
+  const visible = _foqOpen || window.matchMedia('(min-width: 1024px)').matches;
+  document.getElementById('foq-panel').inert = !visible;
+  document.getElementById('foq-fab').setAttribute('aria-expanded', String(visible));
+}
+window.matchMedia('(min-width: 1024px)').addEventListener('change', syncFoquitoVisibility);
+syncFoquitoVisibility();
+
 // Cara de Foquito reacciona al momento: idle (default), happy (festejo), thinking (procesando voz)
 // Un PNG por estado (mismo estilo del avatar base) — si el archivo no está
 // todavía en /public, el onerror pisa el src con el avatar default en vez
@@ -2902,6 +2911,10 @@ function toggleFoquitoWidget() {
   _foqOpen = !_foqOpen;
   document.getElementById('foq-panel').classList.toggle('open', _foqOpen);
   document.getElementById('foq-fab').classList.toggle('open', _foqOpen);
+  syncFoquitoVisibility();
+  if (!_foqOpen && document.getElementById('foq-panel').contains(document.activeElement)) {
+    document.getElementById('foq-fab').focus({ preventScroll: true });
+  }
 
   if (_foqOpen) {
     if (!_foqGreeted) {
@@ -3356,6 +3369,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Escape — cerrar panel, command palette y quick-add
     if (e.key === 'Escape') {
       closeCmd();
+      if (_foqOpen && !window.matchMedia('(min-width: 1024px)').matches) toggleFoquitoWidget();
       if (document.getElementById('event-panel')?.classList.contains('open')) closeEventPanel();
       if (document.getElementById('quickadd-modal')?.classList.contains('open')) closeQuickAdd();
       return;
@@ -3446,7 +3460,7 @@ function checkOnboarding() {
   const hasRecurrente = Object.values(eventsCache).some(evs => evs.some(e => e.recurrente));
   if (hasRecurrente) { markOnboardingCompleted(); return; }
 
-  startFoquitoOnboarding();
+  startFoquitoOnboarding({ openPanel: window.matchMedia('(min-width: 1024px)').matches });
 }
 
 async function markOnboardingCompleted() {
@@ -3570,15 +3584,15 @@ async function interpretOnboardingMessage(text) {
 }
 
 // Abre el panel real de Foquito (en desktop ya está siempre visible; en
-// mobile fuerza el toggle a abierto, como pide el punto 2 del pedido) y
+// mobile sólo se abre por una acción explícita de la persona) y
 // dispara la primera pregunta en modo onboarding. _foqGreeted se prende
 // ANTES de tocar el panel para que no se pise con el saludo normal.
-async function startFoquitoOnboarding() {
+async function startFoquitoOnboarding({ openPanel = true } = {}) {
   _foqOnboarding = true;
   _obHistory = [];
   _foqGreeted = true;
   toggleObSkipButton(true);
-  if (!_foqOpen) toggleFoquitoWidget();
+  if (openPanel && !_foqOpen) toggleFoquitoWidget();
 
   setFoquitoState('thinking');
   const kickoffText = 'Arrancá la entrevista.';

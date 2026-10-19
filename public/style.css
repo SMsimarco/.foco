@@ -24,6 +24,8 @@
   --text-muted: var(--text3);
   --accent:    #6366F1;
   --accent-rgb: 99, 102, 241;
+  --accent-solid: #4F46E5;
+  --on-accent: #FFFFFF;
   --success:   #10B981;
   --success-text: #6EE7B7;
   --danger:    #F43F5E;
@@ -63,6 +65,8 @@
   --text-muted: var(--text3);
   --accent:    #6366F1;
   --accent-rgb: 99, 102, 241;
+  --accent-solid: #4F46E5;
+  --on-accent: #FFFFFF;
   --success:   #10B981;
   --success-text: #047857;
   --danger:    #F43F5E;
@@ -4771,3 +4775,20 @@ input:focus-visible, textarea:focus-visible, select:focus-visible {
 @media (max-width: 1023px) {
   input, textarea, select, #foq-input { font-size: 16px; } /* Evita zoom al enfocar en iOS. */
 }
+
+/* ── Foquito: panel discreto, cierre accesible y safe areas ── */
+#foq-fab { width: 64px; height: 64px; bottom: calc(var(--nav-height) + 16px + env(safe-area-inset-bottom, 0px)); box-shadow: var(--shadow-panel); }
+#foq-panel { box-shadow: var(--shadow-panel); }
+.foq-bubble { overflow-wrap: anywhere; font-weight: 400; }
+.foq-bubble-user, .foq-send-btn, .foq-send-btn:hover { background: var(--accent-solid); color: var(--on-accent); }
+.foq-panel-hd { padding: 8px 12px; gap: 8px; }
+.foq-panel-hd-right { gap: 0; }
+.foq-scroll { min-height: 0; overscroll-behavior: contain; }
+.event-panel:not(.open) { visibility: hidden; }
+.panel-content { padding-bottom: calc(26px + env(safe-area-inset-bottom, 0px)); }
+@media (max-width: 1023px) {
+  #foq-panel { bottom: calc(var(--nav-height) + 12px + env(safe-area-inset-bottom, 0px)); height: min(520px, calc(100dvh - 152px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px))); }
+  #foq-panel:not(.open) { visibility: hidden; }
+  .phub, #view-sugerencias, .tuana-wrap { padding-bottom: calc(112px + env(safe-area-inset-bottom, 0px)); }
+}
+@media (min-width: 1024px) { #foq-panel { box-shadow: none; } }
