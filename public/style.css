@@ -871,10 +871,10 @@ html, body {
 }
 
 .hoy-check {
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  border: 1.5px solid var(--ios-circle);
+  position: relative;
+  width: 44px;
+  height: 44px;
+  border: 0;
   background: transparent;
   flex-shrink: 0;
   display: flex;
@@ -883,10 +883,19 @@ html, body {
   cursor: pointer;
 }
 
-.hoy-check.done {
-  background: var(--success);
-  border-color: var(--success);
+.hoy-check::before {
+  content: '';
+  position: absolute;
+  inset: 11px;
+  border-radius: 50%;
+  border: 1.5px solid var(--ios-circle);
 }
+
+.hoy-check.done {
+  color: #fff;
+}
+.hoy-check.done::before { background: var(--success); border-color: var(--success); }
+.hoy-check svg { position: relative; z-index: 1; width: 15px; height: 15px; }
 
 .hoy-row-title {
   flex: 1;
