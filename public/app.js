@@ -151,7 +151,7 @@ const I18N_UI = {
     projColor: 'Color', projUnoPorLinea: 'uno por línea', projCronoAyuda: 'cuándo | qué | estado (pendiente, ahora, listo)',
     projClientePh: 'Para quién es', projViaPh: 'Directo, Qenti, Antic...', projMontoPh: 'USD 1.000 · 50/50', projPlazoPh: '6 semanas',
     projProximoPh: 'Lo siguiente que tiene que pasar',
-    phubTitle: 'Tus proyectos', phubLead: 'Tocá un proyecto para ver su tablero completo.',
+    phubTitle: 'Tus proyectos', phubLead: 'Tocá un proyecto para ver su tablero completo.', projDefineNext: 'Definí el próximo paso',
     phubProxima: 'Próxima fecha', phubFecha: 'Fecha', phubSinFechas: 'Sin fechas próximas', phubPendientes: 'Pendientes',
     phubSinPendientes: 'Nada pendiente', phubActivos: 'Proyectos activos', phubEnMarcha: 'en marcha', phubEntregados: 'Entregados',
     phubEntrega: 'Entrega', phubPaso: 'pasó', phubEn: 'en', phubManana: 'mañana', phubDias: 'días',
@@ -242,7 +242,7 @@ const I18N_UI = {
     projColor: 'Color', projUnoPorLinea: 'one per line', projCronoAyuda: 'when | what | status (pendiente, ahora, listo)',
     projClientePh: 'Who it is for', projViaPh: 'Direct, agency...', projMontoPh: 'USD 1,000 · 50/50', projPlazoPh: '6 weeks',
     projProximoPh: 'The next thing that has to happen',
-    phubTitle: 'Your projects', phubLead: 'Tap a project to see its full board.',
+    phubTitle: 'Your projects', phubLead: 'Tap a project to see its full board.', projDefineNext: 'Define the next step',
     phubProxima: 'Next date', phubFecha: 'Date', phubSinFechas: 'No upcoming dates', phubPendientes: 'To do',
     phubSinPendientes: 'Nothing pending', phubActivos: 'Active projects', phubEnMarcha: 'active', phubEntregados: 'Delivered',
     phubEntrega: 'Due', phubPaso: 'past', phubEn: 'in', phubManana: 'tomorrow', phubDias: 'days',
@@ -2006,6 +2006,8 @@ function renderProjAgenda() {
 function proyectoCardHTML(p) {
   const color = projColor(p);
   const av = projAvance(p);
+  const nextTask = projTareasAll.find(it => it.proyecto_id === p.id && !it.done);
+  const nextAction = p.proximo_paso || nextTask?.texto || '';
   const sub = [p.cliente, p.monto].filter(Boolean).map(escH).join(' · ') || (p.descripcion ? escH(p.descripcion) : '');
   let fechaStr = '';
   if (p.fecha_limite) {
@@ -2024,7 +2026,10 @@ function proyectoCardHTML(p) {
         ${projEstadoChip(p)}
       </div>
       ${sub ? `<div class="ptab-card-sub">${sub}</div>` : ''}
-      ${p.proximo_paso ? `<div class="ptab-card-next"><b>${t('projProximo')}:</b> ${escH(p.proximo_paso)}</div>` : ''}
+      <div class="ptab-card-next${nextAction ? '' : ' is-empty'}">
+        <span class="ptab-card-next-label">${t('projProximoPaso')}</span>
+        <span class="ptab-card-next-text">${escH(nextAction || t('projDefineNext'))}</span>
+      </div>
       <div class="ptab-card-foot">
         <span>${av.total ? `${av.hechas} ${t('projDe')} ${av.total} ${t('projTareasMin')}` : (av.pct ? av.pct + '%' : '')}</span>
         ${fechaStr}

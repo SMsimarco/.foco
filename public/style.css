@@ -4865,6 +4865,14 @@ input:focus-visible, textarea:focus-visible, select:focus-visible {
 .ptab-card-name, .pdet-title, .pdet-next b, .phub-next-title, .pdet-fact b, .nota-text { overflow-wrap: anywhere; }
 .ptab-card-name { min-width: 0; }
 .ptab-card-next, .sug-desc, .tuana-empty { color: var(--text2); font-size: 13px; line-height: 1.55; }
+.ptab-card-next {
+  display: flex; flex-direction: column; gap: 3px; padding: 10px 12px;
+  background: color-mix(in srgb, var(--pc) 8%, var(--surface));
+  border-left: 2px solid var(--pc); border-radius: 0 var(--radius-control) var(--radius-control) 0;
+}
+.ptab-card-next-label { color: var(--text3); font-size: 10px; font-weight: 600; letter-spacing: .07em; text-transform: uppercase; }
+.ptab-card-next-text { color: var(--text); font-size: 13px; font-weight: 500; line-height: 1.4; overflow-wrap: anywhere; }
+.ptab-card-next.is-empty .ptab-card-next-text { color: var(--text3); font-weight: 400; }
 .ptab-card-foot { flex-wrap: wrap; }
 .ptab-chip { color: color-mix(in srgb, var(--chip) 35%, var(--text) 65%); }
 .phub-tag { max-width: 100%; white-space: normal; text-align: left; margin-left: 0; }
@@ -4900,6 +4908,14 @@ input:focus-visible, textarea:focus-visible, select:focus-visible {
   .phub-clock b { font-size: 28px; }
   .phub-ag { grid-template-columns: 60px minmax(0, 1fr) auto; gap: 6px; min-height: 44px; align-items: center; }
   .phub-ag-falta { grid-column: auto; justify-self: start; font-size: 11px; }
+  .phub-hero { display: contents; }
+  .phub-intro { order: 0; }
+  .phub-next { order: 1; }
+  .phub-sec-hd { order: 2; }
+  .ptab-grid { order: 3; }
+  .phub-pend-panel { order: 4; }
+  #phub-done { order: 5; }
+  .phub-notas { order: 6; }
   .phub-title, .pdet-title { font-size: 28px; line-height: 1.15; }
   .ptab-grid { grid-template-columns: minmax(0, 1fr); }
 }
