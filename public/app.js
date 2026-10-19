@@ -1923,6 +1923,7 @@ function renderProjAgenda() {
   const items = agendaItems();
   const next = items.find(it => it.fin >= now);
   const title = document.getElementById('phub-next-title');
+  title.closest('.phub-next').classList.toggle('is-empty', !next);
   const [D, H, M] = ['phub-cd-d', 'phub-cd-h', 'phub-cd-m'].map(id => document.getElementById(id));
   if (next) {
     title.textContent = next.nombre;
