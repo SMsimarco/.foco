@@ -2475,7 +2475,7 @@ async function renderPatrones() {
   if (!patterns.length) {
     grid.innerHTML = `<div class="hm-empty" style="grid-column:1/-1">
       Todavía no hay datos.<br>
-      <span style="color:var(--text4);font-size:11px">Marcá eventos como hechos para ver tus patrones.</span>
+      <span style="color:var(--text3);font-size:11px">Marcá eventos como hechos para ver tus patrones.</span>
     </div>`;
     if (insightEl) insightEl.style.display = 'none';
     return;
@@ -5102,7 +5102,7 @@ async function renderPalabrasHistoria() {
   if (!el) return;
 
   if (!data || !data.length) {
-    el.innerHTML = '<div style="font-size:11px;color:var(--text4);font-family:\'Geist\',sans-serif">Todavía no hay palabras.</div>';
+    el.innerHTML = '<div style="font-size:11px;color:var(--text3);font-family:\'Geist\',sans-serif">Todavía no hay palabras.</div>';
     return;
   }
 
@@ -5126,7 +5126,7 @@ async function renderMoodTimeline() {
     .order('date', { ascending: true });
 
   if (!data || !data.length) {
-    el.innerHTML = '<div style="font-size:11px;color:var(--text4);font-family:\'Geist\',sans-serif;padding:8px 0">Completá el morning brief algunos días para ver tu energía en el tiempo.</div>';
+    el.innerHTML = '<div style="font-size:11px;color:var(--text3);font-family:\'Geist\',sans-serif;padding:8px 0">Completá el morning brief algunos días para ver tu energía en el tiempo.</div>';
     return;
   }
 
@@ -5141,8 +5141,8 @@ async function renderMoodTimeline() {
       }).join('')}
     </div>
     <div class="mood-legend">
-      <span style="color:var(--text4);font-size:9px">${data[0].date}</span>
-      <span style="color:var(--text4);font-size:9px">${data[data.length-1].date}</span>
+      <span style="color:var(--text3);font-size:9px">${data[0].date}</span>
+      <span style="color:var(--text3);font-size:9px">${data[data.length-1].date}</span>
     </div>
   `;
 }
@@ -5161,7 +5161,7 @@ async function renderAreasTimeline() {
     .gte('date', since);
 
   if (!data || !data.length) {
-    el.innerHTML = '<div style="font-size:11px;color:var(--text4);font-family:\'Geist\',sans-serif;padding:8px 0">Categorizá eventos en el panel para ver el balance.</div>';
+    el.innerHTML = '<div style="font-size:11px;color:var(--text3);font-family:\'Geist\',sans-serif;padding:8px 0">Categorizá eventos en el panel para ver el balance.</div>';
     return;
   }
 
@@ -5346,7 +5346,7 @@ function renderTuanaChart() {
     const step = tuanaChartPeriod === 'año' ? 3 : 1;
     labelsEl.innerHTML = labels.map((l, i) => {
       const visible = i % step === 0 || i === labels.length - 1;
-      return `<span style="visibility:${visible ? 'visible' : 'hidden'};font-size:9px;color:var(--text4);font-family:'Geist',sans-serif">${l}</span>`;
+      return `<span style="visibility:${visible ? 'visible' : 'hidden'};font-size:9px;color:var(--text3);font-family:'Geist',sans-serif">${l}</span>`;
     }).join('');
   }
 }
