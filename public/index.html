@@ -128,6 +128,7 @@
     <div class="morning-box">
       <div class="morning-greeting" id="morning-greeting" data-i18n="morningGreetingDefault">Buenos días.</div>
       <div class="morning-sub" id="morning-sub" data-i18n="morningSubDefault">Cargando tu día...</div>
+      <div class="mb-proj" id="morning-proj" style="display:none"></div>
       <div class="morning-section-label" data-i18n="morningQ1">¿Cómo llegás hoy?</div>
       <div class="energy-btns">
         <button class="energy-btn" data-e="1" onclick="selectMorningEnergy(1)">
@@ -288,16 +289,7 @@
             <div class="phub-next">
               <div class="phub-next-hd">
                 <span class="phub-eyebrow" data-i18n="phubProxima">Próxima fecha</span>
-                <button class="phub-add" onclick="toggleRecordaForm()">+ <span data-i18n="phubFecha">Fecha</span></button>
-              </div>
-              <div class="recorda-form phub-form" id="recorda-form" style="display:none">
-                <input class="slab-input" id="recorda-nombre" placeholder="Ej: Parcial física" data-i18n-ph="recordaNombrePh"
-                  onkeydown="if(event.key==='Enter')saveRecordatorio()" />
-                <div class="phub-form-row">
-                  <input class="slab-input slab-input-date" id="recorda-fecha" type="date" />
-                  <input class="slab-input slab-input-date" id="recorda-hora" type="time" />
-                </div>
-                <button class="slab-save-btn" onclick="saveRecordatorio()" data-i18n="guardar">Guardar</button>
+                <button class="phub-add" onclick="openFechaModal(null)">+ <span data-i18n="phubFecha">Fecha</span></button>
               </div>
               <h3 class="phub-next-title" id="phub-next-title">—</h3>
               <div class="phub-clock" aria-live="polite">
@@ -314,6 +306,8 @@
               <div class="pdet-checks" id="phub-pend"></div>
             </div>
           </div>
+
+          <div class="phub-stats" id="phub-stats"></div>
 
           <div class="phub-sec-hd">
             <span class="phub-sec-title" data-i18n="phubActivos">Proyectos activos</span>
@@ -506,102 +500,116 @@
   </div>
 
 
-  <!-- LEAD MODAL -->
+  <!-- PROYECTO: lo esencial arriba, el resto en "Más detalles" -->
   <div id="lead-backdrop" class="lead-backdrop" onclick="closeProjModal()" style="display:none"></div>
   <div id="lead-modal" class="lead-modal" style="display:none">
     <div class="lm-head">
       <div class="lm-title" id="lm-title" data-i18n="lmNewProject">Nuevo proyecto</div>
-      <button class="lm-close" onclick="closeProjModal()">×</button>
+      <button class="lm-close" onclick="closeProjModal()" aria-label="Cerrar">×</button>
     </div>
     <div class="lm-body">
       <div class="lm-field">
-        <label class="lm-lbl" data-i18n="lmNombre">Nombre</label>
+        <label class="lm-lbl" for="lm-nombre" data-i18n="lmNombre">Nombre</label>
         <input class="lm-inp" id="lm-nombre" type="text" placeholder="Mi proyecto..." data-i18n-ph="lmNombrePh"/>
       </div>
       <div class="lm-field">
-        <label class="lm-lbl" data-i18n="lmDesc">Descripción</label>
-        <input class="lm-inp" id="lm-desc" type="text" placeholder="¿De qué se trata?" data-i18n-ph="lmDescPh"/>
-      </div>
-      <div class="lm-row2">
-        <div class="lm-field">
-          <label class="lm-lbl" data-i18n="projCliente">Cliente</label>
-          <input class="lm-inp" id="lm-cliente" type="text" placeholder="Para quién es" data-i18n-ph="projClientePh"/>
-        </div>
-        <div class="lm-field">
-          <label class="lm-lbl" data-i18n="projVia">Vía</label>
-          <input class="lm-inp" id="lm-via" type="text" placeholder="Directo, Qenti, Antic..." data-i18n-ph="projViaPh"/>
-        </div>
-      </div>
-      <div class="lm-row2">
-        <div class="lm-field">
-          <label class="lm-lbl" data-i18n="projMonto">Monto</label>
-          <input class="lm-inp" id="lm-monto" type="text" placeholder="USD 1.000 · 50/50" data-i18n-ph="projMontoPh"/>
-        </div>
-        <div class="lm-field">
-          <label class="lm-lbl" data-i18n="projPlazo">Plazo</label>
-          <input class="lm-inp" id="lm-plazo" type="text" placeholder="6 semanas" data-i18n-ph="projPlazoPh"/>
-        </div>
-      </div>
-      <div class="lm-field">
-        <label class="lm-lbl" data-i18n="projProximoPaso">Próximo paso</label>
-        <input class="lm-inp" id="lm-proximo_paso" type="text" placeholder="Lo siguiente que tiene que pasar" data-i18n-ph="projProximoPh"/>
-      </div>
-      <div class="lm-field">
-        <label class="lm-lbl" data-i18n="lmArea">Área</label>
-        <div class="lm-areas" id="lm-areas"></div>
-      </div>
-      <div class="lm-row2">
-        <div class="lm-field">
-          <label class="lm-lbl" data-i18n="lmFechaLimite">Fecha límite</label>
-          <input class="lm-inp" id="lm-fecha" type="date"/>
-        </div>
-        <div class="lm-field">
-          <label class="lm-lbl"><span data-i18n="lmProgreso">Progreso:</span> <span id="lm-progreso-val">0%</span></label>
-          <input class="lm-progreso-slider" id="lm-progreso" type="range" min="0" max="100" value="0"
-                 oninput="document.getElementById('lm-progreso-val').textContent = this.value + '%'"/>
-        </div>
+        <label class="lm-lbl" for="lm-cliente" data-i18n="projCliente">Cliente</label>
+        <input class="lm-inp" id="lm-cliente" type="text" placeholder="Para quién es" data-i18n-ph="projClientePh"/>
       </div>
       <div class="lm-field">
         <label class="lm-lbl" data-i18n="lmEstado">Estado</label>
         <div class="lm-estados" id="lm-estados"></div>
       </div>
       <div class="lm-field">
-        <label class="lm-lbl" data-i18n="lmNotas">Notas</label>
-        <textarea class="lm-inp lm-ta" id="lm-notas" placeholder="Detalles, contexto, próximos pasos..." data-i18n-ph="lmNotasPh"></textarea>
-      </div>
-      <div class="lm-field">
-        <label class="lm-lbl"><span data-i18n="projIncluye">Incluye</span> · <span data-i18n="projUnoPorLinea">uno por línea</span></label>
-        <textarea class="lm-inp lm-ta" id="lm-incluye"></textarea>
-      </div>
-      <div class="lm-field">
-        <label class="lm-lbl"><span data-i18n="projExcluye">No incluye</span> · <span data-i18n="projUnoPorLinea">uno por línea</span></label>
-        <textarea class="lm-inp lm-ta" id="lm-excluye"></textarea>
-      </div>
-      <div class="lm-field">
-        <label class="lm-lbl"><span data-i18n="projCronograma">Cronograma</span> · <span data-i18n="projCronoAyuda">cuándo | qué | estado (pendiente, ahora, listo)</span></label>
-        <textarea class="lm-inp lm-ta" id="lm-cronograma" placeholder="13/10 | Arranque | listo"></textarea>
-      </div>
-      <div class="lm-field">
-        <label class="lm-lbl"><span data-i18n="projContactos">Contactos</span> · <span data-i18n="projUnoPorLinea">uno por línea</span></label>
-        <textarea class="lm-inp lm-ta" id="lm-contactos"></textarea>
+        <label class="lm-lbl" for="lm-proximo_paso" data-i18n="projProximoPaso">Próximo paso</label>
+        <input class="lm-inp" id="lm-proximo_paso" type="text" placeholder="Lo siguiente que tiene que pasar" data-i18n-ph="projProximoPh"/>
       </div>
       <div class="lm-row2">
         <div class="lm-field">
-          <label class="lm-lbl" data-i18n="projLink">Link del tablero</label>
-          <input class="lm-inp" id="lm-link_tablero" type="url" placeholder="https://..."/>
+          <label class="lm-lbl" for="lm-fecha" data-i18n="projEntrega">Entrega</label>
+          <input class="lm-inp" id="lm-fecha" type="date"/>
         </div>
         <div class="lm-field">
-          <label class="lm-lbl" data-i18n="projColor">Color</label>
-          <div class="lm-colors" id="lm-colors"></div>
+          <label class="lm-lbl" for="lm-monto_total" data-i18n="projMonto">Monto</label>
+          <div class="lm-money">
+            <input class="lm-inp" id="lm-monto_total" type="number" inputmode="decimal" min="0" placeholder="0"/>
+            <select class="lm-inp lm-sel" id="lm-moneda" aria-label="Moneda">
+              <option>USD</option><option>ARS</option><option>EUR</option>
+            </select>
+          </div>
         </div>
       </div>
+
+      <details class="lm-more" id="lm-more">
+        <summary data-i18n="lmMasDetalles">Más detalles</summary>
+        <div class="lm-more-body">
+          <div class="lm-field">
+            <label class="lm-lbl" for="lm-desc" data-i18n="lmDesc">Descripción</label>
+            <input class="lm-inp" id="lm-desc" type="text" placeholder="¿De qué se trata?" data-i18n-ph="lmDescPh"/>
+          </div>
+          <div class="lm-row2">
+            <div class="lm-field">
+              <label class="lm-lbl" for="lm-via" data-i18n="projVia">Vía</label>
+              <input class="lm-inp" id="lm-via" type="text" placeholder="Directo, Qenti, Antic..." data-i18n-ph="projViaPh"/>
+            </div>
+            <div class="lm-field">
+              <label class="lm-lbl" for="lm-plazo" data-i18n="projPlazo">Plazo</label>
+              <input class="lm-inp" id="lm-plazo" type="text" placeholder="6 semanas" data-i18n-ph="projPlazoPh"/>
+            </div>
+          </div>
+          <div class="lm-field">
+            <label class="lm-lbl" for="lm-monto" data-i18n="projCondiciones">Condiciones de pago</label>
+            <input class="lm-inp" id="lm-monto" type="text" placeholder="50/50, adelanto + final..." data-i18n-ph="projCondicionesPh"/>
+          </div>
+          <div class="lm-field">
+            <label class="lm-lbl" data-i18n="projCronograma">Cronograma</label>
+            <div id="lm-crono-rows" class="lm-crono-rows"></div>
+            <button class="lm-link-btn" onclick="addPmCrono()" data-i18n="lmCronoAgregar">+ Agregar hito</button>
+          </div>
+          <div class="lm-row2">
+            <div class="lm-field">
+              <label class="lm-lbl" for="lm-incluye"><span data-i18n="projIncluye">Incluye</span> · <span data-i18n="projUnoPorLinea">uno por línea</span></label>
+              <textarea class="lm-inp lm-ta" id="lm-incluye"></textarea>
+            </div>
+            <div class="lm-field">
+              <label class="lm-lbl" for="lm-excluye"><span data-i18n="projExcluye">No incluye</span> · <span data-i18n="projUnoPorLinea">uno por línea</span></label>
+              <textarea class="lm-inp lm-ta" id="lm-excluye"></textarea>
+            </div>
+          </div>
+          <div class="lm-row2">
+            <div class="lm-field">
+              <label class="lm-lbl" for="lm-contactos"><span data-i18n="projContactos">Contactos</span> · <span data-i18n="projUnoPorLinea">uno por línea</span></label>
+              <textarea class="lm-inp lm-ta" id="lm-contactos"></textarea>
+            </div>
+            <div class="lm-field">
+              <label class="lm-lbl" for="lm-notas" data-i18n="lmNotas">Notas</label>
+              <textarea class="lm-inp lm-ta" id="lm-notas" placeholder="Detalles, contexto..." data-i18n-ph="lmNotasPh"></textarea>
+            </div>
+          </div>
+          <div class="lm-field">
+            <label class="lm-lbl" for="lm-link_tablero" data-i18n="projLink">Link del tablero</label>
+            <input class="lm-inp" id="lm-link_tablero" type="url" placeholder="https://..."/>
+          </div>
+          <div class="lm-row2">
+            <div class="lm-field">
+              <label class="lm-lbl" data-i18n="projColor">Color</label>
+              <div class="lm-colors" id="lm-colors"></div>
+            </div>
+            <div class="lm-field">
+              <label class="lm-lbl" data-i18n="lmArea">Área</label>
+              <div class="lm-areas" id="lm-areas"></div>
+            </div>
+          </div>
+        </div>
+      </details>
+
       <div class="lm-field" id="lm-checklist-wrap" style="display:none">
-        <label class="lm-lbl" data-i18n="lmChecklist">Checklist</label>
+        <label class="lm-lbl" data-i18n="projTareas">Tareas</label>
         <div id="lm-checklist-list"></div>
         <div class="lm-checklist-add">
           <input class="lm-inp" id="lm-checklist-inp" type="text" placeholder="Agregar tarea..." data-i18n-ph="lmChecklistAddPh"
                  onkeydown="if(event.key==='Enter'){event.preventDefault();addChecklistItem();}"/>
-          <button class="lm-checklist-add-btn" onclick="addChecklistItem()">+</button>
+          <button class="lm-checklist-add-btn" onclick="addChecklistItem()" aria-label="Agregar tarea">+</button>
         </div>
       </div>
     </div>
@@ -612,6 +620,64 @@
       <button class="lm-save" onclick="saveProjModal()" data-i18n="guardar">Guardar</button>
     </div>
   </div>
+
+  <!-- FECHA: crear y editar (nombre, día, hora, si se repite) -->
+  <div id="fecha-backdrop" class="lead-backdrop" onclick="closeFechaModal()" style="display:none"></div>
+  <div id="fecha-modal" class="lead-modal lead-modal-sm" style="display:none">
+    <div class="lm-head">
+      <div class="lm-title" id="fm-title" data-i18n="fmNueva">Nueva fecha</div>
+      <button class="lm-close" onclick="closeFechaModal()" aria-label="Cerrar">×</button>
+    </div>
+    <div class="lm-body">
+      <div class="lm-field">
+        <label class="lm-lbl" for="fm-nombre" data-i18n="lmNombre">Nombre</label>
+        <input class="lm-inp" id="fm-nombre" type="text" placeholder="Ej: Seguimiento con el cliente" data-i18n-ph="fmNombrePh"
+               onkeydown="if(event.key==='Enter')saveFechaModal()"/>
+      </div>
+      <div class="lm-row2">
+        <div class="lm-field">
+          <label class="lm-lbl" for="fm-fecha" data-i18n="phubFecha">Fecha</label>
+          <input class="lm-inp" id="fm-fecha" type="date"/>
+        </div>
+        <div class="lm-field">
+          <label class="lm-lbl" for="fm-hora" data-i18n="fmHora">Hora (opcional)</label>
+          <input class="lm-inp" id="fm-hora" type="time"/>
+        </div>
+      </div>
+      <div class="lm-field">
+        <label class="lm-lbl" data-i18n="fmRepite">Se repite</label>
+        <div class="lm-estados" id="fm-repite">
+          <button class="lm-estado-btn" data-v="" onclick="selectFmRepite(null)" data-i18n="fmUnaVez">Una vez</button>
+          <button class="lm-estado-btn" data-v="semanal" onclick="selectFmRepite('semanal')" data-i18n="fmCadaSemana">Cada semana</button>
+        </div>
+      </div>
+    </div>
+    <div class="lm-foot">
+      <button class="lm-del" id="fm-del" onclick="deleteFechaModal()" style="display:none" data-i18n="eliminar">Eliminar</button>
+      <div style="flex:1"></div>
+      <button class="lm-cancel" onclick="closeFechaModal()" data-i18n="cancelar">Cancelar</button>
+      <button class="lm-save" onclick="saveFechaModal()" data-i18n="guardar">Guardar</button>
+    </div>
+  </div>
+
+  <!-- RESUMEN SEMANAL de un proyecto, listo para copiar -->
+  <div id="rs-backdrop" class="lead-backdrop" onclick="closeResumenSemanal()" style="display:none"></div>
+  <div id="rs-modal" class="lead-modal" style="display:none">
+    <div class="lm-head">
+      <div class="lm-title" id="rs-title" data-i18n="rsTitulo">Resumen semanal</div>
+      <button class="lm-close" onclick="closeResumenSemanal()" aria-label="Cerrar">×</button>
+    </div>
+    <div class="lm-body">
+      <textarea class="lm-inp lm-ta rs-text" id="rs-text" spellcheck="false"></textarea>
+    </div>
+    <div class="lm-foot">
+      <span class="rs-copied" id="rs-copied" aria-live="polite"></span>
+      <div style="flex:1"></div>
+      <button class="lm-cancel" onclick="closeResumenSemanal()" data-i18n="cancelar">Cancelar</button>
+      <button class="lm-save" onclick="copyResumenSemanal()" data-i18n="rsCopiar">Copiar</button>
+    </div>
+  </div>
+
 
 </div>
 
@@ -784,6 +850,19 @@
         <div class="panel-area-pills" id="panel-area-pills"></div>
       </div>
 
+      <button class="panel-row" onclick="togglePanelRow('proj')">
+        <span class="panel-row-icon">◈</span>
+        <span class="panel-row-label" data-i18n="panelProyecto">Proyecto</span>
+        <span class="panel-row-value">
+          <span class="panel-row-dot" id="panel-row-proj-dot"></span>
+          <span id="panel-row-proj-text" data-i18n="panelSinProyecto">Ninguno</span>
+        </span>
+        <span class="panel-row-chevron">›</span>
+      </button>
+      <div class="panel-row-expand" id="panel-proj-wrap" style="display:none">
+        <div class="panel-area-pills" id="panel-proj-pills"></div>
+      </div>
+
       <button class="panel-row" onclick="togglePanelRow('hora')">
         <span class="panel-row-icon">◷</span>
         <span class="panel-row-label" data-i18n="panelHora">Hora</span>
@@ -944,6 +1023,8 @@
   <img id="foq-reaction-img" src="/foquito-avatar.png" alt=""/>
 </div>
 
+<!-- proyectos.js va antes: app.js lo usa al arrancar (resumen de la mañana) -->
+<script src="/proyectos.js"></script>
 <script src="/app.js"></script>
 </body>
 </html>

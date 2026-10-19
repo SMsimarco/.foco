@@ -151,6 +151,20 @@ const I18N_UI = {
     phubSinPendientes: 'Nada pendiente', phubActivos: 'Proyectos activos', phubEnMarcha: 'en marcha', phubEntregados: 'Entregados',
     phubEntrega: 'Entrega', phubPaso: 'pasó', phubEn: 'en', phubManana: 'mañana', phubDias: 'días',
     phubD: 'días', phubH: 'horas', phubM: 'min', phubNuevo: 'Nuevo proyecto',
+    phubPorCobrar: 'Por cobrar', phubCobradoMes: 'Cobrado este mes', phubHorasSemana: 'Horas esta semana',
+    phubEditar: 'Tocá para editar', phubAgregaFecha: 'Sin fechas. Tocá "+ Fecha" para sumar una.',
+    projTildar: 'Marcar como hecha', projEntrega: 'Entrega', projHoras: 'Horas', projEstaSemana: 'esta semana',
+    projResumen: 'Resumen semanal', projCobros: 'Cobros', projFaltaCobrar: 'Falta cobrar', projCobradoTodo: 'Todo cobrado',
+    projPorHora: 'por hora', projSinMonto: 'Cargá el monto en "Editar" para seguir los cobros.', projCobro: 'Cobro',
+    projCobroNotaPh: 'Nota (ej. 50% inicial)', projAgregarCobro: 'Agregar cobro', projBorrarCobro: '¿Borrar este cobro?',
+    projCronoTip: 'tocá el punto para cambiar el estado', projCondiciones: 'Condiciones de pago', projCondicionesPh: '50/50, adelanto + final...',
+    lmMasDetalles: 'Más detalles', lmCronoCuando: 'Cuándo', lmCronoQue: 'Qué', lmCronoAgregar: '+ Agregar hito',
+    crono_pendiente: 'Pendiente', crono_ahora: 'Ahora', crono_listo: 'Listo',
+    fmNueva: 'Nueva fecha', fmEditar: 'Editar fecha', fmNombrePh: 'Ej: Seguimiento con el cliente', fmHora: 'Hora (opcional)',
+    fmRepite: 'Se repite', fmUnaVez: 'Una vez', fmCadaSemana: 'Cada semana', fmBorrarConfirm: '¿Borrar esta fecha?',
+    rsTitulo: 'Resumen semanal', rsHecho: 'Lo que se hizo esta semana', rsNada: 'Sin tareas cerradas esta semana',
+    rsPendiente: 'Lo que queda', rsProxFecha: 'Próxima fecha', rsHoras: 'Horas dedicadas', rsCopiar: 'Copiar', rsCopiado: 'Copiado',
+    mbProyectos: 'Tus proyectos', panelProyecto: 'Proyecto', panelSinProyecto: 'Ninguno',
     lmNewProject: 'Nuevo proyecto', lmEditProject: 'Editar proyecto', lmNombre: 'Nombre', lmNombrePh: 'Mi proyecto...',
     lmChecklist: 'Checklist', lmChecklistAddPh: 'Agregar tarea...', lmChecklistEmpty: 'Sin tareas todavía',
     lmDesc: 'Descripción', lmDescPh: '¿De qué se trata?', lmArea: 'Área',
@@ -237,6 +251,20 @@ const I18N_UI = {
     phubSinPendientes: 'Nothing pending', phubActivos: 'Active projects', phubEnMarcha: 'active', phubEntregados: 'Delivered',
     phubEntrega: 'Due', phubPaso: 'past', phubEn: 'in', phubManana: 'tomorrow', phubDias: 'days',
     phubD: 'days', phubH: 'hours', phubM: 'min', phubNuevo: 'New project',
+    phubPorCobrar: 'To collect', phubCobradoMes: 'Collected this month', phubHorasSemana: 'Hours this week',
+    phubEditar: 'Tap to edit', phubAgregaFecha: 'No dates. Tap "+ Date" to add one.',
+    projTildar: 'Mark as done', projEntrega: 'Due', projHoras: 'Hours', projEstaSemana: 'this week',
+    projResumen: 'Weekly summary', projCobros: 'Payments', projFaltaCobrar: 'Still to collect', projCobradoTodo: 'Fully paid',
+    projPorHora: 'per hour', projSinMonto: 'Add the amount in "Edit" to track payments.', projCobro: 'Payment',
+    projCobroNotaPh: 'Note (e.g. 50% upfront)', projAgregarCobro: 'Add payment', projBorrarCobro: 'Delete this payment?',
+    projCronoTip: 'tap the dot to change status', projCondiciones: 'Payment terms', projCondicionesPh: '50/50, upfront + final...',
+    lmMasDetalles: 'More details', lmCronoCuando: 'When', lmCronoQue: 'What', lmCronoAgregar: '+ Add milestone',
+    crono_pendiente: 'Pending', crono_ahora: 'Now', crono_listo: 'Done',
+    fmNueva: 'New date', fmEditar: 'Edit date', fmNombrePh: 'E.g. Client follow-up', fmHora: 'Time (optional)',
+    fmRepite: 'Repeats', fmUnaVez: 'Once', fmCadaSemana: 'Every week', fmBorrarConfirm: 'Delete this date?',
+    rsTitulo: 'Weekly summary', rsHecho: 'Done this week', rsNada: 'No tasks closed this week',
+    rsPendiente: 'Still to do', rsProxFecha: 'Next date', rsHoras: 'Hours spent', rsCopiar: 'Copy', rsCopiado: 'Copied',
+    mbProyectos: 'Your projects', panelProyecto: 'Project', panelSinProyecto: 'None',
     lmNewProject: 'New project', lmEditProject: 'Edit project', lmNombre: 'Name', lmNombrePh: 'My project...',
     lmChecklist: 'Checklist', lmChecklistAddPh: 'Add item...', lmChecklistEmpty: 'No items yet',
     lmDesc: 'Description', lmDescPh: "What's it about?", lmArea: 'Area',
@@ -385,12 +413,7 @@ let eventsCache = {}; // { 'YYYY-MM-DD': [...events] }
 let notifOn = true;
 let authMode = 'login';
 
-// Proyectos state
-let projModalId = null;
-let pmEstado = 'idea';
-let pmArea = null;
-let pmColor = null;
-let checklistItems = [];
+// Proyectos state: vive en proyectos.js
 
 // Tu año state
 let tuanaChartPeriod = 'mes';
@@ -1093,7 +1116,7 @@ function cancelRecurModal() {
   closeRecurModal();
 }
 
-async function addEvent(dateISO, title, startTime, endTime, recurrente = false, diaSemana = null, isFocus = false) {
+async function addEvent(dateISO, title, startTime, endTime, recurrente = false, diaSemana = null, isFocus = false, proyectoId = null) {
   if (!currentUser || !title.trim()) return;
 
   const { data, error } = await db.from('events').insert({
@@ -1105,7 +1128,10 @@ async function addEvent(dateISO, title, startTime, endTime, recurrente = false, 
     done: false,
     recurrente,
     dia_semana: diaSemana,
-    is_focus: isFocus
+    is_focus: isFocus,
+    // proyecto_id solo se manda si hay uno: así no depende de la migración
+    // para el resto de los eventos
+    ...(proyectoId ? { proyecto_id: proyectoId } : {})
   }).select().single();
 
   if (error) { console.error(error); return; }
@@ -1712,683 +1738,8 @@ function changeMes(dir) {
   renderMes();
 }
 
-// ── PROYECTOS ────────────────────────────────────────────────
-
-async function renderProyectos() {
-  if (!currentUser) return;
-  const { data } = await db.from('proyectos')
-    .select('*').eq('user_id', currentUser.id)
-    .order('created_at', { ascending: true });
-  const all = data || [];
-
-  const recordatorios = all.filter(p => p.estado === 'recordatorio')
-    .sort((a, b) => {
-      if (!a.fecha_limite) return 1;
-      if (!b.fecha_limite) return -1;
-      return new Date(a.fecha_limite) - new Date(b.fecha_limite);
-    });
-  const notas    = all.filter(p => p.estado === 'nota').reverse();
-  const projs    = all.filter(p => !['recordatorio','nota'].includes(p.estado));
-
-  // Las fechas se muestran en el panel grande del tablero (renderProjAgenda)
-  projRecordatorios = recordatorios;
-
-  // Notas
-  const notasList = document.getElementById('notas-list');
-  if (notasList) {
-    notasList.innerHTML = notas.length === 0
-      ? `<div class="slab-empty">${t('sinNotas')}</div>`
-      : notas.map(n => `
-          <div class="slab-item nota-item">
-            <button class="slab-del" onclick="event.stopPropagation();deleteProyecto('${n.id}')">×</button>
-            <span class="slab-item-name nota-text">${escH(n.nombre)}</span>
-          </div>`).join('');
-  }
-
-  renderProjBoard(projs);
-}
-
-// Tablero de Proyectos — igual al tablero de seguimiento: arriba un resumen
-// con una tarjeta por proyecto (estado, cliente, monto, próximo paso y
-// avance de tareas) y, al tocar una, la vista completa del proyecto: datos,
-// próximo paso, tareas para tildar, cronograma, qué incluye y qué no, notas.
-// Guarda `projs` en módulo (projBoardCache) para re-renderizar sin volver a
-// pedir todo a Supabase.
-let projBoardCache = [];
-let projTareasCount = {};   // { proyecto_id: [hechas, total] }
-let projRecordatorios = [];
-let projTareasAll = [];
-let phubTimer = null;
-let projDetailId = null;
-let projDetailTareas = [];
-
-const PROJ_COLORS = ['#6366F1', '#06B6D4', '#10B981', '#F59E0B', '#F43F5E', '#A78BFA', '#3B82F6', '#71717A'];
-const CRONO_ESTADOS = ['pendiente', 'ahora', 'listo'];
-
-function projColor(p) {
-  if (p.color) return p.color;
-  const col = PROJ_COLS.find(c => c.id === p.estado);
-  return col ? col.color : 'var(--accent)';
-}
-
-function projEstadoChip(p) {
-  const col = PROJ_COLS.find(c => c.id === p.estado);
-  const color = col ? col.color : '#71717A';
-  return `<span class="ptab-chip" style="--chip:${color}">${escH(projLabel(p.estado))}</span>`;
-}
-
-function projAvance(p) {
-  const c = projTareasCount[p.id];
-  if (c && c[1] > 0) return { hechas: c[0], total: c[1], pct: Math.round(c[0] / c[1] * 100) };
-  return { hechas: 0, total: 0, pct: p.progreso || 0 };
-}
-
-function asList(v) {
-  if (Array.isArray(v)) return v.filter(Boolean);
-  if (typeof v === 'string' && v.trim()) return v.split('\n').map(s => s.trim()).filter(Boolean);
-  return [];
-}
-
-async function loadProjTareas() {
-  const { data, error } = await db.from('proyecto_tareas')
-    .select('id, proyecto_id, texto, done, orden, created_at').eq('user_id', currentUser.id)
-    .order('orden', { ascending: true }).order('created_at', { ascending: true });
-  projTareasAll = error ? [] : (data || []);
-  if (error) console.error(error);
-  projTareasCount = {};
-  projTareasAll.forEach(r => {
-    const c = projTareasCount[r.proyecto_id] || (projTareasCount[r.proyecto_id] = [0, 0]);
-    c[1]++; if (r.done) c[0]++;
-  });
-}
-
-async function renderProjBoard(projs) {
-  projBoardCache = projs;
-  if (currentUser) await loadProjTareas();
-  if (projDetailId && projs.some(p => p.id === projDetailId)) {
-    await openProjDetail(projDetailId);
-  } else {
-    projDetailId = null;
-    renderProjHome();
-  }
-}
-
-function showProjHome(on) {
-  const home = document.getElementById('phub-home');
-  const det  = document.getElementById('proj-board');
-  if (home) home.hidden = !on;
-  if (det)  det.hidden  = on;
-  document.getElementById('phub-scroll')?.scrollTo?.(0, 0);
-}
-
-// ── Inicio del tablero: fechas, pendientes y proyectos ──
-function renderProjHome() {
-  showProjHome(true);
-  const hoy = new Date();
-  const todayEl = document.getElementById('phub-today');
-  if (todayEl) todayEl.textContent = `${DAYS_FULL[hoy.getDay()]} ${hoy.getDate()} · ${MONTHS_FULL[hoy.getMonth()]}`;
-
-  renderProjAgenda();
-  if (!phubTimer) phubTimer = setInterval(() => { if (currentView === 'patrones' && !projDetailId) renderProjAgenda(); }, 30000);
-
-  // Pendientes de todos los proyectos activos, en el orden de los proyectos
-  const activos = projBoardCache.filter(p => p.estado !== 'hecho');
-  const orden = Object.fromEntries(activos.map((p, i) => [p.id, i]));
-  const deActivos = projTareasAll.filter(x => x.proyecto_id in orden);
-  const pend = deActivos.filter(x => !x.done)
-    .sort((a, b) => orden[a.proyecto_id] - orden[b.proyecto_id] || (a.orden || 0) - (b.orden || 0))
-    .slice(0, 8);
-  const hechas = deActivos.filter(x => x.done).length;
-  const pendEl = document.getElementById('phub-pend');
-  if (pendEl) {
-    document.getElementById('phub-pend-count').textContent = `${hechas} ${t('projDe')} ${deActivos.length}`;
-    document.getElementById('phub-pend-bar').style.width = (deActivos.length ? hechas / deActivos.length * 100 : 0) + '%';
-    pendEl.innerHTML = pend.length ? pend.map(it => {
-      const p = projBoardCache.find(x => x.id === it.proyecto_id);
-      return `<div class="pdet-check">
-        <button class="lm-checklist-check" onclick="toggleHomeTarea('${it.id}')"></button>
-        <span class="pdet-check-txt">${escH(it.texto)}
-          <button class="phub-tag" onclick="openProjDetail('${escH(p.id)}')"><span class="ptab-dot" style="background:${projColor(p)}"></span>${escH(p.nombre)}</button>
-        </span>
-      </div>`;
-    }).join('') : `<div class="lm-checklist-empty">${t('phubSinPendientes')}</div>`;
-  }
-
-  // Proyectos activos + entregados
-  const grid = document.getElementById('phub-grid');
-  if (grid) grid.innerHTML = activos.length
-    ? activos.map(proyectoCardHTML).join('')
-    : `<div class="ptab-empty">${t('sinProyectosAun')}</div>`;
-  const cnt = document.getElementById('phub-count');
-  if (cnt) cnt.textContent = `${activos.length} ${t('phubEnMarcha')}`;
-  const hechos = projBoardCache.filter(p => p.estado === 'hecho');
-  const doneWrap = document.getElementById('phub-done');
-  if (doneWrap) {
-    doneWrap.hidden = !hechos.length;
-    document.getElementById('phub-done-list').innerHTML = hechos.map(p =>
-      `<button class="phub-tag big" onclick="openProjDetail('${escH(p.id)}')"><span class="ptab-dot" style="background:${projColor(p)}"></span>${escH(p.nombre)}</button>`).join('');
-  }
-}
-
-async function toggleHomeTarea(id) {
-  const it = projTareasAll.find(x => x.id === id);
-  if (!it) return;
-  it.done = true;
-  const c = projTareasCount[it.proyecto_id]; if (c) c[0]++;
-  renderProjHome();
-  const { error } = await db.from('proyecto_tareas').update({ done: true }).eq('id', id).eq('user_id', currentUser.id);
-  if (error) { console.error(error); it.done = false; if (c) c[0]--; renderProjHome(); }
-}
-
-// Fechas: las "Próximas fechas" (recordatorios, con hora opcional) y las
-// fechas límite de los proyectos. La primera que viene va grande, con
-// cuenta regresiva; el resto, con cuánto falta para cada una.
-function agendaItems() {
-  const items = [];
-  projRecordatorios.forEach(r => { if (r.fecha_limite) items.push({ id: r.id, nombre: r.nombre, fecha: r.fecha_limite, hora: r.hora || null, tipo: 'rec' }); });
-  projBoardCache.forEach(p => { if (p.fecha_limite && p.estado !== 'hecho') items.push({ id: p.id, nombre: `${t('phubEntrega')} · ${p.nombre}`, fecha: p.fecha_limite, hora: null, tipo: 'proj', color: projColor(p) }); });
-  items.forEach(it => {
-    it.at = new Date(`${it.fecha}T${it.hora || '00:00'}:00`);
-    it.fin = it.hora ? it.at : new Date(`${it.fecha}T23:59:59`);
-  });
-  const hoy0 = new Date(); hoy0.setHours(0, 0, 0, 0);
-  return items.filter(it => it.fin >= hoy0).sort((a, b) => a.at - b.at);
-}
-
-function faltaLabel(it, now) {
-  const hoy0 = new Date(now); hoy0.setHours(0, 0, 0, 0);
-  const dias = Math.round((new Date(`${it.fecha}T00:00:00`) - hoy0) / 86400000);
-  if (it.fin < now) return t('phubPaso');
-  if (it.hora && dias <= 0) {
-    const min = Math.max(0, Math.round((it.at - now) / 60000));
-    return min < 60 ? `${t('phubEn')} ${min} min` : `${t('phubEn')} ${Math.floor(min / 60)} h`;
-  }
-  if (dias <= 0) return t('hoyTitleDefault');
-  if (dias === 1) return t('phubManana');
-  return `${t('phubEn')} ${dias} ${t('phubDias')}`;
-}
-
-function renderProjAgenda() {
-  const list = document.getElementById('phub-agenda');
-  if (!list) return;
-  const now = new Date();
-  const items = agendaItems();
-  const next = items.find(it => it.fin >= now);
-  const title = document.getElementById('phub-next-title');
-  const [D, H, M] = ['phub-cd-d', 'phub-cd-h', 'phub-cd-m'].map(id => document.getElementById(id));
-  if (next) {
-    title.textContent = next.nombre;
-    const min = Math.max(0, Math.floor((next.at - now) / 60000));
-    D.textContent = Math.floor(min / 1440); H.textContent = Math.floor(min % 1440 / 60); M.textContent = min % 60;
-  } else {
-    title.textContent = t('phubSinFechas');
-    D.textContent = H.textContent = M.textContent = '0';
-  }
-  list.innerHTML = items.slice(0, 6).map(it => {
-    const past = it.fin < now;
-    const mes = it.at.getMonth() !== now.getMonth() ? ' ' + MONTHS_SHORT[it.at.getMonth()].toLowerCase() : '';
-    const cuando = `${DAYS[it.at.getDay()]} ${it.at.getDate()}${mes}${it.hora ? ' · ' + it.hora : ''}`;
-    const open = it.tipo === 'proj' ? `onclick="openProjDetail('${escH(it.id)}')"` : '';
-    return `<div class="phub-ag${past ? ' past' : ''}${it.tipo === 'proj' ? ' link' : ''}" ${open}>
-      <b>${escH(cuando)}</b>
-      <span class="phub-ag-name">${escH(it.nombre)}</span>
-      <span class="phub-ag-falta">${escH(faltaLabel(it, now))}</span>
-      ${it.tipo === 'rec' ? `<button class="phub-ag-del" onclick="event.stopPropagation();deleteProyecto('${escH(it.id)}')" aria-label="Borrar">×</button>` : ''}
-    </div>`;
-  }).join('');
-}
-
-function proyectoCardHTML(p) {
-  const color = projColor(p);
-  const av = projAvance(p);
-  const sub = [p.cliente, p.monto].filter(Boolean).map(escH).join(' · ') || (p.descripcion ? escH(p.descripcion) : '');
-  let fechaStr = '';
-  if (p.fecha_limite) {
-    const hoy = new Date(); hoy.setHours(0,0,0,0);
-    const fl = new Date(p.fecha_limite + 'T00:00:00');
-    const diff = Math.ceil((fl - hoy) / 86400000);
-    if (diff < 0)        fechaStr = `<span class="pcard-fecha overdue">${t('vencido')}</span>`;
-    else if (diff === 0) fechaStr = `<span class="pcard-fecha today">${t('hoyTitleDefault')}</span>`;
-    else if (diff <= 3)  fechaStr = `<span class="pcard-fecha soon">${diff}d</span>`;
-    else                 fechaStr = `<span class="pcard-fecha">${formatDate(fl, { year: false })}</span>`;
-  }
-  return `
-    <button class="ptab-card" style="--pc:${color}" onclick="openProjDetail('${escH(p.id)}')">
-      <div class="ptab-card-hd">
-        <span class="ptab-card-name">${escH(p.nombre)}</span>
-        ${projEstadoChip(p)}
-      </div>
-      ${sub ? `<div class="ptab-card-sub">${sub}</div>` : ''}
-      ${p.proximo_paso ? `<div class="ptab-card-next"><b>${t('projProximo')}:</b> ${escH(p.proximo_paso)}</div>` : ''}
-      <div class="ptab-card-foot">
-        <span>${av.total ? `${av.hechas} ${t('projDe')} ${av.total} ${t('projTareasMin')}` : (av.pct ? av.pct + '%' : '')}</span>
-        ${fechaStr}
-        <span class="ptab-bar"><i style="width:${av.pct}%"></i></span>
-      </div>
-    </button>`;
-}
-
-// ── Vista completa de un proyecto ──
-async function openProjDetail(id) {
-  const p = projBoardCache.find(x => x.id === id);
-  if (!p) return;
-  projDetailId = id;
-  const { data, error } = await db.from('proyecto_tareas')
-    .select('*').eq('proyecto_id', id).eq('user_id', currentUser.id)
-    .order('orden', { ascending: true }).order('created_at', { ascending: true });
-  projDetailTareas = error ? [] : (data || []);
-  renderProjDetail();
-  showProjHome(false);
-}
-
-function closeProjDetail() {
-  projDetailId = null;
-  renderProjHome();
-  renderProyectos();
-}
-
-function renderProjDetail() {
-  const board = document.getElementById('proj-board');
-  const p = projBoardCache.find(x => x.id === projDetailId);
-  if (!board || !p) return;
-  const color = projColor(p);
-  const hechas = projDetailTareas.filter(x => x.done).length;
-  const total = projDetailTareas.length;
-  const pct = total ? Math.round(hechas / total * 100) : (p.progreso || 0);
-  const facts = [
-    [t('projCliente'), p.cliente], [t('projMonto'), p.monto], [t('projPlazo'), p.plazo],
-    [t('projContactos'), asList(p.contactos).join(', ')]
-  ].filter(f => f[1]);
-  const crono = Array.isArray(p.cronograma) ? p.cronograma : [];
-  const incluye = asList(p.incluye), excluye = asList(p.excluye), notas = asList(p.notas);
-  const list = items => `<ul>${items.map(x => `<li>${escH(x)}</li>`).join('')}</ul>`;
-
-  board.innerHTML = `
-    <div class="pdet" style="--pc:${color}">
-      <button class="pdet-back" onclick="closeProjDetail()">‹ ${t('slabProyectos')}</button>
-
-      <div class="pdet-hd">
-        <div class="pdet-hd-main">
-          ${p.via ? `<div class="pdet-eyebrow">${escH(p.via)}</div>` : ''}
-          <h2 class="pdet-title"><span class="ptab-dot" style="background:${color}"></span>${escH(p.nombre)}</h2>
-          ${p.descripcion ? `<p class="pdet-lead">${escH(p.descripcion)}</p>` : ''}
-        </div>
-        <div class="pdet-actions">
-          ${projEstadoChip(p)}
-          ${p.link_tablero ? `<a class="pdet-btn" href="${escH(p.link_tablero)}" target="_blank" rel="noopener">${t('projAbrirTablero')} ↗</a>` : ''}
-          <button class="pdet-btn" onclick="openProjModal('${escH(p.id)}')">${t('projEditar')}</button>
-        </div>
-      </div>
-
-      ${facts.length ? `<div class="pdet-facts">${facts.map(f => `<div class="pdet-fact"><span>${escH(f[0])}</span><b>${escH(f[1])}</b></div>`).join('')}</div>` : ''}
-
-      ${p.proximo_paso ? `<div class="pdet-next"><span>${t('projProximoPaso')}</span><b>${escH(p.proximo_paso)}</b></div>` : ''}
-
-      <div class="pdet-cols">
-        <div class="pdet-panel">
-          <div class="pdet-panel-hd"><span>${t('projTareas')}</span><span class="ptab-n">${hechas} ${t('projDe')} ${total}</span></div>
-          <span class="ptab-bar wide"><i style="width:${pct}%"></i></span>
-          <div class="pdet-checks">
-            ${total ? projDetailTareas.map(it => `
-              <div class="pdet-check${it.done ? ' done' : ''}">
-                <button class="lm-checklist-check${it.done ? ' done' : ''}" onclick="toggleDetailTarea('${it.id}')">${it.done ? '✓' : ''}</button>
-                <span class="pdet-check-txt">${escH(it.texto)}</span>
-                <button class="lm-checklist-del" onclick="deleteDetailTarea('${it.id}')">×</button>
-              </div>`).join('') : `<div class="lm-checklist-empty">${t('lmChecklistEmpty')}</div>`}
-          </div>
-          <div class="lm-checklist-add">
-            <input class="lm-inp" id="pdet-tarea-inp" type="text" placeholder="${escH(t('lmChecklistAddPh'))}"
-                   onkeydown="if(event.key==='Enter'){event.preventDefault();addDetailTarea();}"/>
-            <button class="lm-checklist-add-btn" onclick="addDetailTarea()">+</button>
-          </div>
-        </div>
-
-        ${crono.length ? `
-        <div class="pdet-panel">
-          <div class="pdet-panel-hd"><span>${t('projCronograma')}</span></div>
-          <ul class="pdet-crono">
-            ${crono.map((c, i) => `
-              <li class="${escH(c.estado || 'pendiente')}">
-                <button class="pdet-crono-dot" title="${escH(t('projCambiarEstado'))}" onclick="cycleCronoEstado(${i})"></button>
-                <div><div class="pdet-crono-when">${escH(c.cuando || '')}</div><div>${escH(c.que || '')}</div></div>
-              </li>`).join('')}
-          </ul>
-        </div>` : ''}
-      </div>
-
-      ${(incluye.length || excluye.length || notas.length) ? `
-      <div class="pdet-cols three">
-        ${incluye.length ? `<div class="pdet-panel pdet-inc"><div class="pdet-panel-hd"><span>${t('projIncluye')}</span></div>${list(incluye)}</div>` : ''}
-        ${excluye.length ? `<div class="pdet-panel pdet-exc"><div class="pdet-panel-hd"><span>${t('projExcluye')}</span></div>${list(excluye)}</div>` : ''}
-        ${notas.length ? `<div class="pdet-panel"><div class="pdet-panel-hd"><span>${t('lmNotas')}</span></div>${list(notas)}</div>` : ''}
-      </div>` : ''}
-    </div>`;
-}
-
-function syncDetailCount() {
-  projTareasCount[projDetailId] = [projDetailTareas.filter(x => x.done).length, projDetailTareas.length];
-  projTareasAll = projTareasAll.filter(x => x.proyecto_id !== projDetailId).concat(projDetailTareas);
-}
-
-async function toggleDetailTarea(id) {
-  const it = projDetailTareas.find(x => x.id === id);
-  if (!it) return;
-  it.done = !it.done; syncDetailCount(); renderProjDetail();
-  const { error } = await db.from('proyecto_tareas').update({ done: it.done }).eq('id', id).eq('user_id', currentUser.id);
-  if (error) { console.error(error); it.done = !it.done; syncDetailCount(); renderProjDetail(); }
-}
-
-async function addDetailTarea() {
-  const inp = document.getElementById('pdet-tarea-inp');
-  const texto = inp?.value.trim();
-  if (!texto || !projDetailId) return;
-  const { data, error } = await db.from('proyecto_tareas')
-    .insert({ proyecto_id: projDetailId, user_id: currentUser.id, texto, orden: projDetailTareas.length })
-    .select().single();
-  if (error) { console.error(error); return; }
-  projDetailTareas.push(data); syncDetailCount(); renderProjDetail();
-  document.getElementById('pdet-tarea-inp')?.focus();
-}
-
-async function deleteDetailTarea(id) {
-  projDetailTareas = projDetailTareas.filter(x => x.id !== id);
-  syncDetailCount(); renderProjDetail();
-  const { error } = await db.from('proyecto_tareas').delete().eq('id', id).eq('user_id', currentUser.id);
-  if (error) console.error(error);
-}
-
-async function cycleCronoEstado(i) {
-  const p = projBoardCache.find(x => x.id === projDetailId);
-  if (!p || !Array.isArray(p.cronograma) || !p.cronograma[i]) return;
-  const cur = CRONO_ESTADOS.indexOf(p.cronograma[i].estado || 'pendiente');
-  p.cronograma = p.cronograma.map((c, j) => j === i ? { ...c, estado: CRONO_ESTADOS[(cur + 1) % CRONO_ESTADOS.length] } : c);
-  renderProjDetail();
-  const { error } = await db.from('proyectos').update({ cronograma: p.cronograma, updated_at: new Date().toISOString() })
-    .eq('id', p.id).eq('user_id', currentUser.id);
-  if (error) console.error(error);
-}
-
-// Cronograma en el modal: una línea por hito → "cuándo | qué | estado"
-// (estado opcional: pendiente, ahora o listo).
-function cronoToText(c) {
-  return (Array.isArray(c) ? c : []).map(x => [x.cuando || '', x.que || '', x.estado && x.estado !== 'pendiente' ? x.estado : ''].filter((v, i) => i < 2 || v).join(' | ')).join('\n');
-}
-function textToCrono(txt) {
-  return txt.split('\n').map(l => l.trim()).filter(Boolean).map(l => {
-    const parts = l.split('|').map(s => s.trim());
-    if (parts.length === 1) return { cuando: '', que: parts[0], estado: 'pendiente' };
-    const est = (parts[2] || '').toLowerCase();
-    return { cuando: parts[0], que: parts[1], estado: CRONO_ESTADOS.includes(est) ? est : 'pendiente' };
-  });
-}
-
-function renderPmColors() {
-  const el = document.getElementById('lm-colors');
-  if (!el) return;
-  el.innerHTML = PROJ_COLORS.map(c => `
-    <button class="lm-color${pmColor === c ? ' active' : ''}" style="background:${c}" onclick="selectPmColor('${c}')" aria-label="${c}"></button>`).join('');
-}
-function selectPmColor(c) {
-  pmColor = pmColor === c ? null : c;
-  renderPmColors();
-}
-
-async function deleteProyecto(id) {
-  if (!await askConfirm('¿Eliminar este elemento?')) return;
-  await db.from('proyectos').delete().eq('id', id).eq('user_id', currentUser.id);
-  renderProyectos();
-}
-
-function toggleRecordaForm() {
-  const f = document.getElementById('recorda-form');
-  const open = f.style.display === 'none';
-  f.style.display = open ? 'flex' : 'none';
-  if (open) setTimeout(() => document.getElementById('recorda-nombre').focus(), 50);
-}
-
-function toggleNotaForm() {
-  const f = document.getElementById('nota-form');
-  const open = f.style.display === 'none';
-  f.style.display = open ? 'flex' : 'none';
-  if (open) setTimeout(() => document.getElementById('nota-texto').focus(), 50);
-}
-
-async function saveRecordatorio() {
-  const nombre = document.getElementById('recorda-nombre').value.trim();
-  if (!nombre) return;
-  const fecha = document.getElementById('recorda-fecha').value || null;
-  const hora  = document.getElementById('recorda-hora')?.value || null;
-  await db.from('proyectos').insert({
-    user_id: currentUser.id, nombre, fecha_limite: fecha, hora,
-    estado: 'recordatorio', updated_at: new Date().toISOString()
-  });
-  document.getElementById('recorda-nombre').value = '';
-  document.getElementById('recorda-fecha').value  = '';
-  if (document.getElementById('recorda-hora')) document.getElementById('recorda-hora').value = '';
-  document.getElementById('recorda-form').style.display = 'none';
-  renderProyectos();
-}
-
-async function saveNota() {
-  const texto = document.getElementById('nota-texto').value.trim();
-  if (!texto) return;
-  await db.from('proyectos').insert({
-    user_id: currentUser.id, nombre: texto,
-    estado: 'nota', updated_at: new Date().toISOString()
-  });
-  document.getElementById('nota-texto').value = '';
-  document.getElementById('nota-form').style.display = 'none';
-  renderProyectos();
-}
-
 function escH(s) {
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
-
-async function moverProyecto(id, estado) {
-  await db.from('proyectos')
-    .update({ estado, updated_at: new Date().toISOString() })
-    .eq('id', id).eq('user_id', currentUser.id);
-  renderProyectos();
-}
-
-async function openProjModal(id, estadoDefault) {
-  projModalId = id || null;
-  pmEstado = estadoDefault || 'idea';
-  pmArea = null;
-
-  const title  = document.getElementById('lm-title');
-  const delBtn = document.getElementById('lm-del');
-
-  if (id) {
-    const { data } = await db.from('proyectos').select('*').eq('id', id).single();
-    if (!data) return;
-    document.getElementById('lm-nombre').value              = data.nombre      || '';
-    document.getElementById('lm-desc').value                = data.descripcion || '';
-    document.getElementById('lm-fecha').value               = data.fecha_limite || '';
-    document.getElementById('lm-progreso').value            = data.progreso || 0;
-    document.getElementById('lm-progreso-val').textContent  = (data.progreso || 0) + '%';
-    document.getElementById('lm-notas').value               = data.notas || '';
-    pmEstado = data.estado || 'idea';
-    pmArea   = data.area   || null;
-    pmColor  = data.color  || null;
-    setProjExtraFields(data);
-    title.textContent    = t('lmEditProject');
-    delBtn.style.display = 'block';
-  } else {
-    document.getElementById('lm-nombre').value             = '';
-    document.getElementById('lm-desc').value               = '';
-    document.getElementById('lm-fecha').value              = '';
-    document.getElementById('lm-progreso').value           = 0;
-    document.getElementById('lm-progreso-val').textContent = '0%';
-    document.getElementById('lm-notas').value              = '';
-    pmColor = null;
-    setProjExtraFields({});
-    title.textContent    = t('lmNewProject');
-    delBtn.style.display = 'none';
-  }
-
-  renderPmEstados();
-  renderPmAreas();
-  renderPmColors();
-
-  // El checklist necesita un proyecto ya guardado (proyecto_id real) —
-  // en "Nuevo proyecto" no hay id todavía, se oculta.
-  const checklistWrap = document.getElementById('lm-checklist-wrap');
-  if (checklistWrap) checklistWrap.style.display = id ? 'flex' : 'none';
-  if (id) await loadChecklist(id); else checklistItems = [];
-
-  document.getElementById('lead-backdrop').style.display = 'block';
-  document.getElementById('lead-modal').style.display    = 'flex';
-  setTimeout(() => document.getElementById('lm-nombre').focus(), 60);
-}
-
-function renderPmEstados() {
-  document.getElementById('lm-estados').innerHTML = PROJ_COLS.map(col => `
-    <button class="lm-estado-btn${pmEstado === col.id ? ' active' : ''}"
-            style="${pmEstado === col.id ? `background:${col.color};border-color:${col.color};color:#fff` : ''}"
-            onclick="selectPmEstado('${col.id}')">
-      ${projLabel(col.id)}
-    </button>
-  `).join('');
-}
-
-function selectPmEstado(id) {
-  pmEstado = id;
-  renderPmEstados();
-}
-
-function renderPmAreas() {
-  document.getElementById('lm-areas').innerHTML = Object.entries(AREAS).map(([key, a]) => `
-    <button class="lm-area-btn${pmArea === key ? ' active' : ''}"
-            style="${pmArea === key ? `border-color:${a.color};color:${a.color}` : ''}"
-            onclick="selectPmArea('${key}')">
-      <span class="lm-area-dot" style="background:${a.color}"></span>
-      ${areaLabel(key)}
-    </button>
-  `).join('');
-}
-
-function selectPmArea(key) {
-  pmArea = pmArea === key ? null : key;
-  renderPmAreas();
-}
-
-// Campos del tablero (cliente, monto, próximo paso, listas, cronograma)
-const PROJ_TEXT_FIELDS = ['cliente', 'via', 'monto', 'plazo', 'proximo_paso', 'link_tablero'];
-const PROJ_LIST_FIELDS = ['incluye', 'excluye', 'contactos'];
-function setProjExtraFields(d) {
-  PROJ_TEXT_FIELDS.forEach(f => { const el = document.getElementById('lm-' + f); if (el) el.value = d[f] || ''; });
-  PROJ_LIST_FIELDS.forEach(f => { const el = document.getElementById('lm-' + f); if (el) el.value = asList(d[f]).join('\n'); });
-  const cr = document.getElementById('lm-cronograma'); if (cr) cr.value = cronoToText(d.cronograma);
-}
-function getProjExtraFields() {
-  const out = {};
-  PROJ_TEXT_FIELDS.forEach(f => { const el = document.getElementById('lm-' + f); if (el) out[f] = el.value.trim() || null; });
-  PROJ_LIST_FIELDS.forEach(f => { const el = document.getElementById('lm-' + f); if (el) out[f] = asList(el.value); });
-  const cr = document.getElementById('lm-cronograma'); if (cr) out.cronograma = textToCrono(cr.value);
-  return out;
-}
-
-function closeProjModal() {
-  document.getElementById('lead-backdrop').style.display = 'none';
-  document.getElementById('lead-modal').style.display    = 'none';
-  projModalId = null;
-  checklistItems = [];
-}
-
-// ── CHECKLIST (panel de detalle de proyecto) ──────────────────
-async function loadChecklist(proyectoId) {
-  const { data, error } = await db.from('proyecto_tareas')
-    .select('*').eq('proyecto_id', proyectoId).eq('user_id', currentUser.id)
-    .order('orden', { ascending: true }).order('created_at', { ascending: true });
-  if (error) { console.error(error); checklistItems = []; } else { checklistItems = data || []; }
-  renderChecklist();
-}
-
-function renderChecklist() {
-  const el = document.getElementById('lm-checklist-list');
-  if (!el) return;
-  el.innerHTML = checklistItems.length === 0
-    ? `<div class="lm-checklist-empty">${t('lmChecklistEmpty')}</div>`
-    : checklistItems.map(item => `
-        <div class="lm-checklist-item">
-          <button class="lm-checklist-check${item.done ? ' done' : ''}" onclick="toggleChecklistItem('${item.id}')">
-            ${item.done ? '✓' : ''}
-          </button>
-          <span class="lm-checklist-text${item.done ? ' done' : ''}">${escH(item.texto)}</span>
-          <button class="lm-checklist-del" onclick="deleteChecklistItem('${item.id}')">×</button>
-        </div>
-      `).join('');
-}
-
-async function addChecklistItem() {
-  const inp = document.getElementById('lm-checklist-inp');
-  const texto = inp.value.trim();
-  if (!texto || !projModalId) return;
-  inp.value = '';
-
-  const orden = checklistItems.length;
-  const { data, error } = await db.from('proyecto_tareas')
-    .insert({ proyecto_id: projModalId, user_id: currentUser.id, texto, orden })
-    .select().single();
-  if (error) { console.error(error); return; }
-
-  checklistItems.push(data);
-  renderChecklist();
-  inp.focus();
-}
-
-async function toggleChecklistItem(id) {
-  const item = checklistItems.find(i => i.id === id);
-  if (!item) return;
-  item.done = !item.done;
-  renderChecklist();
-  const { error } = await db.from('proyecto_tareas').update({ done: item.done }).eq('id', id).eq('user_id', currentUser.id);
-  if (error) { console.error(error); item.done = !item.done; renderChecklist(); }
-}
-
-async function deleteChecklistItem(id) {
-  checklistItems = checklistItems.filter(i => i.id !== id);
-  renderChecklist();
-  const { error } = await db.from('proyecto_tareas').delete().eq('id', id).eq('user_id', currentUser.id);
-  if (error) console.error(error);
-}
-
-async function saveProjModal() {
-  const nombre = document.getElementById('lm-nombre').value.trim();
-  if (!nombre) { document.getElementById('lm-nombre').focus(); return; }
-
-  const payload = {
-    nombre,
-    descripcion:   document.getElementById('lm-desc').value.trim()    || null,
-    fecha_limite:  document.getElementById('lm-fecha').value           || null,
-    progreso:      parseInt(document.getElementById('lm-progreso').value) || 0,
-    area:          pmArea  || null,
-    notas:         document.getElementById('lm-notas').value.trim()   || null,
-    estado:        pmEstado,
-    color:         pmColor || null,
-    ...getProjExtraFields(),
-    updated_at:    new Date().toISOString()
-  };
-
-  if (projModalId) {
-    await db.from('proyectos').update(payload).eq('id', projModalId).eq('user_id', currentUser.id);
-  } else {
-    await db.from('proyectos').insert({ ...payload, user_id: currentUser.id });
-  }
-
-  closeProjModal();
-  renderProyectos();
-}
-
-async function deleteProjModal() {
-  if (!projModalId) return;
-  if (!await askConfirm('¿Eliminar este proyecto?')) return;
-  await db.from('proyectos').delete().eq('id', projModalId).eq('user_id', currentUser.id);
-  if (projDetailId === projModalId) projDetailId = null;
-  closeProjModal();
-  renderProyectos();
 }
 
 // ── RENDER PATRONES (legacy stub) ───────────────────────────
@@ -2978,6 +2329,7 @@ function buildFoqAgendaText() {
 async function interpretFoquitoMessage(text) {
   const dateISO = toISO(new Date());
   const agendaText = buildFoqAgendaText();
+  const projText = await buildFoqProjText();
 
   try {
     const response = await fetch('/api/claude', {
@@ -2992,9 +2344,11 @@ Hoy es ${DAYS_FULL[new Date().getDay()]} ${dateISO}.
 Agenda de los próximos días:
 ${agendaText || 'sin tareas anotadas'}
 
+${projText}
+
 Antes de crear algo (forma 1 o 2): mirá la Agenda de arriba. Si ese día ya hay una actividad que es LA MISMA aunque esté escrita distinto — sinónimo, mayúsculas, abreviatura ("gym" y "gimnasio" son lo mismo, "facu" y "facultad" también, "laburo" y "trabajo" también — usá sentido común, no un diccionario fijo) — no la crees de nuevo: usá la forma 5 (preguntar) y decile que ya tiene "X" anotado ese día, preguntando si quiere otra o prefiere que actualices esa.
 
-Analizá el mensaje del usuario (y la charla previa si la hay) y respondé SOLO con JSON válido, sin markdown ni texto extra. Una de estas 7 formas exactas:
+Analizá el mensaje del usuario (y la charla previa si la hay) y respondé SOLO con JSON válido, sin markdown ni texto extra. Una de estas formas exactas (1 a 14):
 
 1. Pide anotar/agendar UNA sola actividad y la fecha está clara o no hace falta precisarla:
 {"accion":"crear_evento","nombre":"texto corto sin palabras de tiempo","fecha":"YYYY-MM-DD o null","dia_semana":"0-6 (0=domingo) o null","hora_inicio":"HH:MM o null","hora_fin":"HH:MM o null","respuesta":"confirmación breve y cálida"}
@@ -3029,6 +2383,8 @@ No inventes el dato que falta, preguntá.
 7. Cualquier otra cosa — pregunta cómo viene el día, charla, pide un resumen, dice que no hizo nada, o se traba y no sabe por dónde arrancar:
 {"accion":"conversar","respuesta":"tu respuesta, usando la agenda si aplica"}
 Si viene flojo o no hizo nada, nunca lo retés — ofrecé pasar algo para mañana. Si está trabado con muchas cosas, sugerí UNA para arrancar (la más corta), no un discurso.
+
+${FOQ_PROJ_ACCIONES}
 
 Si no da fecha para crear evento puntual y es evidente que es hoy, usá ${dateISO}. Si una actividad para editar/borrar no está en la agenda de arriba, no inventes que existe — usá preguntar.`,
         messages: [..._foqHistory, { role: 'user', content: text }]
@@ -3066,6 +2422,8 @@ async function sendFoquitoMessage(rawText) {
   const result = await interpretFoquitoMessage(text);
   setFoquitoState(null);
 
+  if (await handleFoqProjectAction(result, text)) return;
+
   if (result?.accion === 'crear_evento' && result.nombre) {
     const diaSemana = Number.isInteger(result.dia_semana) ? result.dia_semana : null;
     const dateISO = diaSemana !== null ? nextDateForWeekday(diaSemana) : (result.fecha || toISO(new Date()));
@@ -3074,7 +2432,9 @@ async function sendFoquitoMessage(rawText) {
     if (dup) {
       respuesta = `Ya tenés "${dup.title}"${dup.start_time ? ' a las ' + dup.start_time : ''} anotado ese día. ¿Creo otro igual o preferís que actualice ese?`;
     } else {
-      await addEvent(dateISO, result.nombre, result.hora_inicio || null, result.hora_fin || null, false, null, false);
+      const proyectoId = foqProyectoId(result.proyecto);
+      await addEvent(dateISO, result.nombre, result.hora_inicio || null, result.hora_fin || null, false, null, false, proyectoId);
+      if (proyectoId) projDataLoaded = false;
       respuesta = result.respuesta || `Anotado: "${result.nombre}".`;
     }
     addFoqBubble(respuesta, 'foq');
@@ -3656,7 +3016,7 @@ async function createBatchEvents(eventos) {
       duplicados.push(ev.nombre);
       continue;
     }
-    await addEvent(dateISO, ev.nombre, ev.hora_inicio || null, ev.hora_fin || null, recurrente, recurrente ? diaSemanaAncla : null, false);
+    await addEvent(dateISO, ev.nombre, ev.hora_inicio || null, ev.hora_fin || null, recurrente, recurrente ? diaSemanaAncla : null, false, foqProyectoId(ev.proyecto));
     creados++;
   }
   return { creados, duplicados };
@@ -3852,6 +3212,7 @@ function showMorningBrief() {
 
   document.getElementById('morning-screen').style.display = 'flex';
   document.getElementById('morning-intention').focus();
+  fillMorningProjects();
 }
 
 function selectMorningEnergy(e) {
@@ -3986,6 +3347,7 @@ function openEventPanel(ev, dateISO) {
 
   updateDoneButton(!!ev.done);
   renderAreaPills(ev.area || 'trabajo');
+  setupPanelProyecto(ev);
 
   renderPanelDiaEditor(ev, dateISO);
 
@@ -4006,6 +3368,8 @@ function openEventPanel(ev, dateISO) {
   const horaWrap = document.getElementById('panel-hora-wrap');
   const diaWrap = document.getElementById('panel-dia-wrap');
   if (areaWrap) areaWrap.style.display = 'none';
+  const projWrap = document.getElementById('panel-proj-wrap');
+  if (projWrap) projWrap.style.display = 'none';
   if (recurWrap) recurWrap.style.display = 'none';
   if (horaWrap) horaWrap.style.display = 'none';
   if (diaWrap) diaWrap.style.display = 'none';
@@ -4016,7 +3380,7 @@ function openEventPanel(ev, dateISO) {
 
 // Abre/cierra una fila de propiedad (Área o Repetir) — colapsa la otra si estaba abierta
 function togglePanelRow(name) {
-  const ids = { area: 'panel-area-wrap', recur: 'panel-recur-wrap', hora: 'panel-hora-wrap', dia: 'panel-dia-wrap' };
+  const ids = { area: 'panel-area-wrap', proj: 'panel-proj-wrap', recur: 'panel-recur-wrap', hora: 'panel-hora-wrap', dia: 'panel-dia-wrap' };
   Object.entries(ids).forEach(([key, id]) => {
     const el = document.getElementById(id);
     if (!el) return;
