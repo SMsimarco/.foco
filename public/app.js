@@ -2075,7 +2075,7 @@ function renderProjDetail() {
           <ul class="pdet-crono">
             ${crono.map((c, i) => `
               <li class="${escH(c.estado || 'pendiente')}">
-                <button class="pdet-crono-dot" title="${escH(t('projCambiarEstado'))}" onclick="cycleCronoEstado(${i})"></button>
+                <button class="pdet-crono-dot" title="${escH(t('projCambiarEstado'))}" aria-label="${escH(t('projCambiarEstado') + ': ' + (c.que || ''))}" onclick="cycleCronoEstado(${i})"></button>
                 <div><div class="pdet-crono-when">${escH(c.cuando || '')}</div><div>${escH(c.que || '')}</div></div>
               </li>`).join('')}
           </ul>
