@@ -113,6 +113,7 @@ function formatDate(d, { year = true } = {}) {
 // de esta pasada, ver resumen que le pasé a Marco.
 const I18N_UI = {
   es: {
+    a11yPrevious: 'Anterior', a11yNext: 'Siguiente', a11yAdd: 'Agregar', a11yLanguage: 'Cambiar idioma', a11yFoquito: 'Hablar con Foquito', a11ySend: 'Enviar mensaje', a11ySpeak: 'Dictar mensaje', a11yTask: 'Cambiar estado de la tarea',
     authTagline: 'Organizá tu semana.', authOr: 'o con email', authNamePh: 'Tu nombre',
     authEmailPh: 'Email', authPasswordPh: 'Contraseña', authEnter: 'Entrar',
     authNoAccount: '¿No tenés cuenta? ', authRegister: 'Registrate',
@@ -199,6 +200,7 @@ const I18N_UI = {
     cmdCambiarIdioma: 'Cambiar idioma (Español/English)', cmdCerrarSesion: 'Cerrar sesión'
   },
   en: {
+    a11yPrevious: 'Previous', a11yNext: 'Next', a11yAdd: 'Add', a11yLanguage: 'Change language', a11yFoquito: 'Talk to Foquito', a11ySend: 'Send message', a11ySpeak: 'Dictate message', a11yTask: 'Toggle task completion',
     authTagline: 'Organize your week.', authOr: 'or with email', authNamePh: 'Your name',
     authEmailPh: 'Email', authPasswordPh: 'Password', authEnter: 'Sign in',
     authNoAccount: "Don't have an account? ", authRegister: 'Sign up',
@@ -304,6 +306,8 @@ function applyI18nDom() {
   document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.getAttribute('data-i18n')); });
   document.querySelectorAll('[data-i18n-ph]').forEach(el => { el.placeholder = t(el.getAttribute('data-i18n-ph')); });
   document.querySelectorAll('[data-i18n-title]').forEach(el => { el.title = t(el.getAttribute('data-i18n-title')); });
+
+  document.querySelectorAll('[data-i18n-aria]').forEach(el => el.setAttribute('aria-label', t(el.dataset.i18nAria)));
 
   const mesDayNames = document.getElementById('mes-day-names');
   if (mesDayNames) {
@@ -1362,7 +1366,7 @@ function renderDiaGrid(dateISO, dayEvents) {
   if (alldayListEl) {
     alldayListEl.innerHTML = sinHora.map(ev => {
       const color = eventColor(ev.title, ev.area);
-      return `<div class="sg-chip" style="background:${color}4D;border-left-color:${color}"
+      return `<div class="sg-chip" role="button" tabindex="0" style="background:${color}4D;border-left-color:${color}"
         onclick="openEventPanel(eventsCache['${dateISO}'].find(e=>e.id==='${ev.id}'), '${dateISO}')">${ev.title}</div>`;
     }).join('');
   }
@@ -1557,7 +1561,7 @@ function renderSemanaGrid() {
       const dateISO = toISO(d);
       const chips = sinHoraPorDia[i].map(ev => {
         const color = eventColor(ev.title, ev.area);
-        return `<div class="sg-chip" style="background:${color}4D;border-left-color:${color}"
+        return `<div class="sg-chip" role="button" tabindex="0" style="background:${color}4D;border-left-color:${color}"
           onclick="openEventPanel(eventsCache['${dateISO}'].find(e=>e.id==='${ev.id}'), '${dateISO}')">${ev.title}</div>`;
       }).join('');
       return `<div class="sg-allday-col">${chips}</div>`;
@@ -1609,17 +1613,17 @@ function buildGridBlockHTML(ev, dateISO, top, alto, izq, ancho, color) {
   const abrir = `openEventPanel(eventsCache['${dateISO}'].find(e=>e.id==='${ev.id}'), '${dateISO}')`;
   const cerrarSwipe = `this.closest('.sg-block').classList.remove('swiped')`;
   const delBtn = alto >= 34
-    ? `<button class="sg-block-del" onclick="event.stopPropagation();deleteEvent('${ev.id}','${dateISO}')">×</button>`
+    ? `<button class="sg-block-del" data-i18n-aria="eliminar" aria-label="${t('eliminar')}" onclick="event.stopPropagation();deleteEvent('${ev.id}','${dateISO}')">×</button>`
     : '';
   return `
     <div class="sg-block${ev.done ? ' done' : ''}" data-event-id="${ev.id}"
       style="top:${top}px;height:${alto}px;left:${izq}%;width:calc(${ancho}% - 2px);background:${color}4D;border-left-color:${color}">
-      <div class="sg-block-content" onclick="if(this.closest('.sg-block').classList.contains('swiped')){${cerrarSwipe};event.stopPropagation();}else{${abrir}}">
-        <span class="sg-block-title">${ev.title}</span>
+      <div class="sg-block-content" role="button" tabindex="0" aria-label="${escH(ev.title)} · ${ev.start_time}" onclick="if(this.closest('.sg-block').classList.contains('swiped')){${cerrarSwipe};event.stopPropagation();}else{${abrir}}">
+        <span class="sg-block-title">${escH(ev.title)}</span>
         ${alto >= 34 ? `<span class="sg-block-time">${ev.start_time}${ev.end_time ? '–' + ev.end_time : ''}</span>` : ''}
       </div>
       ${delBtn}
-      <div class="sg-block-swipe-del" onclick="event.stopPropagation();deleteEvent('${ev.id}','${dateISO}')">Eliminar</div>
+      <div class="sg-block-swipe-del" onclick="event.stopPropagation();deleteEvent('${ev.id}','${dateISO}')" data-i18n="eliminar">${t('eliminar')}</div>
     </div>
   `;
 }
@@ -1682,6 +1686,10 @@ async function renderMes() {
 
     const el = document.createElement('div');
     el.className = 'mes-day' + (today ? ' today' : '');
+    el.setAttribute('role', 'button');
+    el.tabIndex = 0;
+    el.setAttribute('aria-label', formatDate(date));
+    if (today) el.setAttribute('aria-current', 'date');
 
     const dots = evs.slice(0, 6).map(ev =>
       `<div class="mes-dot" style="background:${eventColor(ev.title, ev.area)};opacity:${ev.done ? 0.3 : 1}"></div>`
@@ -1846,7 +1854,7 @@ function renderProjHome() {
     pendEl.innerHTML = pend.length ? pend.map(it => {
       const p = projBoardCache.find(x => x.id === it.proyecto_id);
       return `<div class="pdet-check">
-        <button class="lm-checklist-check" onclick="toggleHomeTarea('${it.id}')"></button>
+        <button class="lm-checklist-check" data-i18n-aria="a11yTask" aria-label="${t('a11yTask')}" onclick="toggleHomeTarea('${it.id}')"></button>
         <span class="pdet-check-txt">${escH(it.texto)}
           <button class="phub-tag" onclick="openProjDetail('${escH(p.id)}')"><span class="ptab-dot" style="background:${projColor(p)}"></span>${escH(p.nombre)}</button>
         </span>
@@ -2031,7 +2039,7 @@ function renderProjDetail() {
           <div class="pdet-checks">
             ${total ? projDetailTareas.map(it => `
               <div class="pdet-check${it.done ? ' done' : ''}">
-                <button class="lm-checklist-check${it.done ? ' done' : ''}" onclick="toggleDetailTarea('${it.id}')">${it.done ? '✓' : ''}</button>
+                <button class="lm-checklist-check${it.done ? ' done' : ''}" data-i18n-aria="a11yTask" aria-label="${t('a11yTask')}" onclick="toggleDetailTarea('${it.id}')">${it.done ? '✓' : ''}</button>
                 <span class="pdet-check-txt">${escH(it.texto)}</span>
                 <button class="lm-checklist-del" onclick="deleteDetailTarea('${it.id}')">×</button>
               </div>`).join('') : `<div class="lm-checklist-empty">${t('lmChecklistEmpty')}</div>`}
@@ -2313,7 +2321,7 @@ function renderChecklist() {
     ? `<div class="lm-checklist-empty">${t('lmChecklistEmpty')}</div>`
     : checklistItems.map(item => `
         <div class="lm-checklist-item">
-          <button class="lm-checklist-check${item.done ? ' done' : ''}" onclick="toggleChecklistItem('${item.id}')">
+          <button class="lm-checklist-check${item.done ? ' done' : ''}" data-i18n-aria="a11yTask" aria-label="${t('a11yTask')}" onclick="toggleChecklistItem('${item.id}')">
             ${item.done ? '✓' : ''}
           </button>
           <span class="lm-checklist-text${item.done ? ' done' : ''}">${escH(item.texto)}</span>
@@ -2677,7 +2685,12 @@ async function setView(view) {
     if (el) el.style.display = v === view ? 'flex' : 'none';
 
     const btn = document.getElementById('nav-' + v);
-    if (btn) btn.classList.toggle('active', v === view);
+    if (btn) {
+      const active = v === view || (v === 'semana' && ['semana-grid', 'mes'].includes(view));
+      btn.classList.toggle('active', active);
+      if (active) btn.setAttribute('aria-current', 'page');
+      else btn.removeAttribute('aria-current');
+    }
   });
 
   const viewEl = document.getElementById('view-' + view);
@@ -2715,6 +2728,9 @@ function updateViewPills() {
   const enTemporal = currentView === 'semana' || currentView === 'semana-grid' || currentView === 'mes';
   if (pillsBar) pillsBar.style.display = enTemporal ? 'flex' : 'none';
 
+  ['dia', 'semana', 'mes'].forEach((id, i) => {
+    document.getElementById('pill-' + id)?.setAttribute('aria-pressed', String(currentView === ['semana', 'semana-grid', 'mes'][i]));
+  });
   document.getElementById('pill-dia')?.classList.toggle('active', currentView === 'semana');
   document.getElementById('pill-semana')?.classList.toggle('active', currentView === 'semana-grid');
   document.getElementById('pill-mes')?.classList.toggle('active', currentView === 'mes');
@@ -3318,6 +3334,13 @@ async function disableNotifications() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+  document.addEventListener('keydown', e => {
+    if ((e.key === 'Enter' || e.key === ' ') && e.target.matches('[role="button"]:not(button)')) {
+      e.preventDefault();
+      e.target.click();
+    }
+  });
+
   // Atajos de teclado globales
   document.addEventListener('keydown', e => {
     const tag = document.activeElement?.tagName;

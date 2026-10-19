@@ -310,7 +310,7 @@ html, body {
   /* height crece con el notch/isla en vez de robarle alto al contenido
      (box-sizing:border-box) — la banda de 44px de logo/íconos queda intacta,
      el safe-area se suma arriba de esa banda, no la reemplaza. */
-  height: calc(44px + env(safe-area-inset-top, 0px));
+  height: calc(56px + env(safe-area-inset-top, 0px));
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -1369,7 +1369,7 @@ html, body {
      padding-bottom de abajo ya sumaba el safe-area pero la height fija
      (border-box) hacía que ese padding le robara alto a los íconos en vez
      de agregar espacio nuevo — por eso quedaban más arriba de lo debido. */
-  height: calc(52px + env(safe-area-inset-bottom, 0px));
+  height: calc(var(--nav-height) + env(safe-area-inset-bottom, 0px));
   display: flex;
   align-items: center;
   padding: 6px 12px calc(6px + env(safe-area-inset-bottom, 0px));
@@ -4742,3 +4742,32 @@ body.ambient #app::before {
 /* Los metadatos siguen siendo legibles; el cuarto nivel se reserva para disabled. */
 button:disabled, input:disabled, textarea:disabled { color: var(--text4); cursor: not-allowed; }
 .ptab-n, .phub-clock span, .phub-eyebrow { opacity: 1; }
+
+/* ── Accesibilidad de controles ── */
+button { min-height: 44px; min-width: 44px; touch-action: manipulation; }
+button:focus-visible, a:focus-visible, [tabindex]:focus-visible,
+input:focus-visible, textarea:focus-visible, select:focus-visible {
+  outline: 2px solid var(--accent-text); outline-offset: 3px;
+}
+.sg-block-content:focus-visible { outline-offset: -3px; }
+.header-right { gap: 4px; }
+.lang-toggle-btn { border-color: transparent; font-size: 11px; }
+.view-pill { font-family: 'Geist', sans-serif; }
+.nav-btn { min-width: 0; }
+.nav-btn.active::after { display: none; }
+.nav-btn.active { color: var(--accent-text); background: rgba(var(--accent-rgb), .1); }
+.foq-mic-btn, .foq-send-btn { width: 44px; height: 44px; }
+.panel-row { min-height: 48px; }
+.lm-checklist-check { width: 44px; height: 44px; border: 0; position: relative; background: transparent; }
+.lm-checklist-check::before { content: ''; position: absolute; inset: 12px; border: 1.5px solid var(--text3); border-radius: 5px; }
+.lm-checklist-check.done { background: transparent; color: transparent; }
+.lm-checklist-check.done::before { border-color: var(--success-text); background: var(--success-text); }
+.lm-checklist-check.done::after { content: '✓'; position: absolute; inset: 0; display: grid; place-items: center; color: var(--bg); }
+.pdet-check { align-items: center; gap: 4px; padding: 0; }
+.pdet-check .lm-checklist-check { margin: 0; }
+.pdet-check .lm-checklist-del { opacity: 1; }
+.sg-block-del { display: none; } /* El panel conserva Eliminar; evita blancos táctiles diminutos. */
+.sg-block-content { padding-right: 6px; }
+@media (max-width: 1023px) {
+  input, textarea, select, #foq-input { font-size: 16px; } /* Evita zoom al enfocar en iOS. */
+}
