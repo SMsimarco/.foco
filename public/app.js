@@ -141,6 +141,8 @@ const I18N_UI = {
     registrar: 'Registrar →', sugPulso: 'Pulso', sugEstaSemana: 'Esta semana',
     sugCompletadas: 'completadas esta semana', sugInsight: 'Insight de tu semana',
     sugAnalizando: 'Analizando tu semana...', sugCerrarSemana: 'Cerrar la semana',
+    sugLead: 'Elegí un paso para seguir avanzando.', sugAction: 'Próximo paso',
+    sugOfflineTip: 'Mientras tanto, elegí una tarea pendiente para hoy.',
     sugRevision: 'Revisión semanal', sugRevisionDesc: 'Cerrá la semana con una reflexión corta.',
     comenzar: 'Comenzar →', sugFootHint: '¿Reorganizar algo? Pedíselo a Foquito.',
     foqSaltear: 'Saltear', foqRedoTitle: 'Rehacer mi semana', foqInputPh: 'Escribile a Foquito...',
@@ -186,7 +188,7 @@ const I18N_UI = {
     manana: 'Mañana', ayer: 'Ayer',
     sinFechasProximas: 'Sin fechas próximas', sinNotas: 'Sin notas', sinProyectosAun: 'Sin proyectos aún',
     vencido: 'Vencido',
-    progresoTitulo: 'Progreso', actividadUltimos6Meses: 'Actividad — últimos 6 meses',
+    progresoTitulo: 'Progreso', progresoLead: 'Tu recorrido a lo largo del tiempo.', actividadUltimos6Meses: 'Actividad — últimos 6 meses',
     menos: 'Menos', mas: 'Más', completadasLabel: 'completadas', rachaActual: 'racha actual',
     tendencia: 'Tendencia',
     tendenciaEmpty: 'Tu tendencia de tareas aparece acá cuando tengas un par de semanas registradas. Seguí un poco más.',
@@ -232,6 +234,8 @@ const I18N_UI = {
     registrar: 'Log →', sugPulso: 'Pulse', sugEstaSemana: 'This week',
     sugCompletadas: 'completed this week', sugInsight: 'Insight of your week',
     sugAnalizando: 'Analyzing your week...', sugCerrarSemana: 'Close the week',
+    sugLead: 'Choose one step to keep moving forward.', sugAction: 'Next step',
+    sugOfflineTip: 'In the meantime, choose one pending task for today.',
     sugRevision: 'Weekly review', sugRevisionDesc: 'Close the week with a short reflection.',
     comenzar: 'Start →', sugFootHint: 'Want to reorganize something? Ask Foquito.',
     foqSaltear: 'Skip', foqRedoTitle: 'Redo my week', foqInputPh: 'Message Foquito...',
@@ -277,7 +281,7 @@ const I18N_UI = {
     manana: 'Tomorrow', ayer: 'Yesterday',
     sinFechasProximas: 'No upcoming dates', sinNotas: 'No notes', sinProyectosAun: 'No projects yet',
     vencido: 'Overdue',
-    progresoTitulo: 'Progress', actividadUltimos6Meses: 'Activity — last 6 months',
+    progresoTitulo: 'Progress', progresoLead: 'Your journey over time.', actividadUltimos6Meses: 'Activity — last 6 months',
     menos: 'Less', mas: 'More', completadasLabel: 'completed', rachaActual: 'current streak',
     tendencia: 'Trend',
     tendenciaEmpty: 'Your task trend shows up here once you have a couple of weeks logged. Keep going.',
@@ -2609,20 +2613,9 @@ async function renderPatrones() {
 // ── RENDER SUGERENCIAS ──────────────────────────────────────
 
 async function renderSugerencias() {
-  updateSugStats();
   renderConflicts();
   generateAISummary();
   updateEstadoCard();
-}
-
-// Bloque "Pulso" — solo hechas/total + barra. Se sacaron momentum y total
-// como métricas separadas (momentum no tenía significado claro, total es
-// redundante con el X/10).
-function updateSugStats() {
-  const { done, total, pct } = calcMomentum();
-  document.getElementById('sug-done').textContent = `${done}/${total}`;
-  const bar = document.getElementById('pulso-bar-fill');
-  if (bar) bar.style.width = `${pct}%`;
 }
 
 function renderConflicts() {
@@ -2672,10 +2665,11 @@ async function generateAISummary() {
   const titleEl = document.getElementById('sug-insight-title');
   const textEl = document.getElementById('sug-insight-text');
   const tipEl = document.getElementById('sug-insight-tip');
+  const actionEl = document.getElementById('sug-insight-action');
   document.getElementById('sug-insight-card').setAttribute('aria-busy', 'true');
   titleEl.textContent = t('sugAnalizando');
   textEl.textContent = '';
-  tipEl.style.display = 'none';
+  actionEl.style.display = 'none';
   setFoquitoState('reading');
 
   const allEvs = week.flatMap(d => eventsCache[toISO(d)] || []);
@@ -2728,11 +2722,13 @@ Respondé SOLO con JSON válido, sin markdown ni texto extra:
     textEl.textContent = parsed.insight || '';
     if (parsed.tip) {
       tipEl.textContent = parsed.tip;
-      tipEl.style.display = 'block';
+      actionEl.style.display = 'flex';
     }
   } catch {
     titleEl.textContent = t('sugWeek');
     textEl.textContent = t('sugConnectionError');
+    tipEl.textContent = t('sugOfflineTip');
+    actionEl.style.display = 'flex';
   } finally {
     document.getElementById('sug-insight-card').setAttribute('aria-busy', 'false');
     setFoquitoState(null);
@@ -5470,6 +5466,7 @@ async function renderEquipo() {
     <div class="tuana-wrap">
       <div class="tuana-header">
         <div class="tuana-title">${t('progresoTitulo')}</div>
+        <p class="tuana-lead">${t('progresoLead')}</p>
       </div>
 
       <div class="tuana-card">

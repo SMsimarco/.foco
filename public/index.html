@@ -379,9 +379,22 @@
     <div id="view-sugerencias" style="display:none">
       <h1 class="view-title" data-i18n="navSugerencias">Sugerencias</h1>
 
-      <!-- "¿Cómo estás hoy?" es diario, no semanal — en rigor no va en esta
-           vista. Moverlo a la vista Hoy queda fuera de este cambio (tocaría
-           otra vista); se deja acá por ahora, sin duplicar. -->
+      <p class="sug-lead" data-i18n="sugLead">Elegí un paso para seguir avanzando.</p>
+
+      <div class="sug-section" data-i18n="sugInsight">Insight de tu semana</div>
+
+      <div class="sug-card sug-insight-card" id="sug-insight-card">
+        <div class="sug-insight-hd">
+          <img src="/foquito-avatar.png" alt="" class="foq-avatar-img foq-avatar-sm"/>
+          <div class="sug-insight-title" id="sug-insight-title" data-i18n="sugAnalizando">Analizando tu semana...</div>
+        </div>
+        <div class="sug-desc" id="sug-insight-text" role="status"></div>
+        <div class="sug-insight-action" id="sug-insight-action" style="display:none">
+          <span class="sug-insight-action-label" data-i18n="sugAction">Próximo paso</span>
+          <span id="sug-insight-tip"></span>
+        </div>
+      </div>
+
       <div class="sug-section sug-section--cyan" data-i18n="sugHoy">Hoy</div>
 
       <div class="sug-card sug-card--cyan" id="sug-estado-card">
@@ -397,29 +410,6 @@
       <!-- Conflictos -->
       <div id="sug-conflicts"></div>
 
-      <!-- BLOQUE 1: PULSO -->
-      <div class="sug-section" data-i18n="sugPulso">Pulso</div>
-
-      <div class="sug-hero" id="sug-resumen">
-        <div class="sug-hero-eyebrow" data-i18n="sugEstaSemana">Esta semana</div>
-        <div class="pulso-num" id="sug-done">—</div>
-        <div class="pulso-label" data-i18n="sugCompletadas">completadas esta semana</div>
-        <div class="proj-progress"><div class="proj-progress-fill" id="pulso-bar-fill" style="width:0%;background:var(--success-text)"></div></div>
-      </div>
-
-      <!-- BLOQUE 2: INSIGHT DE LA IA (protagonista) -->
-      <div class="sug-section" data-i18n="sugInsight">Insight de tu semana</div>
-
-      <div class="sug-card sug-insight-card" id="sug-insight-card">
-        <div class="sug-insight-hd">
-          <img src="/foquito-avatar.png" alt="" class="foq-avatar-img foq-avatar-sm"/>
-          <div class="sug-insight-title" id="sug-insight-title" data-i18n="sugAnalizando">Analizando tu semana...</div>
-        </div>
-        <div class="sug-desc" id="sug-insight-text" role="status"></div>
-        <div class="sug-insight-tip" id="sug-insight-tip" style="display:none"></div>
-      </div>
-
-      <!-- BLOQUE 3: CERRAR LA SEMANA -->
       <div class="sug-section sug-section--purple" data-i18n="sugCerrarSemana">Cerrar la semana</div>
 
       <div class="sug-card sug-card--purple" id="sug-review">

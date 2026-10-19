@@ -4895,12 +4895,21 @@ input:focus-visible, textarea:focus-visible, select:focus-visible {
 .view-title { margin-bottom: 8px; }
 #view-sugerencias { gap: 12px; }
 #view-sugerencias > * { width: 100%; max-width: 760px; margin-left: auto; margin-right: auto; }
+.sug-lead, .tuana-lead { color: var(--text2); font-size: 13px; line-height: 1.5; }
+.sug-lead { margin-top: -8px; }
 .sug-section { padding-top: 12px; font-size: 11px; }
 .sug-insight-card { min-height: 196px; }
 @media (max-width: 760px) { .sug-insight-card { min-height: 256px; } }
-.sug-insight-tip, .sug-btn-primary { color: var(--accent-text); }
+.sug-insight-action {
+  display: flex; flex-direction: column; gap: 5px; padding: 11px 12px; margin-top: 14px;
+  background: rgba(var(--accent-rgb), .1); border: 1px solid rgba(var(--accent-rgb), .2);
+  border-radius: var(--radius-control); color: var(--text); font-size: 13px; line-height: 1.45;
+}
+.sug-insight-action-label { color: var(--accent-text); font-size: 10px; font-weight: 600; letter-spacing: .07em; text-transform: uppercase; }
+.sug-btn-primary { color: var(--accent-text); }
 .tuana-wrap { width: 100%; max-width: 900px; margin: 0 auto; gap: 16px; padding-top: 24px; }
 .tuana-header { padding: 0 0 4px; }
+.tuana-lead { margin-top: 6px; }
 .tuana-section-label, .tuana-hl-lbl { font-size: 11px; }
 #foq-input { font-weight: 400; }
 @media (max-width: 760px) {
