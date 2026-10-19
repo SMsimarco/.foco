@@ -714,78 +714,81 @@ html, body {
   padding: 8px 16px 16px;
 }
 
-/* Espacio extra abajo en mobile para que el último evento no quede
-   tapado por el FAB de Foquito (fixed, fuera del flujo del scroll) */
+/* Espacio para recorrer el final de la agenda debajo del botón de Foquito. */
 @media (max-width: 1023px) {
-  /* FAB: bottom 52px (nav) + 24px (margen) + 92px (alto) = 168px de zócalo
-     real; +16px de aire para que nunca quede pegado al borde del scroll. */
-  .hoy-scroll { padding-bottom: calc(184px + env(safe-area-inset-bottom, 0px)); }
+  .hoy-scroll { padding-bottom: calc(110px + env(safe-area-inset-bottom, 0px)); }
 }
 
-/* Header */
+/* El contexto del día queda visible mientras se recorre el horario. */
+.hoy-overview {
+  flex-shrink: 0;
+  padding: 18px 16px 14px;
+  border-bottom: 1px solid var(--border);
+}
+
 .hoy-header-top {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
-  padding-top: 8px;
+  gap: 12px;
 }
 
 .hoy-date {
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--ios-text2);
-  text-transform: capitalize;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+  color: var(--text3);
+  margin-bottom: 4px;
 }
 
 .hoy-title {
-  /* SF a propósito, NO Instrument Serif — commit 890f359 (2026-09-10) ya
-     migró esto de serif a SF por pedido explícito de Marco (se veía
-     inconsistente contra el resto, confirmado en foto de su iPhone real).
-     Si alguna vez parece "raro" comparado con Mes/Semana (que sí llevan
-     serif a propósito), esa es la razón — no es un bug, es la decisión
-     vigente. No revertir sin confirmar con Marco primero.
-  */
   font-family: 'Geist', sans-serif;
-  font-weight: 700;
-  font-size: 34px;
-  letter-spacing: -0.01em;
+  font-weight: 600;
+  font-size: 30px;
+  letter-spacing: -.035em;
   color: var(--ios-text);
-  line-height: 1.15;
+  line-height: 1.12;
 }
 
+.hoy-header-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.hoy-summary { color: var(--text2); font-size: 13px; line-height: 1.45; margin-top: 9px; font-variant-numeric: tabular-nums; }
+
 .hoy-add-btn {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  border: none;
-  background: var(--ios-card);
-  color: var(--ios-text);
-  font-size: 18px;
-  font-weight: 400;
-  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  height: 44px;
+  padding: 0 12px;
+  border-radius: var(--radius-control);
+  border: 1px solid rgba(var(--accent-rgb), .2);
+  background: rgba(var(--accent-rgb), .1);
+  color: var(--accent-text);
+  font-size: 13px;
+  font-weight: 600;
   cursor: pointer;
-  flex-shrink: 0;
-  margin-top: 6px;
-  transition: transform 0.12s;
+  white-space: nowrap;
+  transition: background .18s var(--ease), transform .18s var(--ease);
 }
+.hoy-add-btn span:first-child { font-size: 20px; line-height: 1; font-weight: 400; }
+.hoy-add-btn:hover { background: rgba(var(--accent-rgb), .16); }
 
 .hoy-add-btn:active { transform: scale(0.9); }
 
 .hoy-day-nav {
   display: flex;
-  gap: 8px;
-  margin-top: 10px;
-  margin-bottom: 14px;
+  gap: 4px;
 }
 
 .hoy-day-nav-btn {
-  width: 30px;
-  height: 30px;
-  border-radius: 8px;
-  border: none;
-  background: var(--ios-card);
-  color: var(--ios-text);
-  font-size: 15px;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-control);
+  border: 1px solid var(--border2);
+  background: var(--surface);
+  color: var(--text2);
+  font-size: 19px;
   cursor: pointer;
 }
 
@@ -793,7 +796,7 @@ html, body {
 
 /* Progreso */
 /* Secciones — cards estilo "inset grouped list" */
-.hoy-section { margin-bottom: 22px; }
+.hoy-section { margin-top: 16px; }
 
 .hoy-section-hd {
   font-size: 13px;
@@ -805,9 +808,34 @@ html, body {
 }
 
 .hoy-list {
-  background: var(--ios-card);
-  border-radius: 12px;
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius-card);
   overflow: hidden;
+}
+
+.hoy-empty {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin-top: 16px;
+  padding: 13px 15px;
+  background: rgba(var(--accent-rgb), .07);
+  border: 1px solid rgba(var(--accent-rgb), .16);
+  border-radius: var(--radius-card);
+  color: var(--text2);
+  font-size: 12px;
+  line-height: 1.45;
+}
+.hoy-empty-title { color: var(--text); font-size: 13px; font-weight: 600; }
+.hoy-agenda-label {
+  padding: 12px 16px 10px;
+  color: var(--text3);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--border);
 }
 
 .hoy-row {
@@ -3943,11 +3971,6 @@ body.ambient #app::before {
 }
 .tuana-header { padding: 8px 0 4px; }
 .tuana-title {
-  /* Remanente viejo usaba la serif itálica del logo — Progreso va con la
-     tipografía del sistema, como el resto de los títulos de vista. Ojo:
-     Mes y Semana (.mes-title/.sg-week-label) SÍ llevan Instrument Serif,
-     pero Día (.hoy-title) NO — se sacó a propósito en 890f359 (2026-09-10,
-     reconfirmado 2026-09-17), no es parte de ningún "trío" parejo. */
   font-family: 'Geist', sans-serif;
   font-weight: 600;
   font-size: 28px;
@@ -4839,7 +4862,7 @@ input:focus-visible, textarea:focus-visible, select:focus-visible {
 .phub-next.is-empty { background: var(--surface); min-height: 144px; }
 .phub-next.is-empty .phub-next-title { color: var(--text2); font-size: 18px; font-weight: 400; }
 .ptab-empty, .slab-empty { padding: 24px 16px; font-size: 13px; line-height: 1.5; }
-.view-title, .tuana-title { font-family: 'Instrument Serif', serif; font-style: italic; font-weight: 400; font-size: 32px; line-height: 1.15; color: var(--text); }
+.view-title, .tuana-title { font-family: 'Geist', sans-serif; font-style: normal; font-weight: 600; font-size: 30px; letter-spacing: -.035em; line-height: 1.15; color: var(--text); }
 .view-title { margin-bottom: 8px; }
 #view-sugerencias { gap: 12px; }
 #view-sugerencias > * { width: 100%; max-width: 760px; margin-left: auto; margin-right: auto; }
@@ -4881,3 +4904,32 @@ button:active:not(:disabled) { filter: brightness(.94); }
 
 /* hidden debe prevalecer sobre los layouts flex/grid de los componentes. */
 [hidden] { display: none !important; }
+
+/* Una sola voz tipográfica para la interfaz. La serif queda para la marca y
+   los textos reflexivos; navegación, datos y títulos de vista usan Geist. */
+.phub-title, .pdet-title, .mes-title, .sg-week-label,
+.digest-headline, .ficha-titulo, .equipo-coming-title, .panel-timer-count {
+  font-family: 'Geist', sans-serif;
+  font-style: normal;
+  font-weight: 600;
+  letter-spacing: -.025em;
+}
+.phub-title, .pdet-title { font-size: 30px; line-height: 1.15; }
+.mes-title { font-size: 22px; }
+.sg-week-label { font-size: 16px; }
+.panel-timer-count { font-variant-numeric: tabular-nums; }
+.mes-day-name { font-size: 10px; letter-spacing: .04em; }
+.mes-day-num { font-size: 12px; }
+.mes-day.today { background: rgba(var(--accent-rgb), .1); border-color: rgba(var(--accent-rgb), .2); }
+.mes-day.today .mes-day-num { color: var(--accent-text); font-weight: 600; }
+.view-pill.active { background: rgba(var(--accent-rgb), .1); color: var(--accent-text); }
+.view-pill:hover { background: var(--border); }
+#foq-fab { width: 56px; height: 56px; right: 16px; background: var(--accent-solid); border: 2px solid var(--bg); }
+@media (max-width: 1023px) {
+  .hoy-header-actions { gap: 5px; }
+  .hoy-add-btn { padding: 0 9px; }
+}
+@media (min-width: 1024px) {
+  #bottom-nav { justify-content: center; }
+  #bottom-nav .nav-btn { flex: 1 1 0; max-width: 160px; }
+}

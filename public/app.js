@@ -131,6 +131,8 @@ const I18N_UI = {
     themeToggleTitle: 'Cambiar tema', notifTitle: 'Notificaciones', goalBarLabel: 'foco semanal',
     pillDay: 'Día', pillWeek: 'Semana', pillMonth: 'Mes',
     hoyTitleDefault: 'Hoy', hoySectionFoco: 'Tu foco', sgToday: 'Hoy',
+    hoyAgenda: 'Agenda', hoyEmptyTitle: 'Un día con espacio para elegir.', hoyEmptyHint: 'Tocá un horario para sumar una actividad.',
+    hoySummaryEmpty: 'Todavía no hay actividades', hoySummaryOne: '1 actividad', hoySummaryMany: '{count} actividades', hoySummaryDoneOne: '1 completada', hoySummaryDoneMany: '{count} completadas',
     slabProximas: 'Próximas fechas', recordaNombrePh: 'Ej: Parcial física', guardar: 'Guardar',
     slabNotas: 'Notas', notaTextoPh: 'Escribí lo que no querés olvidar...', slabProyectos: 'Proyectos',
     navHoy: 'Hoy', navProyectos: 'Proyectos', navSugerencias: 'Sugerencias', navProgreso: 'Progreso',
@@ -148,7 +150,7 @@ const I18N_UI = {
     projColor: 'Color', projUnoPorLinea: 'uno por línea', projCronoAyuda: 'cuándo | qué | estado (pendiente, ahora, listo)',
     projClientePh: 'Para quién es', projViaPh: 'Directo, Qenti, Antic...', projMontoPh: 'USD 1.000 · 50/50', projPlazoPh: '6 semanas',
     projProximoPh: 'Lo siguiente que tiene que pasar',
-    phubTitle: 'Todos tus proyectos en un lugar', phubLead: 'Tocá un proyecto para ver su tablero completo.',
+    phubTitle: 'Tus proyectos', phubLead: 'Tocá un proyecto para ver su tablero completo.',
     phubProxima: 'Próxima fecha', phubFecha: 'Fecha', phubSinFechas: 'Sin fechas próximas', phubPendientes: 'Pendientes',
     phubSinPendientes: 'Nada pendiente', phubActivos: 'Proyectos activos', phubEnMarcha: 'en marcha', phubEntregados: 'Entregados',
     phubEntrega: 'Entrega', phubPaso: 'pasó', phubEn: 'en', phubManana: 'mañana', phubDias: 'días',
@@ -183,7 +185,7 @@ const I18N_UI = {
     manana: 'Mañana', ayer: 'Ayer',
     sinFechasProximas: 'Sin fechas próximas', sinNotas: 'Sin notas', sinProyectosAun: 'Sin proyectos aún',
     vencido: 'Vencido',
-    progresoTitulo: 'Progreso.', actividadUltimos6Meses: 'Actividad — últimos 6 meses',
+    progresoTitulo: 'Progreso', actividadUltimos6Meses: 'Actividad — últimos 6 meses',
     menos: 'Menos', mas: 'Más', completadasLabel: 'completadas', rachaActual: 'racha actual',
     tendencia: 'Tendencia',
     tendenciaEmpty: 'Tu tendencia de tareas aparece acá cuando tengas un par de semanas registradas. Seguí un poco más.',
@@ -219,6 +221,8 @@ const I18N_UI = {
     themeToggleTitle: 'Toggle theme', notifTitle: 'Notifications', goalBarLabel: 'weekly focus',
     pillDay: 'Day', pillWeek: 'Week', pillMonth: 'Month',
     hoyTitleDefault: 'Today', hoySectionFoco: 'Your focus', sgToday: 'Today',
+    hoyAgenda: 'Schedule', hoyEmptyTitle: 'A day with room to choose.', hoyEmptyHint: 'Tap a time slot to add an activity.',
+    hoySummaryEmpty: 'No activities yet', hoySummaryOne: '1 activity', hoySummaryMany: '{count} activities', hoySummaryDoneOne: '1 completed', hoySummaryDoneMany: '{count} completed',
     slabProximas: 'Upcoming dates', recordaNombrePh: 'E.g: Physics exam', guardar: 'Save',
     slabNotas: 'Notes', notaTextoPh: "Write what you don't want to forget...", slabProyectos: 'Projects',
     navHoy: 'Today', navProyectos: 'Projects', navSugerencias: 'Suggestions', navProgreso: 'Progress',
@@ -236,7 +240,7 @@ const I18N_UI = {
     projColor: 'Color', projUnoPorLinea: 'one per line', projCronoAyuda: 'when | what | status (pendiente, ahora, listo)',
     projClientePh: 'Who it is for', projViaPh: 'Direct, agency...', projMontoPh: 'USD 1,000 · 50/50', projPlazoPh: '6 weeks',
     projProximoPh: 'The next thing that has to happen',
-    phubTitle: 'All your projects in one place', phubLead: 'Tap a project to see its full board.',
+    phubTitle: 'Your projects', phubLead: 'Tap a project to see its full board.',
     phubProxima: 'Next date', phubFecha: 'Date', phubSinFechas: 'No upcoming dates', phubPendientes: 'To do',
     phubSinPendientes: 'Nothing pending', phubActivos: 'Active projects', phubEnMarcha: 'active', phubEntregados: 'Delivered',
     phubEntrega: 'Due', phubPaso: 'past', phubEn: 'in', phubManana: 'tomorrow', phubDias: 'days',
@@ -271,7 +275,7 @@ const I18N_UI = {
     manana: 'Tomorrow', ayer: 'Yesterday',
     sinFechasProximas: 'No upcoming dates', sinNotas: 'No notes', sinProyectosAun: 'No projects yet',
     vencido: 'Overdue',
-    progresoTitulo: 'Progress.', actividadUltimos6Meses: 'Activity — last 6 months',
+    progresoTitulo: 'Progress', actividadUltimos6Meses: 'Activity — last 6 months',
     menos: 'Less', mas: 'More', completadasLabel: 'completed', rachaActual: 'current streak',
     tendencia: 'Trend',
     tendenciaEmpty: 'Your task trend shows up here once you have a couple of weeks logged. Keep going.',
@@ -1316,6 +1320,17 @@ function renderHoy() {
       : DAYS_FULL[diaActual.getDay()];
   }
   if (dateEl) dateEl.textContent = formatLongDate(diaActual);
+
+  const summaryEl = document.getElementById('hoy-summary');
+  if (summaryEl) {
+    const count = dayEvents.length;
+    const done = dayEvents.filter(e => e.done).length;
+    const base = count === 0 ? t('hoySummaryEmpty') : count === 1 ? t('hoySummaryOne') : t('hoySummaryMany').replace('{count}', count);
+    const doneText = done === 1 ? t('hoySummaryDoneOne') : t('hoySummaryDoneMany').replace('{count}', done);
+    summaryEl.textContent = done ? `${base} · ${doneText}` : base;
+  }
+  const emptyEl = document.getElementById('hoy-empty');
+  if (emptyEl) emptyEl.hidden = dayEvents.length > 0;
 
   // "Tu foco" sigue siendo una lista chica arriba — no compite con el calendario de abajo
   const foco = dayEvents.filter(e => e.is_focus).slice(0, 3);

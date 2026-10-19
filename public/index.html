@@ -207,27 +207,34 @@
 
     <!-- HOY -->
     <div id="view-semana">
-      <div class="hoy-scroll" id="hoy-scroll">
-
+      <div class="hoy-overview">
         <div class="hoy-header">
           <div class="hoy-header-top">
             <div>
               <div class="hoy-date" id="hoy-date">—</div>
               <div class="hoy-title" id="hoy-title" data-i18n="hoyTitleDefault">Hoy</div>
             </div>
-            <button class="hoy-add-btn" onclick="toggleFoquitoWidget()" data-i18n-aria="a11yAdd">+</button>
+            <div class="hoy-header-actions">
+              <div class="hoy-day-nav">
+                <button class="hoy-day-nav-btn" onclick="changeDia(-1)" data-i18n-aria="a11yPrevious">‹</button>
+                <button class="hoy-day-nav-btn" onclick="changeDia(1)" data-i18n-aria="a11yNext">›</button>
+              </div>
+              <button class="hoy-add-btn" onclick="toggleFoquitoWidget()" data-i18n-aria="a11yAdd"><span aria-hidden="true">+</span><span data-i18n="a11yAdd">Agregar</span></button>
+            </div>
           </div>
-          <div class="hoy-day-nav">
-            <button class="hoy-day-nav-btn" onclick="changeDia(-1)" data-i18n-aria="a11yPrevious">‹</button>
-            <button class="hoy-day-nav-btn" onclick="changeDia(1)" data-i18n-aria="a11yNext">›</button>
-          </div>
+          <div class="hoy-summary" id="hoy-summary" aria-live="polite"></div>
         </div>
-
         <div class="hoy-section" id="hoy-section-foco">
           <div class="hoy-section-hd" data-i18n="hoySectionFoco">Tu foco</div>
           <div class="hoy-list" id="hoy-list-foco"></div>
         </div>
-
+        <div class="hoy-empty" id="hoy-empty" hidden>
+          <span class="hoy-empty-title" data-i18n="hoyEmptyTitle">Un día con espacio para elegir.</span>
+          <span data-i18n="hoyEmptyHint">Tocá un horario para sumar una actividad.</span>
+        </div>
+      </div>
+      <div class="hoy-agenda-label" data-i18n="hoyAgenda">Agenda</div>
+      <div class="hoy-scroll" id="hoy-scroll">
         <!-- Grilla del día (reemplaza las listas "Durante el día" / "Cuando puedas") -->
         <div class="sg-allday" id="dg-allday" style="display:none">
           <div class="dg-allday-list" id="dg-allday-list"></div>
@@ -280,7 +287,7 @@
         <section class="phub-home" id="phub-home">
           <div class="phub-intro">
             <div class="pdet-eyebrow" id="phub-today"></div>
-            <h2 class="phub-title" data-i18n="phubTitle">Todos tus proyectos en un lugar</h2>
+            <h2 class="phub-title" data-i18n="phubTitle">Tus proyectos</h2>
             <p class="pdet-lead" data-i18n="phubLead">Tocá un proyecto para ver su tablero completo.</p>
           </div>
 
