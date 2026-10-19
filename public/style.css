@@ -4515,10 +4515,10 @@ body.ambient #app::before {
   /* Scope a #view-semana-grid nada más — .sg-allday/.sg-body son clases
      compartidas con la grilla de 1 columna de Día (#view-semana), que no
      necesita ancho mínimo y quedaba con scroll horizontal fantasma. */
-  .sg-scrollx { overflow-x: auto; }
+  .sg-scrollx { overflow-x: hidden; }
   #view-semana-grid .sg-daylabels,
   #view-semana-grid .sg-allday,
-  #view-semana-grid .sg-body { min-width: 620px; }
+  #view-semana-grid .sg-body { min-width: 0; width: 100%; }
 }
 
 /* ── VISTA DÍA — grilla de 1 columna, dentro de #view-semana ── */
@@ -4792,3 +4792,16 @@ input:focus-visible, textarea:focus-visible, select:focus-visible {
   .phub, #view-sugerencias, .tuana-wrap { padding-bottom: calc(112px + env(safe-area-inset-bottom, 0px)); }
 }
 @media (min-width: 1024px) { #foq-panel { box-shadow: none; } }
+
+/* ── Calendario: siete días visibles sin alterar la escala temporal ── */
+.sg-days, .sg-daylabels-days { min-width: 0; }
+.sg-block-time { color: var(--text2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sg-block.done { opacity: 1; background: var(--bg2) !important; }
+.sg-block.done .sg-block-title, .sg-block.done .sg-block-time { color: var(--text3); }
+@media (max-width: 1023px) {
+  #view-semana-grid .sg-block-content { padding: 4px 3px; }
+  #view-semana-grid .sg-block-title { font-size: 10px; font-weight: 500; white-space: normal; overflow-wrap: anywhere; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; }
+  #view-semana-grid .sg-block-time { display: none; }
+  #view-semana-grid .sg-chip { padding: 6px 3px; }
+  .sg-hour-label { font-variant-numeric: tabular-nums; }
+}
