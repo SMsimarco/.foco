@@ -5412,15 +5412,9 @@ function renderTuanaChart() {
   }
 }
 
-// Antes eran 5 colores fijos pensados para fondo oscuro — en tema claro
-// el nivel 0 (#12141F, casi negro) quedaba igual de oscuro que en dark,
-// un bloque negro grande sobre fondo claro. Clarea la escala completa
-// cuando el tema activo es "light".
+// Los tokens responden al cambio de tema incluso si el mapa ya está pintado.
 function heatmapColors() {
-  const isLight = document.documentElement.getAttribute('data-theme') === 'light';
-  return isLight
-    ? ['#E8E9F5', '#C7CCEE', '#9AA3E0', '#6B76D6', '#4C56C4']
-    : ['#12141F', '#1C2045', '#3B4280', '#818CF8', '#C7D2FE'];
+  return [0, 1, 2, 3, 4].map(level => `var(--heat-${level})`);
 }
 
 async function renderEquipo() {
@@ -5554,8 +5548,8 @@ function renderTendenciaCard(hayDatos) {
         <div class="tuana-section-label">${t('tendencia')}</div>
         <div class="tuana-empty-state">
           <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
-            <polyline points="4,30 14,20 20,25 36,8" stroke="#3A3A3C" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            <circle cx="36" cy="8" r="2.5" fill="#3A3A3C"/>
+            <polyline points="4,30 14,20 20,25 36,8" stroke="var(--text3)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <circle cx="36" cy="8" r="2.5" fill="var(--text3)"/>
           </svg>
           <div class="tuana-empty">${t('tendenciaEmpty')}</div>
         </div>

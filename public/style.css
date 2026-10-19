@@ -47,6 +47,11 @@
   --ease: cubic-bezier(.4,0,.2,1);
   --nav-height: 60px;
   --shadow-panel: 0 12px 36px rgba(0,0,0,.3);
+  --heat-0: #252734;
+  --heat-1: #393D62;
+  --heat-2: #5963A5;
+  --heat-3: #818CF8;
+  --heat-4: #C7D2FE;
 }
 
 /* ── Tema claro ── */
@@ -82,6 +87,11 @@
   --card-blur: rgba(255,255,255,0.94);
   --shadow-panel: 0 12px 36px rgba(28,25,23,.14);
   --shadow-card: 0 1px 3px rgba(28, 25, 23, 0.08), 0 1px 2px rgba(28, 25, 23, 0.04);
+  --heat-0: #E8E9F5;
+  --heat-1: #C7CCEE;
+  --heat-2: #9AA3E0;
+  --heat-3: #6B76D6;
+  --heat-4: #4C56C4;
 }
 
 /* Kill ALL browser input styling */
