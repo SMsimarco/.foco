@@ -1402,7 +1402,7 @@ async function changeDia(dir) {
   const wrap = document.getElementById('hoy-scroll');
   try {
     if (wrap) {
-      wrap.style.transition = 'opacity 0.12s ease';
+      wrap.style.transition = 'opacity 0.12s cubic-bezier(.4,0,.2,1)';
       wrap.style.opacity = '0';
       await new Promise(r => setTimeout(r, 120));
     }
@@ -1428,7 +1428,7 @@ async function changeDia(dir) {
     // se queda trabada en opacity:0 — antes el restore vivía en medio del
     // try y un throw a mitad de camino dejaba la pantalla invisible.
     if (wrap) {
-      wrap.style.transition = 'opacity 0.18s ease';
+      wrap.style.transition = 'opacity 0.18s cubic-bezier(.4,0,.2,1)';
       wrap.style.opacity = '1';
     }
     _changingDia = false;
@@ -4376,6 +4376,8 @@ async function saveFocusSession(completed) {
 // ── PARTÍCULAS & CONFETTI ────────────────────────────────────
 
 function fireParticles(x, y) {
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const animationStart = performance.now();
   const canvas = document.getElementById('particles-canvas');
   if (!canvas) return;
   canvas.width = window.innerWidth;
@@ -4406,13 +4408,15 @@ function fireParticles(x, y) {
       ctx.fill();
     });
     ctx.globalAlpha = 1;
-    if (alive) requestAnimationFrame(animate);
+    if (alive && performance.now() - animationStart < 300) requestAnimationFrame(animate);
     else canvas.style.display = 'none';
   };
   requestAnimationFrame(animate);
 }
 
 function fireConfetti() {
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const animationStart = performance.now();
   const canvas = document.getElementById('particles-canvas');
   if (!canvas) return;
   canvas.width = window.innerWidth;
@@ -4446,7 +4450,7 @@ function fireConfetti() {
       ctx.fillRect(-p.size / 2, -p.size / 4, p.size, p.size / 2);
       ctx.restore();
     });
-    if (alive) requestAnimationFrame(animate);
+    if (alive && performance.now() - animationStart < 300) requestAnimationFrame(animate);
     else canvas.style.display = 'none';
   };
   requestAnimationFrame(animate);

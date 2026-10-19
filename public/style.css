@@ -138,7 +138,7 @@ html, body {
   font-size: 32px;
   color: var(--text);
   opacity: 0.5;
-  animation: bootPulse 1.4s ease-in-out infinite;
+  animation: bootPulse .3s var(--ease) infinite;
 }
 
 @keyframes bootPulse {
@@ -447,7 +447,7 @@ html, body {
   display: flex;
   align-items: center;
   justify-content: center;
-  animation: fadeIn .3s ease;
+  animation: fadeIn .3s var(--ease);
 }
 
 .digest-box {
@@ -457,7 +457,7 @@ html, body {
   padding: 28px 24px;
   max-width: 360px;
   width: 90%;
-  animation: slideUp .35s cubic-bezier(.4,0,.2,1);
+  animation: slideUp .3s var(--ease);
 }
 
 @keyframes slideUp {
@@ -556,7 +556,7 @@ html, body {
   align-items: center;
   justify-content: center;
   z-index: 300;
-  animation: morningFade .5s ease;
+  animation: morningFade .3s var(--ease);
 }
 
 @keyframes morningFade {
@@ -981,7 +981,7 @@ html, body {
   background: var(--accent);
   border-radius: 3px 3px 0 0;
   min-height: 3px;
-  transition: height 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: height .3s var(--ease);
 }
 
 .day-bar-inner.bar-empty {
@@ -1401,7 +1401,7 @@ html, body {
   gap: 4px;
   height: 100%;
   border-radius: 10px;
-  transition: all 0.18s cubic-bezier(.4,0,.2,1);
+  transition: all 0.18s var(--ease);
   padding: 0 8px;
   position: relative;
 }
@@ -1432,7 +1432,7 @@ html, body {
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: transform 0.18s cubic-bezier(.34,1.56,.64,1);
+  transition: transform 0.18s var(--ease);
 }
 
 .nav-btn.active .nav-icon { transform: scale(1.1); }
@@ -1459,7 +1459,7 @@ html, body {
   cursor: pointer;
   box-shadow: 0 8px 20px rgba(0,0,0,0.45);
   z-index: 250;
-  transition: transform 0.2s cubic-bezier(.34,1.56,.64,1), opacity 0.2s;
+  transition: transform 0.2s var(--ease), opacity 0.2s;
 }
 
 #foq-fab:hover { transform: scale(1.06); }
@@ -1481,7 +1481,7 @@ html, body {
   object-fit: cover;
   display: block;
   /* Flota solo, todo el tiempo — que se sienta vivo, no un ícono fijo */
-  animation: foqFloat 3.2s ease-in-out infinite;
+  animation: foqFloat .3s var(--ease) infinite;
 }
 
 @keyframes foqFloat {
@@ -1503,10 +1503,10 @@ html, body {
 .foq-avatar-img.state-happy,
 .foq-avatar-img.state-celebrating,
 .foq-avatar-img.state-approving,
-.foq-avatar-img.state-love { animation: foqBounce 0.5s cubic-bezier(.34,1.56,.64,1); }
+.foq-avatar-img.state-love { animation: foqBounce .3s var(--ease); }
 .foq-avatar-img.state-thinking,
-.foq-avatar-img.state-reading { animation: foqPulse 1s ease-in-out infinite; }
-.foq-avatar-img.state-sleepy { animation: foqSleepy 2.4s ease-in-out infinite; }
+.foq-avatar-img.state-reading { animation: foqPulse .3s var(--ease) infinite; }
+.foq-avatar-img.state-sleepy { animation: foqSleepy .3s var(--ease) infinite; }
 
 @keyframes foqBounce {
   0%, 100% { transform: scale(1); }
@@ -1543,7 +1543,7 @@ html, body {
   transform: translateY(12px) scale(0.96);
   transform-origin: bottom right;
   pointer-events: none;
-  transition: opacity 0.2s cubic-bezier(.4,0,.2,1), transform 0.2s cubic-bezier(.4,0,.2,1);
+  transition: opacity 0.2s var(--ease), transform 0.2s var(--ease);
 }
 
 #foq-panel.open {
@@ -1628,7 +1628,7 @@ html, body {
   font-size: 13px;
   line-height: 1.45;
   font-weight: 300;
-  animation: chipPop 0.2s cubic-bezier(.34,1.56,.64,1);
+  animation: chipPop 0.2s var(--ease);
   white-space: pre-wrap;
 }
 
@@ -1677,7 +1677,7 @@ html, body {
 .foq-mic-btn.recording {
   color: var(--text);
   background: var(--danger);
-  animation: foqPulse 1.1s ease-in-out infinite;
+  animation: foqPulse .3s var(--ease) infinite;
 }
 
 @keyframes foqPulse {
@@ -1714,7 +1714,7 @@ html, body {
   backdrop-filter: blur(0px);
   z-index: 299;
   display: none;
-  transition: background 0.3s ease, backdrop-filter 0.3s ease;
+  transition: background 0.3s var(--ease), backdrop-filter 0.3s var(--ease);
 }
 
 .panel-overlay.open {
@@ -1734,7 +1734,7 @@ html, body {
   border-top: 1px solid var(--border2);
   border-radius: 22px 22px 0 0;
   transform: translateY(100%);
-  transition: transform 0.34s cubic-bezier(.32,0,.15,1);
+  transition: transform .3s var(--ease);
   z-index: 300;
   box-shadow: 0 -24px 64px rgba(0,0,0,0.7), 0 -1px 0 var(--border);
 }
@@ -1902,7 +1902,7 @@ html, body {
   align-items: center;
   justify-content: center;
   gap: 6px;
-  transition: all 0.2s ease;
+  transition: all 0.2s var(--ease);
   letter-spacing: 0.01em;
 }
 
@@ -2028,7 +2028,7 @@ html, body {
   backdrop-filter: blur(20px);
   transform: translateX(110%);
   opacity: 0;
-  transition: transform 0.28s cubic-bezier(.34,1.56,.64,1), opacity 0.22s;
+  transition: transform 0.28s var(--ease), opacity 0.22s;
   white-space: nowrap;
   box-shadow: 0 4px 24px rgba(0,0,0,0.5);
   pointer-events: none;
@@ -2056,7 +2056,7 @@ html, body {
   padding: 6px;
   opacity: 0;
   transform: scale(0.4) translateY(-8px);
-  transition: transform 0.32s cubic-bezier(.34,1.56,.64,1), opacity 0.22s;
+  transition: transform .3s var(--ease), opacity 0.22s;
   pointer-events: none;
 }
 #foq-reaction.show { opacity: 1; transform: scale(1) translateY(0); }
@@ -2108,7 +2108,7 @@ html, body {
   animation: none;
 }
 
-.cmd-overlay.open { display: block; animation: cmdBgIn 0.15s ease forwards; }
+.cmd-overlay.open { display: block; animation: cmdBgIn 0.15s var(--ease) forwards; }
 
 @keyframes cmdBgIn {
   from { opacity: 0; }
@@ -2131,7 +2131,7 @@ html, body {
   box-shadow: 0 24px 64px rgba(0,0,0,0.7), 0 0 0 1px var(--border);
   opacity: 0;
   pointer-events: none;
-  transition: transform 0.22s cubic-bezier(.34,1.56,.64,1), opacity 0.18s;
+  transition: transform 0.22s var(--ease), opacity 0.18s;
 }
 
 .cmd-palette.open {
@@ -2199,7 +2199,7 @@ body.ambient #app::before {
   background: radial-gradient(ellipse 55% 55% at 50% 38%, rgba(var(--accent-rgb), 0.07) 0%, transparent 70%);
   pointer-events: none;
   z-index: 0;
-  animation: ambientPulse 5s ease-in-out infinite;
+  animation: ambientPulse .3s var(--ease) infinite;
 }
 
 @keyframes ambientPulse {
@@ -2209,7 +2209,7 @@ body.ambient #app::before {
 
 /* ── EVENT EXIT ANIMATION (fix) ── */
 .event-block.completing {
-  animation: completingAnim 0.4s cubic-bezier(.4,0,.2,1) forwards !important;
+  animation: completingAnim .3s var(--ease) forwards !important;
 }
 
 /* ── EVENING CHECK-IN ── */
@@ -2314,7 +2314,7 @@ body.ambient #app::before {
   flex-direction: column;
   gap: 10px;
   box-shadow: 0 8px 40px rgba(0,0,0,0.6);
-  animation: fadeIn 0.18s ease;
+  animation: fadeIn 0.18s var(--ease);
 }
 
 .goal-edit-title {
@@ -2336,7 +2336,7 @@ body.ambient #app::before {
   display: flex;
   flex-direction: column;
   gap: 18px;
-  animation: fadeIn 0.25s ease;
+  animation: fadeIn 0.25s var(--ease);
 }
 
 .review-close-btn {
@@ -2692,7 +2692,7 @@ body.ambient #app::before {
   padding: 20px 16px 32px;
   z-index: 302;
   transform: translateY(100%);
-  transition: transform 0.25s cubic-bezier(.4,0,.2,1);
+  transition: transform 0.25s var(--ease);
 }
 .recur-modal.open {
   display: block;
@@ -2787,7 +2787,7 @@ body.ambient #app::before {
   padding: 20px 18px;
   z-index: 304;
   opacity: 0;
-  transition: transform 0.2s cubic-bezier(.4,0,.2,1), opacity 0.2s;
+  transition: transform 0.2s var(--ease), opacity 0.2s;
 }
 .confirm-modal.open {
   transform: translate(-50%, -50%) scale(1);
@@ -2881,7 +2881,7 @@ body.ambient #app::before {
   display: flex;
   flex-direction: column;
   gap: 16px;
-  animation: fadeIn 0.25s ease;
+  animation: fadeIn 0.25s var(--ease);
 }
 
 .estado-header {
@@ -2930,7 +2930,7 @@ body.ambient #app::before {
   display: flex;
   flex-direction: column;
   gap: 16px;
-  animation: fadeIn 0.3s ease;
+  animation: fadeIn 0.3s var(--ease);
 }
 
 .carta-meta {
@@ -2976,7 +2976,7 @@ body.ambient #app::before {
   flex-direction: column;
   gap: 16px;
   align-items: center;
-  animation: fadeIn 0.2s ease;
+  animation: fadeIn 0.2s var(--ease);
 }
 
 .palabra-prompt {
@@ -3084,7 +3084,7 @@ body.ambient #app::before {
 .area-row-fill {
   height: 100%;
   border-radius: 3px;
-  transition: width 0.4s cubic-bezier(.4,0,.2,1);
+  transition: width .3s var(--ease);
 }
 
 .area-row-pct {
@@ -3625,7 +3625,7 @@ body.ambient #app::before {
   display: flex;
   flex-direction: column;
   box-shadow: 0 24px 60px rgba(0,0,0,0.6);
-  animation: lmIn 0.18s cubic-bezier(.4,0,.2,1);
+  animation: lmIn 0.18s var(--ease);
 }
 
 @keyframes lmIn {
@@ -4168,7 +4168,7 @@ body.ambient #app::before {
   from { opacity: 0; transform: translateY(-6px); }
   to { opacity: 1; transform: translateY(0); }
 }
-.hoy-row-enter { animation: hoyRowEnter 0.26s cubic-bezier(.4,0,.2,1); }
+.hoy-row-enter { animation: hoyRowEnter 0.26s var(--ease); }
 
 @media (min-width: 1024px) {
   #app { flex-direction: row; }
@@ -4432,7 +4432,7 @@ body.ambient #app::before {
 .sg-block-content {
   height: 100%;
   padding: 3px 16px 3px 6px; /* padding-right deja lugar al × siempre, aunque no se muestre */
-  transition: transform 0.18s ease;
+  transition: transform 0.18s var(--ease);
   cursor: pointer;
 }
 
@@ -4485,7 +4485,7 @@ body.ambient #app::before {
   font-size: 10px;
   font-weight: 600;
   transform: translateX(100%);
-  transition: transform 0.18s ease;
+  transition: transform 0.18s var(--ease);
   cursor: pointer;
 }
 
@@ -4550,7 +4550,7 @@ body.ambient #app::before {
     transform: translate(-50%, calc(-50% + 10px)) scale(0.97);
     opacity: 0;
     pointer-events: none;
-    transition: transform 0.2s cubic-bezier(.4,0,.2,1), opacity 0.18s ease;
+    transition: transform 0.2s var(--ease), opacity 0.18s var(--ease);
   }
 
   .event-panel.open {
@@ -4641,7 +4641,7 @@ body.ambient #app::before {
   background: var(--surface); border: 1px solid var(--border2); border-radius: var(--radius-card);
   padding: 15px 15px 13px; display: flex; flex-direction: column; gap: 7px;
   color: var(--text); font-family: 'Geist', sans-serif; box-shadow: var(--shadow-card);
-  transition: border-color .15s, transform .15s cubic-bezier(.4,0,.2,1), box-shadow .15s;
+  transition: border-color .15s, transform .15s var(--ease), box-shadow .15s;
 }
 .ptab-card::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 3px; background: var(--pc); }
 .ptab-card:hover { border-color: var(--pc); transform: translateY(-1px); }
@@ -4660,11 +4660,11 @@ body.ambient #app::before {
   color: var(--chip); background: color-mix(in srgb, var(--chip) 14%, transparent);
 }
 .ptab-bar { display: block; height: 4px; border-radius: 4px; background: var(--border2); overflow: hidden; }
-.ptab-bar i { display: block; height: 100%; background: var(--pc, var(--accent)); border-radius: 4px; transition: width .3s cubic-bezier(.4,0,.2,1); }
+.ptab-bar i { display: block; height: 100%; background: var(--pc, var(--accent)); border-radius: 4px; transition: width .3s var(--ease); }
 .ptab-bar.wide { width: 100%; }
 
 /* Vista completa */
-.pdet { display: flex; flex-direction: column; gap: 14px; animation: viewEnter .28s cubic-bezier(.4,0,.2,1); }
+.pdet { display: flex; flex-direction: column; gap: 14px; animation: viewEnter .28s var(--ease); }
 .pdet-back {
   align-self: flex-start; background: none; border: 0; padding: 4px 0; cursor: pointer;
   color: var(--text-muted); font-size: 13px; font-family: 'Geist', sans-serif;
@@ -4857,4 +4857,23 @@ input:focus-visible, textarea:focus-visible, select:focus-visible {
   .phub-ag-falta { grid-column: auto; justify-self: start; font-size: 11px; }
   .phub-title, .pdet-title { font-size: 28px; line-height: 1.15; }
   .ptab-grid { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* ── Movimiento breve y foco estable ── */
+button:focus-visible, a:focus-visible, [tabindex]:focus-visible,
+input:focus-visible, textarea:focus-visible, select:focus-visible {
+  outline: 2px solid var(--accent-text) !important; outline-offset: 3px;
+}
+.sg-block-content:focus-visible { outline-offset: -3px; }
+button { transition-timing-function: var(--ease); }
+button:active:not(:disabled) { filter: brightness(.94); }
+.foq-avatar-img, .boot-logo { animation: none; }
+.foq-avatar-img.state-reading, .foq-avatar-img.state-sleepy { animation-iteration-count: 1; }
+.foq-mic-btn.recording { animation: none; box-shadow: 0 0 0 3px rgba(var(--accent-rgb), .2); }
+.foq-input-bar:focus-within { border-top-color: var(--accent-text); }
+#toast-container { top: calc(64px + env(safe-area-inset-top, 0px)); max-width: calc(100vw - 24px); }
+.toast { white-space: normal; overflow-wrap: anywhere; box-shadow: var(--shadow-panel); }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
+  #particles-canvas { display: none !important; }
 }
