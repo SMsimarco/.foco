@@ -26,6 +26,15 @@ Playwright sobre `node server.js`, con el cliente de Supabase simulado sólo en 
 
 La segunda pasada volvió a capturar las seis vistas y el detalle en las cuatro combinaciones, más Hoy con y sin actividades y las vistas principales en inglés móvil. No detectó desborde global, botones visibles menores de 44 px, claves de traducción ausentes ni errores de JavaScript. Las capturas “después” de la galería corresponden a esta última pasada.
 
+## Ajustes posteriores
+
+- Se restauró el contador de fechas con el degradado celeste, azul y violeta que tenía antes. Se oscureció apenas el extremo celeste para que las etiquetas blancas mantengan contraste AA. En celular, los proyectos activos pasan debajo del contador: cada tarjeta destaca una sola próxima acción (o la primera tarea pendiente) y los pendientes globales quedan más abajo.
+- Los círculos del cronograma habían heredado un mínimo global de 44 px y tapaban el texto. La zona táctil sigue midiendo 44 px, pero el indicador visible mide 13 px y tiene un nombre accesible por paso. [Claro](after-crono-390-light.png) · [oscuro](after-crono-390-dark.png).
+- Semana muestra una lista de siete días por defecto en celular, con horario y título completo; el selector Lista/Grilla conserva la vista horaria. Los eventos sin horario y los días vacíos tienen presentación propia, en ES y EN.
+- Sugerencias abre con el insight y un próximo paso destacado; la cifra de completadas se retiró de esa pantalla para que Progreso concentre las métricas históricas. Si falla la IA, ofrece una acción local y conserva la altura de la tarjeta. Progreso ahora explica su propósito en el encabezado.
+
+Se actualizaron las capturas “después” de Semana, Proyectos, detalle, Sugerencias y Progreso en [la galería](index.html), a 390 y 1280 px en los dos temas. Playwright no registró errores de JavaScript ni desborde horizontal. Se comprobó el cambio Lista/Grilla, la apertura de eventos con teclado, títulos largos, eventos sin horario y la presencia de todas las claves ES/EN. La simulación táctil móvil funcionó, pero no sustituye Safari en un iPhone físico. Tampoco se pudo ejecutar un recorrido autenticado con datos reales de Supabase desde este entorno; las capturas usan datos ficticios en memoria.
+
 ## Pendiente
 
 Las columnas de Semana son estrechas en el celular: muestran hasta tres líneas del título, y el panel del evento muestra el texto completo. Eventos de menos de una hora conservan su altura proporcional al tiempo; ampliar sus bloques cambiaría la lectura temporal. La prueba de safe areas fue por reglas CSS y viewport; hace falta comprobarla en un iPhone físico. Los estados de error de datos reales requieren una sesión de Supabase para verificar recorridos completos. La IA se probó con respuesta simulada y con error de red.
