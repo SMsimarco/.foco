@@ -250,7 +250,7 @@
     </div>
 
     <!-- SEMANA (grilla horaria) -->
-    <div id="view-semana-grid" style="display:none">
+    <div id="view-semana-grid" data-mobile-layout="list" style="display:none">
       <div class="sg-toolbar">
         <div class="sg-toolbar-nav">
           <button class="sg-nav-btn" onclick="changeGridWeek(-1)" data-i18n-aria="a11yPrevious">‹</button>
@@ -259,6 +259,12 @@
         </div>
         <button class="sg-today-btn" onclick="goToCurrentGridWeek()" data-i18n="sgToday">Hoy</button>
       </div>
+
+      <div class="sg-mobile-switch" role="group" data-i18n-aria="sgViewMode">
+        <button class="sg-mobile-switch-btn active" id="sg-layout-list" onclick="setWeekMobileLayout('list')" aria-pressed="true" data-i18n="sgList">Lista</button>
+        <button class="sg-mobile-switch-btn" id="sg-layout-grid" onclick="setWeekMobileLayout('grid')" aria-pressed="false" data-i18n="sgGrid">Grilla</button>
+      </div>
+      <div class="sg-mobile-list" id="sg-mobile-list"></div>
 
       <div class="sg-scrollx">
         <div class="sg-daylabels">

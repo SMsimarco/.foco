@@ -131,6 +131,7 @@ const I18N_UI = {
     themeToggleTitle: 'Cambiar tema', notifTitle: 'Notificaciones', goalBarLabel: 'foco semanal',
     pillDay: 'Día', pillWeek: 'Semana', pillMonth: 'Mes',
     hoyTitleDefault: 'Hoy', hoySectionFoco: 'Tu foco', sgToday: 'Hoy',
+    sgViewMode: 'Vista de la semana', sgList: 'Lista', sgGrid: 'Grilla', sgNoEvents: 'Sin actividades',
     hoyAgenda: 'Agenda', hoyEmptyTitle: 'Un día con espacio para elegir.', hoyEmptyHint: 'Tocá un horario para sumar una actividad.',
     hoySummaryEmpty: 'Todavía no hay actividades', hoySummaryOne: '1 actividad', hoySummaryMany: '{count} actividades', hoySummaryDoneOne: '1 completada', hoySummaryDoneMany: '{count} completadas',
     slabProximas: 'Próximas fechas', recordaNombrePh: 'Ej: Parcial física', guardar: 'Guardar',
@@ -221,6 +222,7 @@ const I18N_UI = {
     themeToggleTitle: 'Toggle theme', notifTitle: 'Notifications', goalBarLabel: 'weekly focus',
     pillDay: 'Day', pillWeek: 'Week', pillMonth: 'Month',
     hoyTitleDefault: 'Today', hoySectionFoco: 'Your focus', sgToday: 'Today',
+    sgViewMode: 'Week view', sgList: 'List', sgGrid: 'Grid', sgNoEvents: 'No activities',
     hoyAgenda: 'Schedule', hoyEmptyTitle: 'A day with room to choose.', hoyEmptyHint: 'Tap a time slot to add an activity.',
     hoySummaryEmpty: 'No activities yet', hoySummaryOne: '1 activity', hoySummaryMany: '{count} activities', hoySummaryDoneOne: '1 completed', hoySummaryDoneMany: '{count} completed',
     slabProximas: 'Upcoming dates', recordaNombrePh: 'E.g: Physics exam', guardar: 'Save',
@@ -1480,6 +1482,16 @@ function updateMomentum() {
 const ALTO_HORA = 44; // px por hora — debe coincidir con background-size de .sg-day-col en style.css
 let gridWeekOffset = 0; // semana mostrada acá, independiente de weekOffset (que es para el ring/Sugerencias)
 
+function setWeekMobileLayout(layout) {
+  if (layout !== 'list' && layout !== 'grid') return;
+  document.getElementById('view-semana-grid').dataset.mobileLayout = layout;
+  ['list', 'grid'].forEach(id => {
+    const btn = document.getElementById('sg-layout-' + id);
+    btn.classList.toggle('active', id === layout);
+    btn.setAttribute('aria-pressed', String(id === layout));
+  });
+}
+
 async function changeGridWeek(dir) {
   gridWeekOffset += dir;
   await loadWeek(gridWeekOffset);
@@ -1601,6 +1613,33 @@ function renderSemanaGrid() {
       return `<div class="sg-day-col" data-date="${dateISO}" data-hora-base="${horaBase}" style="height:${alturaTotal}px">${renderGridColumnHTML(dateISO, horaBase, horaTope, isToday(d))}</div>`;
     }).join('');
   }
+  renderWeekMobileList(week);
+}
+
+function renderWeekMobileList(week) {
+  const list = document.getElementById('sg-mobile-list');
+  if (!list) return;
+  list.innerHTML = week.map(d => {
+    const dateISO = toISO(d);
+    const items = (eventsCache[dateISO] || []).filter(ev => !ev.is_focus)
+      .sort((a, b) => (a.start_time ? timeToMin(a.start_time) : 1440) - (b.start_time ? timeToMin(b.start_time) : 1440));
+    const dayLabel = `${DAYS_FULL[d.getDay()]} · ${d.getDate()} ${MONTHS_SHORT[d.getMonth()]}`;
+    return `<section class="sg-mobile-day${isToday(d) ? ' today' : ''}">
+      <h2 class="sg-mobile-day-title">${escH(dayLabel)}</h2>
+      ${items.length ? items.map(ev => {
+        const time = ev.start_time
+          ? `${ev.start_time.slice(0, 5)}${ev.end_time ? '–' + ev.end_time.slice(0, 5) : ''}`
+          : t('panelSinHora');
+        const label = `${time} · ${ev.title}${ev.done ? ' · ' + t('panelCompletada') : ''}`;
+        return `<button class="sg-mobile-event${ev.done ? ' done' : ''}" style="--event-color:${eventColor(ev.title, ev.area)}"
+          aria-label="${escH(label)}" onclick="openEventPanel(eventsCache['${dateISO}'].find(e=>e.id==='${escH(ev.id)}'), '${dateISO}')">
+          <span class="sg-mobile-event-time">${escH(time)}</span>
+          <span class="sg-mobile-event-title">${escH(ev.title)}</span>
+          <span class="sg-mobile-event-arrow" aria-hidden="true">›</span>
+        </button>`;
+      }).join('') : `<p class="sg-mobile-empty">${t('sgNoEvents')}</p>`}
+    </section>`;
+  }).join('');
 }
 
 // Arma el contenido de una columna de día (bloques posicionados + línea de "ahora")

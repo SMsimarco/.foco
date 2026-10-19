@@ -4904,6 +4904,42 @@ input:focus-visible, textarea:focus-visible, select:focus-visible {
   .ptab-grid { grid-template-columns: minmax(0, 1fr); }
 }
 
+/* Semana móvil: títulos completos por día; la grilla horaria sigue a un toque. */
+.sg-mobile-switch, .sg-mobile-list { display: none; }
+@media (max-width: 760px) {
+  .sg-mobile-switch {
+    display: flex; align-self: flex-start; gap: 2px; margin: 2px 16px 12px; padding: 3px;
+    background: var(--bg2); border: 1px solid var(--border2); border-radius: 12px;
+  }
+  .sg-mobile-switch-btn {
+    border: 0; border-radius: 9px; background: transparent; color: var(--text2);
+    padding: 0 16px; font-size: 12px; font-weight: 500; cursor: pointer;
+  }
+  .sg-mobile-switch-btn.active { background: var(--surface); color: var(--accent-text); box-shadow: var(--shadow-card); }
+  #view-semana-grid[data-mobile-layout="list"] .sg-scrollx { display: none; }
+  #view-semana-grid[data-mobile-layout="list"] .sg-mobile-list { display: block; }
+  .sg-mobile-list {
+    flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain;
+    padding: 0 16px calc(148px + env(safe-area-inset-bottom, 0px));
+  }
+  .sg-mobile-day { padding: 0 0 16px; }
+  .sg-mobile-day + .sg-mobile-day { border-top: 1px solid var(--border2); padding-top: 16px; }
+  .sg-mobile-day-title { color: var(--text2); font-size: 12px; font-weight: 600; line-height: 1.4; margin-bottom: 10px; }
+  .sg-mobile-day.today .sg-mobile-day-title { color: var(--accent-text); }
+  .sg-mobile-event {
+    width: 100%; min-height: 58px; display: grid; grid-template-columns: 86px minmax(0, 1fr) 14px;
+    align-items: center; gap: 10px; padding: 10px 12px; margin-bottom: 8px; text-align: left;
+    background: var(--surface); border: 1px solid var(--border2); border-left: 3px solid var(--event-color);
+    border-radius: var(--radius-control); color: var(--text); box-shadow: var(--shadow-card); cursor: pointer;
+  }
+  .sg-mobile-event-time { color: var(--text2); font-size: 11px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .sg-mobile-event-title { min-width: 0; font-size: 13px; font-weight: 500; line-height: 1.4; overflow-wrap: anywhere; }
+  .sg-mobile-event-arrow { color: var(--text3); font-size: 19px; text-align: right; }
+  .sg-mobile-event.done .sg-mobile-event-title { color: var(--text2); }
+  .sg-mobile-event.done .sg-mobile-event-title::before { content: '✓'; color: var(--success-text); margin-right: 6px; font-weight: 700; }
+  .sg-mobile-empty { color: var(--text3); font-size: 12px; padding: 4px 2px 8px; }
+}
+
 /* ── Movimiento breve y foco estable ── */
 button:focus-visible, a:focus-visible, [tabindex]:focus-visible,
 input:focus-visible, textarea:focus-visible, select:focus-visible {
