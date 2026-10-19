@@ -12,9 +12,19 @@ Rama: `codex/pulido-diseno-foco`. Capturas: [galería antes/después](index.html
 - El insight de Sugerencias tenía un salto de altura al cargar. La tarjeta reserva espacio durante carga, resultado y error. Se tradujeron los mensajes fijos del insight.
 - Las transiciones quedan en 300 ms o menos con el easing del sistema. Las partículas respetan movimiento reducido.
 
+## Segunda inspección visual
+
+- Al entrar, el desplazamiento automático de la agenda dejaba fuera de pantalla el título, la fecha, los controles y “Tu foco”. Hoy conserva esa cabecera visible mientras se recorre el horario. Ahora muestra un resumen de actividades y un estado vacío con una indicación útil.
+- Los títulos funcionales mezclaban Geist e Instrument Serif sin un criterio claro. Vistas, calendario, proyectos y datos usan Geist con una escala común; la serif queda para la marca y textos reflexivos. Se acortó el título de Proyectos y se quitó el punto aislado de Progreso en ES/EN.
+- El botón flotante de Foquito era demasiado dominante en celular. Se redujo a 56 px y se ajustó el espacio final de la agenda para que no oculte eventos.
+- El mapa de actividad casi desaparecía en oscuro y su icono vacío usaba un gris fijo. La escala usa tokens de ambos temas, con más contraste, y cambia inmediatamente al alternar el tema.
+- La marca circular de “Tu foco” crecía junto con su área táctil de 44 px. Se mantiene el área táctil y el círculo visible vuelve a 22 px ([claro](after-focus-390-light-hoy.png), [oscuro](after-focus-390-dark-hoy.png)).
+
 ## Verificación
 
 Playwright sobre `node server.js`, con el cliente de Supabase simulado sólo en el navegador. Se capturaron las seis vistas, detalle de proyecto, vacío y onboarding en claro/oscuro a 390 y 1280 px. El escaneo de los textos visibles no detectó contraste inferior a AA en superficies planas, ni botones visibles menores de 44 px; tampoco detectó desborde global ni errores de JavaScript. Se verificaron foco, navegación de evento y día con teclado, cierre y reapertura de Foquito, y preservación del borrador. La tarjeta del insight mantuvo su altura en carga/resultado/error en las cuatro combinaciones. `node --check` y `git diff --check` pasaron.
+
+La segunda pasada volvió a capturar las seis vistas y el detalle en las cuatro combinaciones, más Hoy con y sin actividades y las vistas principales en inglés móvil. No detectó desborde global, botones visibles menores de 44 px, claves de traducción ausentes ni errores de JavaScript. Las capturas “después” de la galería corresponden a esta última pasada.
 
 ## Pendiente
 
