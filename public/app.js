@@ -113,6 +113,7 @@ function formatDate(d, { year = true } = {}) {
 // de esta pasada, ver resumen que le pasé a Marco.
 const I18N_UI = {
   es: {
+    sugWeek: 'Tu semana', sugConnectionError: 'No se pudo conectar con la IA.', sugEmptyWeek: 'Semana sin eventos', sugCompleted: '% completado', sugFallbackSummary: 'Completaste {done} de {total} eventos esta semana.', sugFallbackTip: 'La próxima semana, agendá menos pero cumplí más.',
     a11yPrevious: 'Anterior', a11yNext: 'Siguiente', a11yAdd: 'Agregar', a11yLanguage: 'Cambiar idioma', a11yFoquito: 'Hablar con Foquito', a11ySend: 'Enviar mensaje', a11ySpeak: 'Dictar mensaje', a11yTask: 'Cambiar estado de la tarea',
     authTagline: 'Organizá tu semana.', authOr: 'o con email', authNamePh: 'Tu nombre',
     authEmailPh: 'Email', authPasswordPh: 'Contraseña', authEnter: 'Entrar',
@@ -200,6 +201,7 @@ const I18N_UI = {
     cmdCambiarIdioma: 'Cambiar idioma (Español/English)', cmdCerrarSesion: 'Cerrar sesión'
   },
   en: {
+    sugWeek: 'Your week', sugConnectionError: 'Could not connect to the AI.', sugEmptyWeek: 'No events this week', sugCompleted: '% completed', sugFallbackSummary: 'You completed {done} of {total} events this week.', sugFallbackTip: 'Next week, schedule less and follow through on more.',
     a11yPrevious: 'Previous', a11yNext: 'Next', a11yAdd: 'Add', a11yLanguage: 'Change language', a11yFoquito: 'Talk to Foquito', a11ySend: 'Send message', a11ySpeak: 'Dictate message', a11yTask: 'Toggle task completion',
     authTagline: 'Organize your week.', authOr: 'or with email', authNamePh: 'Your name',
     authEmailPh: 'Email', authPasswordPh: 'Password', authEnter: 'Sign in',
@@ -1854,7 +1856,7 @@ function renderProjHome() {
     pendEl.innerHTML = pend.length ? pend.map(it => {
       const p = projBoardCache.find(x => x.id === it.proyecto_id);
       return `<div class="pdet-check">
-        <button class="lm-checklist-check" data-i18n-aria="a11yTask" aria-label="${t('a11yTask')}" onclick="toggleHomeTarea('${it.id}')"></button>
+        <button class="lm-checklist-check" data-i18n-aria="a11yTask" aria-label="${t('a11yTask')}" aria-pressed="false" onclick="toggleHomeTarea('${it.id}')"></button>
         <span class="pdet-check-txt">${escH(it.texto)}
           <button class="phub-tag" onclick="openProjDetail('${escH(p.id)}')"><span class="ptab-dot" style="background:${projColor(p)}"></span>${escH(p.nombre)}</button>
         </span>
@@ -1942,7 +1944,7 @@ function renderProjAgenda() {
       <b>${escH(cuando)}</b>
       <span class="phub-ag-name">${escH(it.nombre)}</span>
       <span class="phub-ag-falta">${escH(faltaLabel(it, now))}</span>
-      ${it.tipo === 'rec' ? `<button class="phub-ag-del" onclick="event.stopPropagation();deleteProyecto('${escH(it.id)}')" aria-label="Borrar">×</button>` : ''}
+      ${it.tipo === 'rec' ? `<button class="phub-ag-del" onclick="event.stopPropagation();deleteProyecto('${escH(it.id)}')" data-i18n-aria="eliminar" aria-label="${t('eliminar')}">×</button>` : ''}
     </div>`;
   }).join('');
 }
@@ -2040,15 +2042,15 @@ function renderProjDetail() {
           <div class="pdet-checks">
             ${total ? projDetailTareas.map(it => `
               <div class="pdet-check${it.done ? ' done' : ''}">
-                <button class="lm-checklist-check${it.done ? ' done' : ''}" data-i18n-aria="a11yTask" aria-label="${t('a11yTask')}" onclick="toggleDetailTarea('${it.id}')">${it.done ? '✓' : ''}</button>
+                <button class="lm-checklist-check${it.done ? ' done' : ''}" data-i18n-aria="a11yTask" aria-label="${t('a11yTask')}" aria-pressed="${!!it.done}" onclick="toggleDetailTarea('${it.id}')">${it.done ? '✓' : ''}</button>
                 <span class="pdet-check-txt">${escH(it.texto)}</span>
-                <button class="lm-checklist-del" onclick="deleteDetailTarea('${it.id}')">×</button>
+                <button class="lm-checklist-del" data-i18n-aria="eliminar" aria-label="${t('eliminar')}" onclick="deleteDetailTarea('${it.id}')">×</button>
               </div>`).join('') : `<div class="lm-checklist-empty">${t('lmChecklistEmpty')}</div>`}
           </div>
           <div class="lm-checklist-add">
             <input class="lm-inp" id="pdet-tarea-inp" type="text" placeholder="${escH(t('lmChecklistAddPh'))}"
                    onkeydown="if(event.key==='Enter'){event.preventDefault();addDetailTarea();}"/>
-            <button class="lm-checklist-add-btn" onclick="addDetailTarea()">+</button>
+            <button class="lm-checklist-add-btn" data-i18n-aria="a11yAdd" aria-label="${t('a11yAdd')}" onclick="addDetailTarea()">+</button>
           </div>
         </div>
 
@@ -2322,11 +2324,11 @@ function renderChecklist() {
     ? `<div class="lm-checklist-empty">${t('lmChecklistEmpty')}</div>`
     : checklistItems.map(item => `
         <div class="lm-checklist-item">
-          <button class="lm-checklist-check${item.done ? ' done' : ''}" data-i18n-aria="a11yTask" aria-label="${t('a11yTask')}" onclick="toggleChecklistItem('${item.id}')">
+          <button class="lm-checklist-check${item.done ? ' done' : ''}" data-i18n-aria="a11yTask" aria-label="${t('a11yTask')}" aria-pressed="${!!item.done}" onclick="toggleChecklistItem('${item.id}')">
             ${item.done ? '✓' : ''}
           </button>
           <span class="lm-checklist-text${item.done ? ' done' : ''}">${escH(item.texto)}</span>
-          <button class="lm-checklist-del" onclick="deleteChecklistItem('${item.id}')">×</button>
+          <button class="lm-checklist-del" data-i18n-aria="eliminar" aria-label="${t('eliminar')}" onclick="deleteChecklistItem('${item.id}')">×</button>
         </div>
       `).join('');
 }
@@ -2611,7 +2613,8 @@ async function generateAISummary() {
   const titleEl = document.getElementById('sug-insight-title');
   const textEl = document.getElementById('sug-insight-text');
   const tipEl = document.getElementById('sug-insight-tip');
-  titleEl.textContent = 'Analizando tu semana...';
+  document.getElementById('sug-insight-card').setAttribute('aria-busy', 'true');
+  titleEl.textContent = t('sugAnalizando');
   textEl.textContent = '';
   tipEl.style.display = 'none';
   setFoquitoState('reading');
@@ -2655,23 +2658,24 @@ Respondé SOLO con JSON válido, sin markdown ni texto extra:
     }
     if (!parsed || typeof parsed !== 'object') {
       parsed = {
-        headline: total ? `${Math.round(done / total * 100)}% completado` : 'Semana sin eventos',
-        insight: `Completaste ${done} de ${total} eventos esta semana.`,
-        tip: 'La próxima semana, agendá menos pero cumplí más.',
+        headline: total ? `${Math.round(done / total * 100)}${t('sugCompleted')}` : t('sugEmptyWeek'),
+        insight: t('sugFallbackSummary').replace('{done}', done).replace('{total}', total),
+        tip: t('sugFallbackTip'),
         best_day: null
       };
     }
 
-    titleEl.textContent = parsed.headline || 'Tu semana';
+    titleEl.textContent = parsed.headline || t('sugWeek');
     textEl.textContent = parsed.insight || '';
     if (parsed.tip) {
       tipEl.textContent = parsed.tip;
       tipEl.style.display = 'block';
     }
   } catch {
-    titleEl.textContent = 'Tu semana';
-    textEl.textContent = 'No se pudo conectar con la IA.';
+    titleEl.textContent = t('sugWeek');
+    textEl.textContent = t('sugConnectionError');
   } finally {
+    document.getElementById('sug-insight-card').setAttribute('aria-busy', 'false');
     setFoquitoState(null);
   }
 }

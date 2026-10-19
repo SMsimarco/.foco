@@ -73,7 +73,7 @@
   --danger-text: #E11D48;
   --warning:   #F59E0B;
   --warning-text: #B45309;
-  --purple-text: #7C3AED;
+  --purple-text: #6D28D9;
   --cyan-text: #0E7490;
   --accent-text: #4338CA;
   --overlay-strong: rgba(28,25,23,0.10);
@@ -4844,7 +4844,8 @@ input:focus-visible, textarea:focus-visible, select:focus-visible {
 #view-sugerencias { gap: 12px; }
 #view-sugerencias > * { width: 100%; max-width: 760px; margin-left: auto; margin-right: auto; }
 .sug-section { padding-top: 12px; font-size: 11px; }
-.sug-insight-card { min-height: 164px; }
+.sug-insight-card { min-height: 196px; }
+@media (max-width: 760px) { .sug-insight-card { min-height: 256px; } }
 .sug-insight-tip, .sug-btn-primary { color: var(--accent-text); }
 .tuana-wrap { width: 100%; max-width: 900px; margin: 0 auto; gap: 16px; padding-top: 24px; }
 .tuana-header { padding: 0 0 4px; }
@@ -4877,3 +4878,6 @@ button:active:not(:disabled) { filter: brightness(.94); }
   *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
   #particles-canvas { display: none !important; }
 }
+
+/* hidden debe prevalecer sobre los layouts flex/grid de los componentes. */
+[hidden] { display: none !important; }
