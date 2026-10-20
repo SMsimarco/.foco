@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>foco. · Sugerencias y Progreso</title>
+  <style>
+    :root { color-scheme: dark; font-family: system-ui, sans-serif; }
+    body { margin: 0; background: #111115; color: #f5f5f7; }
+    header, main { padding: 24px clamp(16px, 4vw, 48px); }
+    header { border-bottom: 1px solid #31313b; }
+    h1 { margin: 0 0 8px; font-size: 28px; }
+    p { margin: 0; color: #bcbcc6; line-height: 1.5; }
+    .controls { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 20px; }
+    label { display: grid; gap: 4px; color: #bcbcc6; font-size: 13px; }
+    select { min-width: 160px; padding: 9px 12px; border: 1px solid #555565; border-radius: 9px; background: #202027; color: white; font: inherit; }
+    section { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+    figure { margin: 0; padding: 12px; border: 1px solid #393942; border-radius: 14px; background: #202027; }
+    figcaption { margin-bottom: 10px; font-weight: 600; }
+    img { display: block; width: 100%; height: min(72vh, 780px); object-fit: contain; object-position: top center; background: #33333b; border-radius: 9px; }
+    nav { margin-top: 20px; } a { color: #b7b8ff; }
+    @media (max-width: 740px) { section { grid-template-columns: 1fr; } img { height: auto; max-height: 78vh; } }
+  </style>
+</head>
+<body>
+  <header><h1>foco. · Sugerencias y Progreso</h1><p>Antes y después, con datos ficticios. Elegí vista, ancho y tema para comparar el mismo estado.</p></header>
+  <main>
+    <div class="controls">
+      <label>Vista<select id="view"><option value="suggestions">Sugerencias</option><option value="progress-data">Progreso con datos</option><option value="progress-empty">Progreso sin historial</option></select></label>
+      <label>Ancho<select id="width"><option value="390">390 px</option><option value="1280">1280 px</option></select></label>
+      <label>Tema<select id="theme"><option value="light">Claro</option><option value="dark">Oscuro</option></select></label>
+    </div>
+    <section>
+      <figure><figcaption>Antes</figcaption><a id="before-link"><img id="before" alt="Captura anterior"></a></figure>
+      <figure><figcaption>Después</figcaption><a id="after-link"><img id="after" alt="Captura nueva"></a></figure>
+    </section>
+    <nav><a href="INFORME.md">Leer informe</a> · <a href="index.html">Galería general</a></nav>
+  </main>
+  <script>
+    const $ = id => document.getElementById(id);
+    function update() {
+      const suffix = `${$('view').value}-${$('width').value}-${$('theme').value}.png`;
+      for (const side of ['before', 'after']) {
+        const file = `sp-${side}-${suffix}`;
+        $(side).src = file;
+        $(`${side}-link`).href = file;
+      }
+    }
+    for (const id of ['view', 'width', 'theme']) $(id).addEventListener('change', update);
+    update();
+  </script>
+</body>
+</html>
