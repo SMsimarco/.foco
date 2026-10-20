@@ -1,5 +1,5 @@
-const CACHE = 'foco-v62';
-const STATIC = ['/', '/index.html', '/app.js', '/style.css', '/manifest.json', '/icon-192.png', '/icon-512.png', '/apple-touch-icon.png', '/foquito-avatar.png', '/vendor/supabase.js'];
+const CACHE = 'foco-v64';
+const STATIC = ['/', '/index.html', '/app.js', '/style.css', '/manifest.json', '/icon-192.png', '/icon-512.png', '/apple-touch-icon.png', '/favicon-32.png', '/favicon.ico', '/foquito-avatar.png', '/foquito-approving.png', '/foquito-celebrating.png', '/foquito-happy.png', '/foquito-love.png', '/foquito-reading.png', '/foquito-sleepy.png', '/foquito-thinking.png', '/vendor/supabase.js'];
 
 self.addEventListener('install', e => {
   e.waitUntil(
