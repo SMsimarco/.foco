@@ -1492,19 +1492,15 @@ html, body {
      FAB flote limpio arriba de la tab bar, no apoyado. +env() por si el
      dispositivo tiene home indicator (safe area) que la tab bar no resta. */
   bottom: calc(52px + 24px + env(safe-area-inset-bottom, 0px));
-  /* 92px (no 76): el personaje llena ~85% del cuadrado del asset, con
-     76px quedaba grande dentro del redondel. Agrandar el boton en vez
-     de volver a tocar la imagen. padding achica un toque mas sin
-     tocar el asset ni el tamano del boton. */
-  width: 92px;
-  height: 92px;
+  width: 72px;
+  height: 72px;
   border-radius: 50%;
   border: none;
-  background: var(--accent);
-  padding: 5px;
-  overflow: hidden;
+  background: transparent;
+  padding: 0;
+  overflow: visible;
   cursor: pointer;
-  box-shadow: 0 8px 20px rgba(0,0,0,0.45);
+  box-shadow: none;
   z-index: 250;
   transition: transform 0.2s var(--ease), opacity 0.2s;
 }
@@ -1512,28 +1508,19 @@ html, body {
 #foq-fab:hover { transform: scale(1.06); }
 #foq-fab.open { opacity: 0; pointer-events: none; transform: scale(0.7); }
 
-/* Imagen ocupa el botón entero, sin padding que deje ver el redondel de
-   fondo — pensado para el asset circular y sin fondo que va a reemplazar
-   al PNG actual. */
+/* El personaje flota sin placa ni recorte circular. */
 #foq-fab .foq-avatar-img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
-  border-radius: 50%;
+  object-fit: contain;
 }
 
 .foq-avatar-img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
   display: block;
-  /* Flota solo, todo el tiempo — que se sienta vivo, no un ícono fijo */
-  animation: foqFloat .3s var(--ease) infinite;
-}
-
-@keyframes foqFloat {
-  0%, 100% { transform: translateY(0) rotate(0deg); }
-  50% { transform: translateY(-5px) rotate(-2deg); }
+  animation: none;
 }
 
 .foq-avatar-sm {
@@ -1552,8 +1539,8 @@ html, body {
 .foq-avatar-img.state-approving,
 .foq-avatar-img.state-love { animation: foqBounce .3s var(--ease); }
 .foq-avatar-img.state-thinking,
-.foq-avatar-img.state-reading { animation: foqPulse .3s var(--ease) infinite; }
-.foq-avatar-img.state-sleepy { animation: foqSleepy .3s var(--ease) infinite; }
+.foq-avatar-img.state-reading { animation: foqPulse .3s var(--ease); }
+.foq-avatar-img.state-sleepy { animation: foqSleepy .3s var(--ease); }
 
 @keyframes foqBounce {
   0%, 100% { transform: scale(1); }
@@ -2083,24 +2070,22 @@ html, body {
 
 .toast.show { transform: translateX(0); opacity: 1; }
 
-/* Reacción grande de Foquito — arriba a la derecha, sobre todo (10000,
-   por encima de los toasts). Oculta por default, pop-in/out al cambiar
-   de estado (ver setFoquitoState en app.js). */
+/* Reacción grande dentro del área de Foquito en escritorio. En celular
+   alcanza con el FAB: duplicarla sobre la agenda tapaba controles. */
 #foq-reaction {
   position: fixed;
-  top: 56px;
-  right: 12px;
+  bottom: 88px;
+  right: 24px;
   z-index: 10000;
   width: 84px;
   height: 84px;
-  border-radius: 50%;
-  background: var(--card-blur);
-  border: 1px solid var(--border2);
-  box-shadow: 0 8px 28px rgba(0,0,0,0.5);
+  background: transparent;
+  border: 0;
+  box-shadow: none;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 6px;
+  padding: 0;
   opacity: 0;
   transform: scale(0.4) translateY(-8px);
   transition: transform .3s var(--ease), opacity 0.22s;
@@ -2110,10 +2095,9 @@ html, body {
 #foq-reaction img { width: 100%; height: 100%; object-fit: contain; }
 
 @media (min-width: 1024px) {
-  /* Panel de chat mide 380px fijo ahí — la corremos para que caiga del
-     lado del calendario, no tapada atrás/adentro del panel. */
-  #foq-reaction { top: 20px; right: 392px; }
+  #foq-reaction { width: 96px; height: 96px; }
 }
+@media (max-width: 1023px) { #foq-reaction { display: none; } }
 .toast-success { border-color: rgba(16,185,129,0.45); color: var(--success-text); }
 .toast-error   { border-color: rgba(244,63,94,0.45);  color: var(--danger-text); }
 .toast-info    { border-color: rgba(var(--accent-rgb), 0.35);  color: var(--text2); }
@@ -4824,7 +4808,7 @@ input:focus-visible, textarea:focus-visible, select:focus-visible {
 }
 
 /* ── Foquito: panel discreto, cierre accesible y safe areas ── */
-#foq-fab { width: 64px; height: 64px; bottom: calc(var(--nav-height) + 16px + env(safe-area-inset-bottom, 0px)); box-shadow: var(--shadow-panel); }
+#foq-fab { bottom: calc(var(--nav-height) + 16px + env(safe-area-inset-bottom, 0px)); }
 #foq-panel { box-shadow: var(--shadow-panel); }
 .foq-bubble { overflow-wrap: anywhere; font-weight: 400; }
 .foq-bubble-user, .foq-send-btn, .foq-send-btn:hover { background: var(--accent-solid); color: var(--on-accent); }
@@ -5006,7 +4990,7 @@ button:active:not(:disabled) { filter: brightness(.94); }
 .mes-day.today .mes-day-num { color: var(--accent-text); font-weight: 600; }
 .view-pill.active { background: rgba(var(--accent-rgb), .1); color: var(--accent-text); }
 .view-pill:hover { background: var(--border); }
-#foq-fab { width: 56px; height: 56px; right: 16px; background: var(--accent-solid); border: 2px solid var(--bg); }
+#foq-fab:focus-visible { border-radius: 12px; }
 @media (max-width: 1023px) {
   .hoy-header-actions { gap: 5px; }
   .hoy-add-btn { padding: 0 9px; }
