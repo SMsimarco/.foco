@@ -38,3 +38,12 @@ Se actualizaron las capturas “después” de Semana, Proyectos, detalle, Suger
 ## Pendiente
 
 Las columnas de Semana son estrechas en el celular: muestran hasta tres líneas del título, y el panel del evento muestra el texto completo. Eventos de menos de una hora conservan su altura proporcional al tiempo; ampliar sus bloques cambiaría la lectura temporal. La prueba de safe areas fue por reglas CSS y viewport; hace falta comprobarla en un iPhone físico. Los estados de error de datos reales requieren una sesión de Supabase para verificar recorridos completos. La IA se probó con respuesta simulada y con error de red.
+
+## Foquito, reacciones e íconos
+
+- Se reemplazó la pose “pensando”, que tenía una cuadrícula de transparencia pintada, y se limpiaron descanso, aprobación, alegría, cariño, festejo y lectura. Los originales permanecen en `assets/foquitos/`; los maestros editados están en `assets/foquitos/final/`. [Galería antes](foquitos-gallery.png) · [galería después](foquitos-gallery-final.png), ambas sobre blanco y oscuro.
+- Al completar una actividad, Foquito elige la pose por título y área: dormir/descanso → manta, leer/estudiar → libro, actividad física/salud → alegría, relaciones → corazón, otras → aprobación. Si se completó todo el día, aparece luego el festejo. Se mantiene “pensando” durante el procesamiento y “leyendo” para el insight; los temporizadores no apagan una reacción más reciente.
+- El botón móvil y la reacción de escritorio ya no tienen placa circular, borde ni sombra. La reacción de escritorio queda junto al chat; en celular la muestra el botón flotante para no tapar la agenda.
+- Íconos PWA, Apple y favicon/ícono anclado usan PNG/ICO con alfa real; el favicon usa un recorte del rostro para ser legible pequeño. El service worker precarga las poses y subió a `foco-v64` para descartar íconos anteriores.
+
+Capturas de la app con pose de descanso: [390 oscuro](foquito-390-dark.png) · [390 claro](foquito-390-light.png) · [1280 oscuro](foquito-1280-dark.png) · [1280 claro](foquito-1280-light.png). Playwright usó un cliente Supabase simulado en memoria y verificó que completar “Dormir” muestra `foquito-sleepy.png` en el FAB y el panel. Los ocho PNG se revisaron sobre ambos fondos; `node --check`, alfa y tamaños de íconos, manifest y respuestas HTTP locales pasaron. La instalación/anclado del ícono en iOS/Windows todavía requiere comprobación en esos sistemas: pueden conservar el ícono anterior hasta volver a anclar la app.
