@@ -209,9 +209,14 @@ const I18N_UI = {
     progresoStreakLabel: 'racha de registros', progresoHeatmapHelp: 'Cada cuadro es un día. El color muestra cuántas actividades completaste.',
     progresoTrendHelp: 'Compará cómo avanzás con el tiempo.', progresoTrendPeriod: 'Período de la tendencia',
     progresoTrendNoPeriod: 'Sin actividades completadas en este período.', tareaSingular: 'tarea', tareaPlural: 'tareas',
+    progresoLoadError: 'No pudimos cargar tu progreso. Intentá de nuevo.', progresoRetry: 'Reintentar',
+    progresoStreakUnavailable: 'racha no disponible',
+    reviewFallbackPattern: 'Seguís construyendo el hábito de reflexionar.', reviewFallbackStrength: 'Tu disposición a reflexionar.',
+    reviewFallbackChallenge: 'Mantener el rumbo.', reviewWeekTitle: 'Semana de {done}/{total}',
     periodoSem: 'Sem', periodoMes: 'Mes', periodoAnio: 'Año',
     diaSingular: 'día', diaPlural: 'días',
-    subEstaSemana: 'esta semana', subUltimoMes: 'último mes', subEsteAnio: 'este año',
+    subEstaSemana: 'esta semana', subUltimoMes: 'último mes', subEsteAnio: 'últimos 12 meses',
+    reviewPatternLabel: 'Patrón', reviewStrengthLabel: 'Fortaleza', reviewChallengeLabel: 'Reto para la próxima semana',
     cmdPlaceholder: '¿Qué querés hacer? (Cmd+K)', cmdFooter: '↑↓ navegar · Enter seleccionar · Esc cerrar',
     cmdIrHoy: 'Ir a hoy', cmdDiaAnt: 'Día anterior', cmdDiaSig: 'Día siguiente',
     cmdVistaHoy: 'Vista Hoy', cmdVistaMes: 'Vista Mes', cmdVistaProyectos: 'Vista Proyectos',
@@ -319,9 +324,14 @@ const I18N_UI = {
     progresoStreakLabel: 'check-in streak', progresoHeatmapHelp: 'Each square is one day. Its color shows how many activities you completed.',
     progresoTrendHelp: 'See how your progress changes over time.', progresoTrendPeriod: 'Trend period',
     progresoTrendNoPeriod: 'No activities completed in this period.', tareaSingular: 'task', tareaPlural: 'tasks',
+    progresoLoadError: 'We couldn’t load your progress. Please try again.', progresoRetry: 'Try again',
+    progresoStreakUnavailable: 'streak unavailable',
+    reviewFallbackPattern: 'You are building a habit of reflection.', reviewFallbackStrength: 'Your willingness to reflect.',
+    reviewFallbackChallenge: 'Stay on course.', reviewWeekTitle: 'Week of {done}/{total}',
     periodoSem: 'Wk', periodoMes: 'Mo', periodoAnio: 'Yr',
     diaSingular: 'day', diaPlural: 'days',
-    subEstaSemana: 'this week', subUltimoMes: 'last month', subEsteAnio: 'this year',
+    subEstaSemana: 'this week', subUltimoMes: 'last month', subEsteAnio: 'last 12 months',
+    reviewPatternLabel: 'Pattern', reviewStrengthLabel: 'Strength', reviewChallengeLabel: 'Next week’s challenge',
     cmdPlaceholder: 'What do you want to do? (Cmd+K)', cmdFooter: '↑↓ navigate · Enter select · Esc close',
     cmdIrHoy: 'Go to today', cmdDiaAnt: 'Previous day', cmdDiaSig: 'Next day',
     cmdVistaHoy: 'Today view', cmdVistaMes: 'Month view', cmdVistaProyectos: 'Projects view',
@@ -1386,11 +1396,11 @@ function hoyRowHTML(ev, dateISO, mostrarHora) {
       : `<span class="hoy-row-time">${ev.start_time}</span>`;
   }
   return `
-    <div class="hoy-row" data-event-id="${ev.id}" onclick="openEventPanel(eventsCache['${dateISO}'].find(e=>e.id==='${ev.id}'), '${dateISO}')">
-      <button class="hoy-check${ev.done ? ' done' : ''}" onclick="event.stopPropagation();toggleDone('${ev.id}','${dateISO}')">
+    <div class="hoy-row" role="button" tabindex="0" aria-label="${escH(ev.title)}" data-event-id="${ev.id}" onclick="openEventPanel(eventsCache['${dateISO}'].find(e=>e.id==='${ev.id}'), '${dateISO}')">
+      <button class="hoy-check${ev.done ? ' done' : ''}" aria-label="${escH(ev.title)}" aria-pressed="${!!ev.done}" onclick="event.stopPropagation();toggleDone('${ev.id}','${dateISO}')">
         ${ev.done ? checkIconSVG() : ''}
       </button>
-      <span class="hoy-row-title${ev.done ? ' done' : ''}">${ev.title}</span>
+      <span class="hoy-row-title${ev.done ? ' done' : ''}">${escH(ev.title)}</span>
       ${horaHTML}
       <span class="hoy-row-chevron">›</span>
     </div>
@@ -1475,7 +1485,7 @@ function renderDiaGrid(dateISO, dayEvents) {
     alldayListEl.innerHTML = sinHora.map(ev => {
       const color = eventColor(ev.title, ev.area);
       return `<div class="sg-chip" role="button" tabindex="0" style="background:${color}4D;border-left-color:${color}"
-        onclick="openEventPanel(eventsCache['${dateISO}'].find(e=>e.id==='${ev.id}'), '${dateISO}')">${ev.title}</div>`;
+        onclick="openEventPanel(eventsCache['${dateISO}'].find(e=>e.id==='${ev.id}'), '${dateISO}')">${escH(ev.title)}</div>`;
     }).join('');
   }
 
@@ -1680,7 +1690,7 @@ function renderSemanaGrid() {
       const chips = sinHoraPorDia[i].map(ev => {
         const color = eventColor(ev.title, ev.area);
         return `<div class="sg-chip" role="button" tabindex="0" style="background:${color}4D;border-left-color:${color}"
-          onclick="openEventPanel(eventsCache['${dateISO}'].find(e=>e.id==='${ev.id}'), '${dateISO}')">${ev.title}</div>`;
+          onclick="openEventPanel(eventsCache['${dateISO}'].find(e=>e.id==='${ev.id}'), '${dateISO}')">${escH(ev.title)}</div>`;
       }).join('');
       return `<div class="sg-allday-col">${chips}</div>`;
     }).join('');
@@ -4972,10 +4982,10 @@ Respondé SOLO con JSON válido sin markdown:
 
   if (!parsed) {
     parsed = {
-      titulo: `Semana de ${done}/${total}`,
-      patron: 'Seguís construyendo el hábito de reflexionar.',
-      fortaleza: reviewAnswers[1] || 'Tu disposición a reflexionar.',
-      reto: reviewAnswers[3] || 'Mantener el rumbo.'
+      titulo: t('reviewWeekTitle').replace('{done}', done).replace('{total}', total),
+      patron: t('reviewFallbackPattern'),
+      fortaleza: reviewAnswers[1] || t('reviewFallbackStrength'),
+      reto: reviewAnswers[3] || t('reviewFallbackChallenge')
     };
   }
 
@@ -4992,18 +5002,18 @@ Respondé SOLO con JSON válido sin markdown:
   const fichaEl = document.getElementById('rv-ficha-content');
   if (fichaEl) {
     fichaEl.innerHTML = `
-      <div class="ficha-titulo">${parsed.titulo}</div>
+      <div class="ficha-titulo">${escH(parsed.titulo || '')}</div>
       <div class="ficha-section">
-        <div class="ficha-label">Patrón</div>
-        <div class="ficha-text">${parsed.patron}</div>
+        <div class="ficha-label" data-i18n="reviewPatternLabel">${t('reviewPatternLabel')}</div>
+        <div class="ficha-text">${escH(parsed.patron || '')}</div>
       </div>
       <div class="ficha-section">
-        <div class="ficha-label">Fortaleza</div>
-        <div class="ficha-text">${parsed.fortaleza}</div>
+        <div class="ficha-label" data-i18n="reviewStrengthLabel">${t('reviewStrengthLabel')}</div>
+        <div class="ficha-text">${escH(parsed.fortaleza || '')}</div>
       </div>
       <div class="ficha-section">
-        <div class="ficha-label">Reto próxima semana</div>
-        <div class="ficha-text" style="color:var(--accent)">${parsed.reto}</div>
+        <div class="ficha-label" data-i18n="reviewChallengeLabel">${t('reviewChallengeLabel')}</div>
+        <div class="ficha-text" style="color:var(--accent)">${escH(parsed.reto || '')}</div>
       </div>
     `;
   }
@@ -5329,11 +5339,9 @@ async function showPalabra() {
     .limit(8);
 
   const prevEl = document.getElementById('palabras-previas');
-  if (prevEl && historia?.length) {
-    prevEl.innerHTML = historia.map(w =>
-      `<span class="palabra-chip">${w.word}</span>`
-    ).join('');
-  }
+  if (prevEl) prevEl.innerHTML = (historia || []).map(w =>
+    `<span class="palabra-chip">${escH(w.word)}</span>`
+  ).join('');
 
   document.getElementById('palabra-overlay').style.display = 'flex';
   setTimeout(() => inp?.focus(), 100);
@@ -5377,7 +5385,7 @@ async function renderPalabrasHistoria() {
   }
 
   el.innerHTML = data.map(w =>
-    `<span class="palabra-chip">${w.word}</span>`
+    `<span class="palabra-chip">${escH(w.word)}</span>`
   ).join('');
 }
 
@@ -5685,10 +5693,23 @@ async function renderEquipo() {
   const since60d = toISO(new Date(Date.now() - 60  * 86400000));
   const since1y  = toISO(new Date(Date.now() - 365 * 86400000));
 
-  const [evRes, streakRes] = await Promise.all([
-    db.from('events').select('date, done').eq('user_id', uid).gte('date', since1y),
-    db.from('daily_checkins').select('date').eq('user_id', uid).gte('date', since60d).order('date', { ascending: false })
-  ]);
+  let evRes, streakRes;
+  try {
+    [evRes, streakRes] = await Promise.all([
+      db.from('events').select('date, done').eq('user_id', uid).gte('date', since1y),
+      db.from('daily_checkins').select('date').eq('user_id', uid).gte('date', since60d).order('date', { ascending: false })
+    ]);
+  } catch (error) {
+    console.error('renderEquipo:', error);
+    evRes = { error };
+    streakRes = { error };
+  }
+  if (evRes.error) {
+    wrap.innerHTML = `<div class="tuana-wrap"><div class="tuana-header"><h1 class="tuana-title" data-i18n="progresoTitulo">${t('progresoTitulo')}</h1></div>
+      <div class="tuana-card tuana-error-card" role="alert"><p data-i18n="progresoLoadError">${t('progresoLoadError')}</p>
+      <button type="button" onclick="renderEquipo()" data-i18n="progresoRetry">${t('progresoRetry')}</button></div></div>`;
+    return;
+  }
 
   const events     = evRes.data      || [];
   const streakData = streakRes.data  || [];
@@ -5753,12 +5774,18 @@ async function renderEquipo() {
   const elRacha = document.getElementById('tu-racha');
   let streak = 0;
   if (elRacha) {
-    const checkinSet = new Set(streakData.map(c => c.date));
-    const cursor = new Date(); cursor.setHours(0,0,0,0);
-    if (!checkinSet.has(toISO(cursor))) cursor.setDate(cursor.getDate() - 1);
-    while (checkinSet.has(toISO(cursor))) { streak++; cursor.setDate(cursor.getDate() - 1); }
-    // Antes mostraba "—" en 0 — se confundía con "no se pudo calcular".
-    elRacha.textContent = streak + ' ' + (streak === 1 ? t('diaSingular') : t('diaPlural'));
+    if (streakRes.error) {
+      elRacha.textContent = '—';
+      const label = elRacha.nextElementSibling;
+      if (label) { label.dataset.i18n = 'progresoStreakUnavailable'; label.textContent = t('progresoStreakUnavailable'); }
+    } else {
+      const checkinSet = new Set(streakData.map(c => c.date));
+      const cursor = new Date(); cursor.setHours(0,0,0,0);
+      if (!checkinSet.has(toISO(cursor))) cursor.setDate(cursor.getDate() - 1);
+      while (checkinSet.has(toISO(cursor))) { streak++; cursor.setDate(cursor.getDate() - 1); }
+      // Antes mostraba "—" en 0 — se confundía con "no se pudo calcular".
+      elRacha.textContent = streak + ' ' + (streak === 1 ? t('diaSingular') : t('diaPlural'));
+    }
   }
 
   // ── Tendencia ────────────────────────────────────────────────

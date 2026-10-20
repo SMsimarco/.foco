@@ -5228,6 +5228,9 @@ button:active:not(:disabled) { filter: brightness(.94); }
 .tuana-hl-val { font-size: 27px; font-weight: 600; letter-spacing: -.04em; }
 .tuana-hl-lbl { text-transform: none; letter-spacing: 0; line-height: 1.3; }
 .tuana-card { padding: 20px; border-color: var(--border2); border-radius: var(--radius-panel); background: var(--surface); box-shadow: var(--shadow-card); }
+.tuana-error-card { align-items: flex-start; gap: 14px; }
+.tuana-error-card p { color: var(--text2); font-size: 14px; }
+.tuana-error-card button { min-height: 44px; padding: 0 16px; border: 0; border-radius: var(--radius-control); background: var(--accent-solid); color: var(--on-accent); font-weight: 600; cursor: pointer; }
 .tuana-card-help { color: var(--text2); font-size: 12px; line-height: 1.5; margin-top: -4px; }
 .tuana-chart { height: 110px; }
 .tuana-chart-wrap { margin-top: 10px; }
