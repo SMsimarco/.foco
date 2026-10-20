@@ -115,6 +115,11 @@ const I18N_UI = {
   es: {
     sugWeek: 'Tu semana', sugConnectionError: 'No se pudo conectar con la IA.', sugEmptyWeek: 'Semana sin eventos', sugCompleted: '% completado', sugFallbackSummary: 'Completaste {done} de {total} eventos esta semana.', sugFallbackTip: 'La próxima semana, agendá menos pero cumplí más.',
     a11yPrevious: 'Anterior', a11yNext: 'Siguiente', a11yAdd: 'Agregar', a11yLanguage: 'Cambiar idioma', a11yFoquito: 'Hablar con Foquito', a11ySend: 'Enviar mensaje', a11ySpeak: 'Dictar mensaje', a11yTask: 'Cambiar estado de la tarea',
+    welcomeLanguageTitle: 'Elegí tu idioma', welcomeLanguageDesc: 'Podés cambiarlo después desde Ajustes.', languageSpanish: 'Español', languageEnglish: 'English',
+    settingsTitle: 'Ajustes', settingsLanguage: 'Idioma', settingsLanguageDesc: 'Elegí el idioma de la app y de Foquito.',
+    addWithFoquito: 'Agregar con Foquito', hoyUsageHint: 'Para sumar algo, tocá Agregar y escribile a Foquito.',
+    weekUsageHint: 'Lista para leer cada actividad; Grilla para ver toda la semana.', monthUsageHint: 'Tocá un día para ver sus actividades.',
+    foqAddHintTitle: 'Escribile a Foquito', foqAddHintExample: 'Por ejemplo: «Mañana a las 9, gimnasio».',
     authTagline: 'Organizá tu semana.', authOr: 'o con email', authNamePh: 'Tu nombre',
     authEmailPh: 'Email', authPasswordPh: 'Contraseña', authEnter: 'Entrar',
     authNoAccount: '¿No tenés cuenta? ', authRegister: 'Registrate',
@@ -153,7 +158,7 @@ const I18N_UI = {
     projColor: 'Color', projUnoPorLinea: 'uno por línea', projCronoAyuda: 'cuándo | qué | estado (pendiente, ahora, listo)',
     projClientePh: 'Para quién es', projViaPh: 'Directo, Qenti, Antic...', projMontoPh: 'USD 1.000 · 50/50', projPlazoPh: '6 semanas',
     projProximoPh: 'Lo siguiente que tiene que pasar',
-    phubTitle: 'Tus proyectos', phubLead: 'Tocá un proyecto para ver su tablero completo.', projDefineNext: 'Definí el próximo paso',
+    phubTitle: 'Tus proyectos', phubLead: 'Organizá fechas, pendientes y próximos pasos en cada tablero.', projDefineNext: 'Definí el próximo paso', phubCrearPrimero: 'Crear mi primer proyecto',
     phubProxima: 'Próxima fecha', phubFecha: 'Fecha', phubSinFechas: 'Sin fechas próximas', phubPendientes: 'Pendientes',
     phubSinPendientes: 'Nada pendiente', phubActivos: 'Proyectos activos', phubEnMarcha: 'en marcha', phubEntregados: 'Entregados',
     phubEntrega: 'Entrega', phubPaso: 'pasó', phubEn: 'en', phubManana: 'mañana', phubDias: 'días',
@@ -208,6 +213,11 @@ const I18N_UI = {
   en: {
     sugWeek: 'Your week', sugConnectionError: 'Could not connect to the AI.', sugEmptyWeek: 'No events this week', sugCompleted: '% completed', sugFallbackSummary: 'You completed {done} of {total} events this week.', sugFallbackTip: 'Next week, schedule less and follow through on more.',
     a11yPrevious: 'Previous', a11yNext: 'Next', a11yAdd: 'Add', a11yLanguage: 'Change language', a11yFoquito: 'Talk to Foquito', a11ySend: 'Send message', a11ySpeak: 'Dictate message', a11yTask: 'Toggle task completion',
+    welcomeLanguageTitle: 'Choose your language', welcomeLanguageDesc: 'You can change it later in Settings.', languageSpanish: 'Español', languageEnglish: 'English',
+    settingsTitle: 'Settings', settingsLanguage: 'Language', settingsLanguageDesc: 'Choose the language for the app and Foquito.',
+    addWithFoquito: 'Add with Foquito', hoyUsageHint: 'To add something, tap Add and tell Foquito.',
+    weekUsageHint: 'List to read each activity; Grid to see the whole week.', monthUsageHint: 'Tap a day to see its activities.',
+    foqAddHintTitle: 'Message Foquito', foqAddHintExample: 'For example: “Gym tomorrow at 9 am”.',
     authTagline: 'Organize your week.', authOr: 'or with email', authNamePh: 'Your name',
     authEmailPh: 'Email', authPasswordPh: 'Password', authEnter: 'Sign in',
     authNoAccount: "Don't have an account? ", authRegister: 'Sign up',
@@ -246,7 +256,7 @@ const I18N_UI = {
     projColor: 'Color', projUnoPorLinea: 'one per line', projCronoAyuda: 'when | what | status (pendiente, ahora, listo)',
     projClientePh: 'Who it is for', projViaPh: 'Direct, agency...', projMontoPh: 'USD 1,000 · 50/50', projPlazoPh: '6 weeks',
     projProximoPh: 'The next thing that has to happen',
-    phubTitle: 'Your projects', phubLead: 'Tap a project to see its full board.', projDefineNext: 'Define the next step',
+    phubTitle: 'Your projects', phubLead: 'Keep dates, tasks and next steps together on each board.', projDefineNext: 'Define the next step', phubCrearPrimero: 'Create my first project',
     phubProxima: 'Next date', phubFecha: 'Date', phubSinFechas: 'No upcoming dates', phubPendientes: 'To do',
     phubSinPendientes: 'Nothing pending', phubActivos: 'Active projects', phubEnMarcha: 'active', phubEntregados: 'Delivered',
     phubEntrega: 'Due', phubPaso: 'past', phubEn: 'in', phubManana: 'tomorrow', phubDias: 'days',
@@ -327,21 +337,11 @@ function applyI18nDom() {
     mesDayNames.innerHTML = [1,2,3,4,5,6,0].map(i => `<div class="mes-day-name">${DAYS[i]}</div>`).join('');
   }
 
-  const langLabel = document.getElementById('lang-toggle-label');
-  if (langLabel) langLabel.textContent = appLang.toUpperCase();
-  const authLangLabel = document.getElementById('auth-lang-toggle-label');
-  if (authLangLabel) authLangLabel.textContent = appLang.toUpperCase();
   document.documentElement.lang = appLang;
 }
 
-// Elegís el idioma una vez (auth-screen, antes de tener cuenta) y ahí queda
-// — cambiarlo después es una acción rara de configuración, no algo que pasa
-// en caliente mientras usás la app. Por eso esto solo guarda + repinta los
-// textos estáticos (sirve para el auth-screen, donde recargar tiraría lo que
-// la persona ya tipeó en el form). El cambio post-login real está en
-// toggleLanguage(), que sí recarga — mucho más simple y confiable que
-// mantener a mano un re-render de cada vista posible + parchear el saludo
-// de Foquito en memoria.
+// La primera elección sucede antes del login. Más adelante el idioma sólo
+// se modifica desde Ajustes; allí recargamos para regenerar las vistas.
 function setLanguage(lang) {
   if (lang !== 'es' && lang !== 'en') return;
   appLang = lang;
@@ -350,8 +350,51 @@ function setLanguage(lang) {
   applyI18nDom();
 }
 
-function toggleLanguage() {
-  setLanguage(appLang === 'es' ? 'en' : 'es');
+let resolveInitialLanguage;
+function waitForInitialLanguage() {
+  hideBootLoading();
+  const welcome = document.getElementById('language-welcome');
+  welcome.style.display = 'grid';
+  welcome.querySelector('h1')?.focus();
+  return new Promise(resolve => { resolveInitialLanguage = resolve; });
+}
+
+function chooseInitialLanguage(lang) {
+  if (!resolveInitialLanguage) return;
+  setLanguage(lang);
+  document.getElementById('language-welcome').style.display = 'none';
+  document.getElementById('boot-loading').style.display = 'flex';
+  resolveInitialLanguage();
+  resolveInitialLanguage = null;
+}
+
+function openSettings() {
+  const dialog = document.getElementById('settings-dialog');
+  dialog.classList.add('open');
+  dialog.setAttribute('aria-hidden', 'false');
+  document.getElementById('settings-overlay').classList.add('open');
+  dialog.querySelectorAll('[data-lang]').forEach(btn => {
+    const selected = btn.dataset.lang === appLang;
+    btn.setAttribute('aria-pressed', String(selected));
+    btn.classList.toggle('selected', selected);
+  });
+  setTimeout(() => {
+    if (dialog.classList.contains('open')) dialog.querySelector('.settings-close')?.focus();
+  }, 50);
+}
+
+function closeSettings() {
+  const dialog = document.getElementById('settings-dialog');
+  if (!dialog.classList.contains('open')) return;
+  dialog.classList.remove('open');
+  dialog.setAttribute('aria-hidden', 'true');
+  document.getElementById('settings-overlay').classList.remove('open');
+  document.getElementById('settings-btn')?.focus({ preventScroll: true });
+}
+
+function chooseSettingsLanguage(lang) {
+  if (lang === appLang) { closeSettings(); return; }
+  setLanguage(lang);
   location.reload();
 }
 
@@ -796,6 +839,7 @@ function toggleNotif() {
 // ── INICIALIZACIÓN ──────────────────────────────────────────
 
 async function init() {
+  if (!localStorage.getItem('foco-lang')) await waitForInitialLanguage();
   // Verificar sesión existente directamente — no depender solo de onAuthStateChange.
   // Mientras esto resuelve queda #boot-loading en pantalla (ver index.html), NO
   // login — así un usuario con sesión válida nunca ve el form de login parpadear.
@@ -1941,9 +1985,11 @@ function renderProjHome() {
 
   // Proyectos activos + entregados
   const grid = document.getElementById('phub-grid');
+  const createBtn = document.getElementById('phub-create-btn');
+  if (createBtn) createBtn.hidden = !activos.length;
   if (grid) grid.innerHTML = activos.length
     ? activos.map(proyectoCardHTML).join('')
-    : `<div class="ptab-empty">${t('sinProyectosAun')}</div>`;
+    : `<div class="ptab-empty phub-empty"><span data-i18n="sinProyectosAun">${t('sinProyectosAun')}</span><button type="button" onclick="openProjModal(null)" data-i18n="phubCrearPrimero">${t('phubCrearPrimero')}</button></div>`;
   const cnt = document.getElementById('phub-count');
   if (cnt) cnt.textContent = `${activos.length} ${t('phubEnMarcha')}`;
   const hechos = projBoardCache.filter(p => p.estado === 'hecho');
@@ -2995,6 +3041,7 @@ function initFoquitoDesktop() {
 
 function toggleFoquitoWidget() {
   _foqOpen = !_foqOpen;
+  if (!_foqOpen) hideFoquitoAddHint();
   document.getElementById('foq-panel').classList.toggle('open', _foqOpen);
   document.getElementById('foq-fab').classList.toggle('open', _foqOpen);
   syncFoquitoVisibility();
@@ -3009,6 +3056,17 @@ function toggleFoquitoWidget() {
     }
     document.getElementById('foq-input')?.focus();
   }
+}
+
+function openFoquitoForAdd() {
+  if (!_foqOpen) toggleFoquitoWidget();
+  document.getElementById('foq-add-hint').hidden = false;
+  document.getElementById('foq-input')?.focus();
+}
+
+function hideFoquitoAddHint() {
+  const hint = document.getElementById('foq-add-hint');
+  if (hint) hint.hidden = true;
 }
 
 function addFoqBubble(text, who) {
@@ -3454,10 +3512,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Escape — cerrar panel, command palette y quick-add
     if (e.key === 'Escape') {
+      if (document.getElementById('settings-dialog')?.classList.contains('open')) {
+        closeSettings();
+        return;
+      }
       closeCmd();
       if (_foqOpen && !window.matchMedia('(min-width: 1024px)').matches) toggleFoquitoWidget();
       if (document.getElementById('event-panel')?.classList.contains('open')) closeEventPanel();
       if (document.getElementById('quickadd-modal')?.classList.contains('open')) closeQuickAdd();
+      return;
+    }
+
+    if (e.key === 'Tab' && document.getElementById('settings-dialog')?.classList.contains('open')) {
+      const controls = [...document.querySelectorAll('#settings-dialog button')];
+      const next = e.shiftKey ? controls[controls.length - 1] : controls[0];
+      if (document.activeElement === (e.shiftKey ? controls[0] : controls[controls.length - 1])) {
+        e.preventDefault();
+        next.focus();
+      }
       return;
     }
 
@@ -4556,11 +4628,11 @@ const CMD_ACTIONS = [
   { key: 'cmdObjetivoSemanal', icon: '◈', hint: '', fn: () => { closeCmd(); openGoalEdit(); } },
   { key: 'cmdPulsoDia',     icon: '◉',  hint: '',  fn: () => { closeCmd(); showEstadoDia(); } },
   { key: 'cmdPalabraSemana', icon: '❋', hint: '',  fn: () => { closeCmd(); showPalabra(); } },
-  { key: 'cmdNuevoEvento',  icon: '+',  hint: 'N', fn: () => { closeCmd(); toggleFoquitoWidget(); } },
+  { key: 'cmdNuevoEvento',  icon: '+',  hint: 'N', fn: () => { closeCmd(); openFoquitoForAdd(); } },
   { key: 'cmdRehacerSemana', icon: '↻', hint: '',  fn: () => { closeCmd(); startFoquitoOnboarding(); } },
   { key: 'cmdModoFoco',     icon: '✿',  hint: '',  fn: () => { closeCmd(); toggleAmbientMode(); } },
   { key: 'cmdCambiarTema',  icon: '☾',  hint: '',  fn: () => { closeCmd(); toggleTheme(); } },
-  { key: 'cmdCambiarIdioma', icon: '◐',  hint: '',  fn: () => { closeCmd(); toggleLanguage(); } },
+  { key: 'cmdCambiarIdioma', icon: '◐',  hint: '',  fn: () => { closeCmd(); openSettings(); } },
   { key: 'cmdCerrarSesion', icon: '↪',  hint: '',  fn: () => logout() },
 ];
 

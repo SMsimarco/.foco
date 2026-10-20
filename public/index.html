@@ -32,12 +32,21 @@
   <span class="boot-logo">foco.</span>
 </div>
 
+<!-- Primera visita: elegir idioma antes de entrar a la app. -->
+<div id="language-welcome" class="language-welcome" style="display:none" role="dialog" aria-modal="true" aria-labelledby="language-welcome-title">
+  <div class="language-welcome-card">
+    <span class="language-welcome-logo">foco.</span>
+    <h1 id="language-welcome-title" data-i18n="welcomeLanguageTitle" tabindex="-1">Elegí tu idioma</h1>
+    <p data-i18n="welcomeLanguageDesc">Podés cambiarlo después desde Ajustes.</p>
+    <div class="language-welcome-options">
+      <button type="button" onclick="chooseInitialLanguage('es')" lang="es"><span data-i18n="languageSpanish">Español</span><span aria-hidden="true">→</span></button>
+      <button type="button" onclick="chooseInitialLanguage('en')" lang="en"><span data-i18n="languageEnglish">English</span><span aria-hidden="true">→</span></button>
+    </div>
+  </div>
+</div>
+
 <!-- AUTH SCREEN -->
 <div id="auth-screen" class="auth-screen" style="display:none">
-  <button class="lang-toggle-btn auth-lang-toggle-btn" id="auth-lang-toggle-btn" data-i18n-aria="a11yLanguage" onclick="setLanguage(appLang === 'es' ? 'en' : 'es')" title="Language / Idioma">
-    <span id="auth-lang-toggle-label">ES</span>
-  </button>
-
   <div class="auth-foq-hint" onclick="clickAuthFoquitoHint()" title="Registrate">
     <div class="auth-foq-bubble" id="auth-foq-msg"></div>
   </div>
@@ -167,8 +176,8 @@
     <span id="live-clock" class="live-clock"></span>
 
     <div class="header-right">
-      <button class="lang-toggle-btn" id="lang-toggle-btn" data-i18n-aria="a11yLanguage" onclick="toggleLanguage()" title="Language / Idioma">
-        <span id="lang-toggle-label">ES</span>
+      <button class="settings-btn" id="settings-btn" onclick="openSettings()" data-i18n-title="settingsTitle" data-i18n-aria="settingsTitle" title="Ajustes" aria-haspopup="dialog">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 8.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7Z" stroke="currentColor" stroke-width="1.6"/><path d="M9.7 2.9h4.6l.5 2.1c.6.2 1.1.5 1.6.9l2.1-.7 2.3 4-1.7 1.5a8 8 0 0 1 0 1.8l1.7 1.5-2.3 4-2.1-.7c-.5.4-1 .7-1.6.9l-.5 2.1H9.7l-.5-2.1c-.6-.2-1.1-.5-1.6-.9l-2.1.7-2.3-4 1.7-1.5a8 8 0 0 1 0-1.8L3.2 9.2l2.3-4 2.1.7c.5-.4 1-.7 1.6-.9l.5-2.1Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
       </button>
       <button class="theme-toggle-btn" id="theme-toggle-btn" onclick="toggleTheme()" title="Cambiar tema" data-i18n-title="themeToggleTitle" data-i18n-aria="themeToggleTitle">
         <span id="theme-toggle-icon">☾</span>
@@ -220,10 +229,11 @@
                 <button class="hoy-day-nav-btn" onclick="changeDia(-1)" data-i18n-aria="a11yPrevious">‹</button>
                 <button class="hoy-day-nav-btn" onclick="changeDia(1)" data-i18n-aria="a11yNext">›</button>
               </div>
-              <button class="hoy-add-btn" onclick="toggleFoquitoWidget()" data-i18n-aria="a11yAdd"><span aria-hidden="true">+</span><span data-i18n="a11yAdd">Agregar</span></button>
+              <button class="hoy-add-btn" onclick="openFoquitoForAdd()" data-i18n-aria="addWithFoquito"><span aria-hidden="true">+</span><span data-i18n="a11yAdd">Agregar</span></button>
             </div>
           </div>
           <div class="hoy-summary" id="hoy-summary" aria-live="polite"></div>
+          <p class="view-usage-hint" data-i18n="hoyUsageHint">Para sumar algo, tocá Agregar y escribile a Foquito.</p>
         </div>
         <div class="hoy-section" id="hoy-section-foco">
           <div class="hoy-section-hd" data-i18n="hoySectionFoco">Tu foco</div>
@@ -265,6 +275,7 @@
         <button class="sg-mobile-switch-btn active" id="sg-layout-list" onclick="setWeekMobileLayout('list')" aria-pressed="true" data-i18n="sgList">Lista</button>
         <button class="sg-mobile-switch-btn" id="sg-layout-grid" onclick="setWeekMobileLayout('grid')" aria-pressed="false" data-i18n="sgGrid">Grilla</button>
       </div>
+      <p class="view-usage-hint view-usage-hint--week" data-i18n="weekUsageHint">Lista para leer cada actividad; Grilla para ver toda la semana.</p>
       <div class="sg-mobile-list" id="sg-mobile-list"></div>
 
       <div class="sg-scrollx">
@@ -295,7 +306,7 @@
           <div class="phub-intro">
             <div class="pdet-eyebrow" id="phub-today"></div>
             <h2 class="phub-title" data-i18n="phubTitle">Tus proyectos</h2>
-            <p class="pdet-lead" data-i18n="phubLead">Tocá un proyecto para ver su tablero completo.</p>
+            <p class="pdet-lead" data-i18n="phubLead">Organizá fechas, pendientes y próximos pasos en cada tablero.</p>
           </div>
 
           <div class="phub-hero">
@@ -332,7 +343,7 @@
           <div class="phub-sec-hd">
             <span class="phub-sec-title" data-i18n="phubActivos">Proyectos activos</span>
             <span class="ptab-n" id="phub-count"></span>
-            <button class="slab-add-btn" onclick="openProjModal(null)" title="Nuevo proyecto" data-i18n-aria="a11yAdd">+</button>
+            <button class="phub-create-btn" id="phub-create-btn" onclick="openProjModal(null)" data-i18n-aria="phubNuevo"><span aria-hidden="true">+</span><span data-i18n="phubNuevo">Nuevo proyecto</span></button>
           </div>
           <div class="ptab-grid" id="phub-grid"></div>
 
@@ -369,6 +380,7 @@
           <button class="mes-nav-btn" onclick="changeMes(1)" data-i18n-aria="a11yNext">›</button>
         </div>
       </div>
+      <p class="view-usage-hint view-usage-hint--month" data-i18n="monthUsageHint">Tocá un día para ver sus actividades.</p>
       <div class="mes-day-names" id="mes-day-names"></div>
       <div class="mes-grid" id="mes-grid"></div>
     </div>
@@ -492,6 +504,10 @@
       </div>
     </div>
     <div class="foq-scroll" id="foq-messages"></div>
+    <div id="foq-add-hint" class="foq-add-hint" hidden>
+      <strong data-i18n="foqAddHintTitle">Escribile a Foquito</strong>
+      <span data-i18n="foqAddHintExample">Por ejemplo: «Mañana a las 9, gimnasio».</span>
+    </div>
     <div class="foq-input-bar">
       <button type="button" class="foq-mic-btn" id="foq-mic-btn" data-i18n-aria="a11ySpeak" data-i18n-title="a11ySpeak" onclick="toggleFoquitoMic()" title="Hablar">
         <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
@@ -500,7 +516,7 @@
           <path d="M9 14v2.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
         </svg>
       </button>
-      <input id="foq-input" data-i18n-aria="foqInputPh" type="text" placeholder="Escribile a Foquito..." data-i18n-ph="foqInputPh"
+      <input id="foq-input" data-i18n-aria="foqInputPh" type="text" placeholder="Escribile a Foquito..." data-i18n-ph="foqInputPh" oninput="hideFoquitoAddHint()"
         onkeydown="if(event.key==='Enter')sendFoquitoMessage()"/>
       <button type="button" class="foq-send-btn" id="foq-send-btn" data-i18n-aria="a11ySend" data-i18n-title="a11ySend" onclick="sendFoquitoMessage()" title="Enviar">
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
@@ -941,6 +957,23 @@
 
 <!-- TOAST CONTAINER -->
 <div id="toast-container"></div>
+
+<!-- Ajustes: el idioma se cambia deliberadamente desde acá. -->
+<div id="settings-overlay" class="settings-overlay" onclick="closeSettings()"></div>
+<div id="settings-dialog" class="settings-dialog" role="dialog" aria-modal="true" aria-labelledby="settings-dialog-title" aria-hidden="true">
+  <div class="settings-dialog-head">
+    <h2 id="settings-dialog-title" data-i18n="settingsTitle">Ajustes</h2>
+    <button type="button" class="settings-close" onclick="closeSettings()" data-i18n-aria="cerrar" aria-label="Cerrar">×</button>
+  </div>
+  <div class="settings-dialog-body">
+    <div class="settings-label" data-i18n="settingsLanguage">Idioma</div>
+    <p class="settings-description" data-i18n="settingsLanguageDesc">Elegí el idioma de la app y de Foquito.</p>
+    <div class="settings-language-options" role="group" data-i18n-aria="settingsLanguage">
+      <button type="button" data-lang="es" onclick="chooseSettingsLanguage('es')"><span data-i18n="languageSpanish">Español</span></button>
+      <button type="button" data-lang="en" onclick="chooseSettingsLanguage('en')"><span data-i18n="languageEnglish">English</span></button>
+    </div>
+  </div>
+</div>
 
 <!-- Reacción junto al chat en escritorio; en celular se anima el FAB. -->
 <div id="foq-reaction">
