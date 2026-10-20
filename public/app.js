@@ -662,6 +662,7 @@ function hasConflict(evs, ev) {
   return evs.some(o =>
     o.id !== ev.id &&
     !o.done && !ev.done &&
+    o.start_time && o.end_time && ev.start_time && ev.end_time &&
     timeToMin(o.start_time) < timeToMin(ev.end_time) &&
     timeToMin(ev.start_time) < timeToMin(o.end_time)
   );
@@ -932,6 +933,7 @@ function hideBootLoading() {
 }
 
 function showAuth() {
+  window.FocoMoments?.resetSession();
   hideBootLoading();
   document.getElementById('auth-screen').style.display = 'flex';
   document.getElementById('app').style.display = 'none';
@@ -944,6 +946,7 @@ function showAuth() {
 }
 
 async function showApp() {
+  window.FocoMoments?.resetSession();
   hideBootLoading();
   document.getElementById('auth-screen').style.display = 'none';
   document.getElementById('app').style.display = 'flex';
@@ -1442,6 +1445,7 @@ function renderHoy() {
 
   renderDiaGrid(dateISO, dayEvents);
   updateMomentum();
+  window.FocoMoments?.renderToday();
 }
 
 // Arranca el scroll de la vista Día justo antes de la primera actividad con
@@ -2779,6 +2783,7 @@ function renderConflicts() {
       if (hasConflict(evs, ev)) {
         const other = evs.find(o =>
           o.id !== ev.id && !o.done &&
+          o.start_time && o.end_time && ev.start_time && ev.end_time &&
           timeToMin(o.start_time) < timeToMin(ev.end_time) &&
           timeToMin(ev.start_time) < timeToMin(o.end_time)
         );
@@ -3582,6 +3587,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Atajos de teclado globales
   document.addEventListener('keydown', e => {
+    // El diálogo nativo contiene su foco y maneja Escape; no activar atajos detrás.
+    if (document.getElementById('moment-dialog')?.open) return;
     const tag = document.activeElement?.tagName;
     const inInput = tag === 'INPUT' || tag === 'TEXTAREA';
 
@@ -4173,6 +4180,7 @@ async function loadTemplates() {
 
   const groups = {};
   data.forEach(ev => {
+    if (!ev.start_time || !ev.end_time) return;
     const key = ev.title.toLowerCase().trim();
     if (!groups[key]) groups[key] = { title: ev.title, starts: [], ends: [], count: 0 };
     groups[key].count++;
@@ -5793,6 +5801,7 @@ async function renderEquipo() {
   // no hay ninguna, mostramos una explicación en vez de un SVG vacío.
   const diasConCompletadas = new Set(tuanaEventsCache.filter(e => e.done).map(e => e.date)).size;
   renderTendenciaCard(diasConCompletadas > 0);
+  window.FocoMoments?.renderProgress();
 }
 
 // Card "Tendencia" — gráfico real si hay completadas, estado vacío si no.

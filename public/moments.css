@@ -1,0 +1,85 @@
+/* Momentos: controles amplios, misma jerarquía y superficies que la agenda. */
+.mom-launchpad, .mom-progress-actions { display: grid; gap: 10px; margin: 20px 0 28px; }
+.mom-action-card { display: flex; align-items: center; gap: 14px; width: 100%; min-width: 0; padding: 18px; text-align: left; color: var(--text); background: var(--card); border: 1px solid var(--border2); border-radius: var(--radius-card); cursor: pointer; transition: border-color .18s var(--ease), background .18s var(--ease); }
+.mom-action-card > span:nth-child(2) { flex: 1; min-width: 0; }
+.mom-action-card strong, .mom-action-card small { display: block; }
+.mom-action-card strong { font-size: 15px; font-weight: 500; line-height: 1.45; }
+.mom-action-card small { font-size: 13px; color: var(--text3); margin-top: 4px; line-height: 1.5; }
+.mom-action-card > span:last-child { color: var(--text3); }
+.mom-action-icon { flex: 0 0 40px; height: 40px; display: grid; place-items: center; font-size: 24px; color: var(--accent-text); background: rgba(var(--accent-rgb), .1); border-radius: 12px; }
+.mom-action-card:hover { border-color: var(--accent-text); }
+.mom-action-card:active { background: var(--bg3); }
+#moment-today { display: flex; flex-wrap: wrap; justify-content: flex-end; align-items: center; gap: 12px; margin: 0 0 16px; }
+.mom-yesterday { flex: 1 1 220px; min-width: 0; display: grid; gap: 4px; padding-left: 12px; border-left: 2px solid var(--accent-text); }
+.mom-yesterday small { color: var(--text3); }
+.mom-yesterday span { overflow-wrap: anywhere; line-height: 1.5; }
+.mom-dialog { width: calc(100% - 16px); max-width: 620px; max-height: calc(100% - 20px - env(safe-area-inset-top)); margin: auto auto max(8px, env(safe-area-inset-bottom)); padding: 0 20px max(20px, env(safe-area-inset-bottom)); background: var(--bg2); color: var(--text); border: 1px solid var(--border2); border-radius: 24px; box-shadow: var(--shadow-panel); overflow-y: auto; overscroll-behavior: contain; }
+.mom-dialog[open] { animation: mom-enter .2s var(--ease); }
+.mom-dialog::backdrop { background: rgba(0, 0, 0, .65); }
+.mom-dialog-head { display: flex; align-items: center; gap: 12px; position: sticky; top: 0; padding: 20px 0 16px; z-index: 1; background: var(--bg2); border-bottom: 1px solid var(--border2); }
+.mom-dialog-head img { width: 44px; height: 50px; object-fit: contain; flex-shrink: 0; }
+.mom-dialog-head > div { flex: 1; min-width: 0; }
+.mom-dialog-head small { color: var(--text3); font-size: 11px; line-height: 1.5; }
+.mom-dialog-head h2 { font: 500 20px/1.25 'Geist', sans-serif; letter-spacing: -.5px; margin-top: 4px; overflow-wrap: anywhere; }
+.mom-dialog-head button { flex: 0 0 44px; font-size: 26px; padding: 0; }
+#moment-intro { color: var(--text3); margin: 16px 0 24px; font-size: 14px; line-height: 1.6; }
+#moment-body { display: grid; gap: 20px; }
+#moment-body p, #moment-status { line-height: 1.65; font-size: 14px; color: var(--text2); overflow-wrap: anywhere; }
+#moment-body small, .mom-muted { color: var(--text3); font-size: 12px; line-height: 1.6; }
+#moment-status { margin-top: 18px; padding: 12px 14px; background: rgba(var(--accent-rgb), .08); border-radius: 10px; }
+#moment-status:empty { display: none; }
+.mom-dialog button, #moment-today button, .mom-history button { min-height: 44px; padding: 11px 14px; border-radius: var(--radius-control); border: 1px solid var(--border2); color: var(--text); background: var(--card); font-size: 14px; line-height: 1.4; font-weight: 500; cursor: pointer; transition: background .18s var(--ease), border-color .18s var(--ease); }
+.mom-dialog button:hover, #moment-today button:hover { border-color: var(--accent-text); }
+.mom-dialog button.mom-primary { background: var(--accent-solid); color: var(--on-accent); border-color: transparent; }
+.mom-dialog button:disabled { cursor: default; opacity: .65; }
+.mom-dialog :focus-visible, .mom-action-card:focus-visible, #moment-today button:focus-visible, .mom-history :focus-visible { outline: 2px solid var(--accent-text); outline-offset: 3px; }
+.mom-dialog fieldset { border: 0; min-width: 0; }
+.mom-dialog legend { font-size: 14px; font-weight: 500; margin-bottom: 10px; }
+.mom-segments { display: flex; gap: 8px; }
+.mom-segments button { flex: 1; }
+.mom-segments button[aria-pressed="true"] { background: rgba(var(--accent-rgb), .12); border-color: var(--accent-text); color: var(--accent-text); }
+.mom-list { display: grid; gap: 12px; }
+.mom-rescue-row { display: flex; align-items: center; gap: 14px; padding: 16px; background: var(--card); border: 1px solid var(--border2); border-radius: 12px; cursor: pointer; }
+.mom-rescue-row > span { min-width: 0; }
+.mom-rescue-row strong { display: block; font-size: 14px; font-weight: 500; line-height: 1.5; overflow-wrap: anywhere; }
+.mom-rescue-row small { display: block; margin-top: 4px; }
+.mom-dialog input[type="checkbox"] { appearance: auto; -webkit-appearance: auto; accent-color: var(--accent-solid); width: 22px; height: 22px; flex-shrink: 0; cursor: pointer; }
+.mom-field { display: grid; gap: 8px; font-size: 13px; color: var(--text2); min-width: 0; }
+.mom-field input, .mom-field textarea { width: 100%; min-width: 0; min-height: 46px; padding: 12px; color: var(--text); background: var(--bg); border: 1px solid var(--border2); border-radius: 10px; font-size: 16px; line-height: 1.5; }
+.mom-field textarea { resize: vertical; }
+.mom-field input::placeholder, .mom-field textarea::placeholder { color: var(--text4); }
+.mom-field input:disabled { color: var(--text3); }
+.mom-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.mom-actions > button { flex: 1 1 120px; }
+.mom-two { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.mom-capture-row { display: grid; gap: 14px; padding: 16px; background: var(--card); border: 1px solid var(--border2); border-radius: 14px; }
+.mom-check { display: flex; gap: 10px; align-items: center; min-height: 44px; font-size: 13px; cursor: pointer; }
+.mom-result { display: grid; gap: 16px; background: var(--card); border: 1px solid var(--border2); border-radius: 16px; padding: 20px; }
+.mom-result h3, .mom-memory h3 { font-size: 20px; font-weight: 500; letter-spacing: -.4px; line-height: 1.45; overflow-wrap: anywhere; }
+.mom-evidence { padding: 14px; background: var(--bg2); border-radius: 10px; min-width: 0; overflow-wrap: anywhere; }
+.mom-evidence strong { color: var(--text2); font-size: 13px; line-height: 1.5; font-weight: 500; }
+.mom-evidence p { margin-top: 8px; }
+.mom-memory { display: grid; gap: 12px; text-align: center; padding: 4px 8px 16px; }
+.mom-memory-avatar { width: 100px; height: 100px; object-fit: contain; margin: 0 auto; }
+.mom-success { text-align: center; padding: 24px 12px; }
+.mom-success img { display: block; width: 112px; height: 112px; object-fit: contain; margin: 0 auto 20px; }
+.mom-history { border-bottom: 1px solid var(--border2); margin: -12px 0 28px; }
+.mom-history summary { min-height: 44px; padding: 12px 0; color: var(--text2); cursor: pointer; font-size: 13px; }
+.mom-history button { display: flex; gap: 12px; align-items: center; width: 100%; margin-bottom: 8px; text-align: left; }
+.mom-history button > span:first-child { color: var(--text3); font-size: 12px; }
+.mom-history button strong { flex: 1; font-size: 13px; font-weight: 500; overflow-wrap: anywhere; }
+@keyframes mom-enter { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+@media (min-width: 700px) {
+  .mom-dialog { margin: auto; padding: 0 28px 28px; max-height: min(88%, 900px); }
+  .mom-dialog-head { padding-top: 24px; }
+  .mom-dialog-head h2 { font-size: 24px; }
+  .mom-launchpad { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .mom-launchpad .mom-action-card { align-items: flex-start; flex-wrap: wrap; }
+  .mom-launchpad .mom-action-card > span:nth-child(2) { flex-basis: calc(100% - 65px); }
+  .mom-launchpad .mom-action-card > span:last-child { display: none; }
+  .mom-progress-actions { grid-template-columns: 1fr 1fr; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mom-dialog[open] { animation: none; }
+  .mom-action-card, .mom-dialog button { transition: none; }
+}
