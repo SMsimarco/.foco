@@ -5138,3 +5138,117 @@ button:active:not(:disabled) { filter: brightness(.94); }
 .settings-language-options button { min-height: 48px; border: 1px solid var(--border2); border-radius: var(--radius-control); background: var(--bg2); color: var(--text); font-size: 14px; cursor: pointer; }
 .settings-language-options button:hover, .settings-language-options button.selected { border-color: var(--accent-text); background: rgba(var(--accent-rgb), .12); }
 .settings-language-options button.selected::after { content: '✓'; color: var(--accent-text); margin-left: 8px; }
+
+/* Sugerencias: una decisión visible primero, contexto de Foquito después. */
+#view-sugerencias { gap: 18px; }
+#view-sugerencias > * { max-width: 900px; }
+.sug-page-head .view-title { margin-bottom: 0; }
+.sug-page-head .sug-lead { margin: 7px 0 0; }
+.sug-primary-grid, .sug-tools-grid { display: grid; gap: 12px; min-width: 0; }
+.sug-primary-grid { grid-template-columns: minmax(0, 1.05fr) minmax(0, .95fr); align-items: stretch; }
+.sug-tools-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.sug-next-card {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 260px;
+  padding: 22px;
+  border: 1px solid rgba(var(--accent-rgb), .3);
+  border-radius: var(--radius-panel);
+  background: linear-gradient(145deg, rgba(var(--accent-rgb), .18), var(--surface) 72%);
+  box-shadow: var(--shadow-card);
+}
+.sug-next-eyebrow, .sug-card-eyebrow {
+  display: block;
+  color: var(--accent-text);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: .09em;
+  text-transform: uppercase;
+}
+.sug-next-card h2 { margin-top: 24px; color: var(--text); font-size: clamp(21px, 2.3vw, 27px); font-weight: 600; letter-spacing: -.035em; line-height: 1.18; overflow-wrap: anywhere; }
+.sug-next-card p { margin-top: 9px; color: var(--text2); font-size: 13px; line-height: 1.5; }
+.sug-next-bottom { display: flex; justify-content: space-between; align-items: end; gap: 12px; margin-top: auto; padding-top: 20px; }
+#sug-next-meta { color: var(--text2); font-size: 12px; font-variant-numeric: tabular-nums; }
+.sug-next-bottom button {
+  min-height: 44px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: var(--radius-control);
+  background: var(--accent-solid);
+  color: var(--on-accent);
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.sug-next-bottom button:hover { filter: brightness(1.1); }
+.sug-insight-card { min-height: 260px; padding: 20px; border-color: var(--border2); border-radius: var(--radius-panel); }
+.sug-insight-hd { align-items: flex-start; gap: 12px; margin-bottom: 14px; }
+.sug-insight-hd > div { min-width: 0; }
+.sug-insight-title { margin-top: 7px; font-size: 17px; font-weight: 600; letter-spacing: -.02em; overflow-wrap: anywhere; }
+.sug-insight-card > .sug-desc { color: var(--text2); font-size: 13px; line-height: 1.55; }
+.sug-insight-action { margin-top: auto; padding-top: 12px; }
+.sug-tools-grid .sug-card { min-width: 0; padding: 18px; border-left: 1px solid var(--border2); border-radius: var(--radius-card); }
+.sug-tools-grid .sug-card-eyebrow { margin-bottom: 13px; color: var(--text3); }
+.sug-tools-grid .sug-title { font-size: 15px; font-weight: 600; }
+.sug-tools-grid .sug-desc { font-size: 12px; }
+.sug-inline-btn { min-height: 44px; padding: 0 12px; background: var(--bg2); border-color: var(--border2); color: var(--text); font-size: 12px; }
+.sug-foquito-link { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 48px; padding: 0 16px; border: 1px solid var(--border2); border-radius: var(--radius-control); background: var(--surface); color: var(--text2); font-size: 12px; text-align: left; cursor: pointer; }
+.sug-foquito-link:hover { border-color: var(--accent-text); color: var(--text); }
+.sug-foquito-link span:last-child { color: var(--accent-text); font-size: 18px; }
+#sug-conflicts:empty { display: none; }
+#sug-conflicts { display: grid; gap: 10px; }
+.sug-card.conflict { border-color: rgba(244,63,94,.28); }
+.sug-card.conflict .sug-card-eyebrow { color: var(--danger-text); margin-bottom: 10px; }
+.sug-conflict-body { display: flex; align-items: center; justify-content: space-between; gap: 14px; }
+.sug-conflict-body > div { min-width: 0; }
+.sug-conflict-body .sug-title { overflow-wrap: anywhere; }
+@media (max-width: 760px) {
+  .sug-primary-grid, .sug-tools-grid { grid-template-columns: minmax(0, 1fr); }
+  .sug-next-card { min-height: 220px; padding: 20px; }
+  .sug-next-card h2 { margin-top: 18px; font-size: 23px; }
+  .sug-insight-card { min-height: 0; }
+  .sug-tools-grid .sug-card-top { align-items: flex-start; flex-direction: column; gap: 12px; }
+  .sug-tools-grid .sug-inline-btn { align-self: flex-start; }
+  .sug-conflict-body { align-items: flex-start; }
+}
+
+/* Progreso: primero lectura de la semana, luego tendencia e historial. */
+.tuana-overview { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, .85fr); gap: 12px; }
+.tuana-week-card { display: flex; flex-direction: column; min-width: 0; padding: 20px; border: 1px solid rgba(var(--accent-rgb), .28); border-radius: var(--radius-panel); background: linear-gradient(145deg, rgba(var(--accent-rgb), .15), var(--surface) 76%); box-shadow: var(--shadow-card); }
+.tuana-week-count { display: flex; align-items: baseline; gap: 9px; margin-top: 12px; }
+.tuana-week-count strong { color: var(--text); font-size: 40px; font-weight: 600; letter-spacing: -.055em; line-height: 1; font-variant-numeric: tabular-nums; }
+.tuana-week-count span { color: var(--text2); font-size: 13px; line-height: 1.4; }
+.tuana-week-track { height: 7px; overflow: hidden; border-radius: 99px; background: var(--border2); margin-top: 18px; }
+.tuana-week-track i { display: block; height: 100%; width: 0; border-radius: inherit; background: var(--accent-text); transition: width .3s var(--ease); }
+.tuana-week-card p { color: var(--text2); font-size: 12px; line-height: 1.45; margin-top: 10px; }
+.tuana-highlights { gap: 12px; }
+.tuana-hl { justify-content: center; gap: 8px; padding: 16px; border-color: var(--border2); border-radius: var(--radius-card); background: var(--surface); box-shadow: var(--shadow-card); }
+.tuana-hl-val { font-size: 27px; font-weight: 600; letter-spacing: -.04em; }
+.tuana-hl-lbl { text-transform: none; letter-spacing: 0; line-height: 1.3; }
+.tuana-card { padding: 20px; border-color: var(--border2); border-radius: var(--radius-panel); background: var(--surface); box-shadow: var(--shadow-card); }
+.tuana-card-help { color: var(--text2); font-size: 12px; line-height: 1.5; margin-top: -4px; }
+.tuana-chart { height: 110px; }
+.tuana-chart-wrap { margin-top: 10px; }
+.tuana-chart-big { font-size: 34px; font-weight: 600; letter-spacing: -.04em; }
+.tuana-chart-sub { font-size: 12px; color: var(--text2); }
+.tuana-period-toggle { flex-shrink: 0; border: 1px solid var(--border2); border-radius: var(--radius-control); }
+.tuana-period-btn { min-width: 44px; min-height: 44px; padding: 0 10px; font-size: 11px; }
+.tuana-period-btn.active { box-shadow: var(--shadow-card); }
+.tuana-chart-empty { display: grid; place-items: center; min-height: 110px; color: var(--text3); font-size: 12px; text-align: center; }
+.tuana-activity-card .tuana-heatmap-scroll { margin-top: 8px; }
+.tuana-activity-card .tuana-heatmap-legend { margin-top: 4px; }
+@media (min-width: 761px) {
+  .tuana-hm-grid { grid-template-rows: repeat(7, 20px); grid-auto-columns: 20px; gap: 4px; }
+  .tuana-hm-cell { width: 20px; height: 20px; border-radius: 4px; }
+}
+@media (max-width: 760px) {
+  .tuana-overview { grid-template-columns: 1fr; }
+  .tuana-week-card { padding: 18px; }
+  .tuana-hl { min-height: 100px; }
+  .tuana-card { padding: 16px; }
+  .tuana-card-top { align-items: stretch; flex-direction: column; gap: 12px; }
+  .tuana-card-top > div:first-child { min-width: 0; }
+  .tuana-period-toggle { align-self: flex-start; }
+}

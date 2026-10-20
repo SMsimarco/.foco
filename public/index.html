@@ -390,55 +390,68 @@
 
     <!-- SUGERENCIAS -->
     <div id="view-sugerencias" style="display:none">
-      <h1 class="view-title" data-i18n="navSugerencias">Sugerencias</h1>
-
-      <p class="sug-lead" data-i18n="sugLead">Elegí un paso para seguir avanzando.</p>
-
-      <div class="sug-section" data-i18n="sugInsight">Insight de tu semana</div>
-
-      <div class="sug-card sug-insight-card" id="sug-insight-card">
-        <div class="sug-insight-hd">
-          <img src="/foquito-avatar.png" alt="" class="foq-avatar-img foq-avatar-sm"/>
-          <div class="sug-insight-title" id="sug-insight-title" data-i18n="sugAnalizando">Analizando tu semana...</div>
-        </div>
-        <div class="sug-desc" id="sug-insight-text" role="status"></div>
-        <div class="sug-insight-action" id="sug-insight-action" style="display:none">
-          <span class="sug-insight-action-label" data-i18n="sugAction">Próximo paso</span>
-          <span id="sug-insight-tip"></span>
-        </div>
+      <div class="sug-page-head">
+        <h1 class="view-title" data-i18n="navSugerencias">Sugerencias</h1>
+        <p class="sug-lead" data-i18n="sugLead">Un paso claro para seguir hoy.</p>
       </div>
 
-      <div class="sug-section sug-section--cyan" data-i18n="sugHoy">Hoy</div>
-
-      <div class="sug-card sug-card--cyan" id="sug-estado-card">
-        <div class="sug-card-top">
-          <div>
-            <div class="sug-title" id="sug-estado-title" data-i18n="sugEstadoTitle">¿Cómo estás hoy?</div>
-            <div class="sug-desc" id="sug-estado-desc" data-i18n="sugEstadoDesc">30 segundos. Tres preguntas.</div>
+      <div class="sug-primary-grid">
+        <section class="sug-next-card" aria-labelledby="sug-next-heading">
+          <div class="sug-next-eyebrow" data-i18n="sugNextEyebrow">PARA EMPEZAR</div>
+          <h2 id="sug-next-heading" data-i18n="sugNextLoading">Buscando tu próximo paso...</h2>
+          <p id="sug-next-desc" data-i18n="sugNextLoadingDesc">Revisamos lo que tenés pendiente.</p>
+          <div class="sug-next-bottom">
+            <span id="sug-next-meta"></span>
+            <button type="button" id="sug-next-btn" onclick="openSuggestedNext()" data-i18n="sugViewDay">Ver día →</button>
           </div>
-          <button class="sug-inline-btn" id="sug-estado-btn" onclick="showEstadoDia()" data-i18n="registrar">Registrar →</button>
-        </div>
+        </section>
+
+        <section class="sug-card sug-insight-card" id="sug-insight-card" aria-labelledby="sug-insight-title">
+          <div class="sug-insight-hd">
+            <img src="/foquito-avatar.png" alt="" class="foq-avatar-img foq-avatar-sm"/>
+            <div>
+              <span class="sug-card-eyebrow" data-i18n="sugInsight">Insight de tu semana</span>
+              <h2 class="sug-insight-title" id="sug-insight-title" data-i18n="sugAnalizando">Analizando tu semana...</h2>
+            </div>
+          </div>
+          <div class="sug-desc" id="sug-insight-text" role="status"></div>
+          <div class="sug-insight-action" id="sug-insight-action" style="display:none">
+            <span class="sug-insight-action-label" data-i18n="sugAction">Próximo paso</span>
+            <span id="sug-insight-tip"></span>
+          </div>
+        </section>
       </div>
 
-      <!-- Conflictos -->
       <div id="sug-conflicts"></div>
 
-      <div class="sug-section sug-section--purple" data-i18n="sugCerrarSemana">Cerrar la semana</div>
-
-      <div class="sug-card sug-card--purple" id="sug-review">
-        <div class="sug-card-top">
-          <div>
-            <div class="sug-title" data-i18n="sugRevision">Revisión semanal</div>
-            <div class="sug-desc" id="sug-review-text" data-i18n="sugRevisionDesc">Cerrá la semana con una reflexión corta.</div>
+      <div class="sug-tools-grid">
+        <section class="sug-card sug-card--cyan" id="sug-estado-card">
+          <span class="sug-card-eyebrow" data-i18n="sugHoy">Hoy</span>
+          <div class="sug-card-top">
+            <div>
+              <h2 class="sug-title" id="sug-estado-title" data-i18n="sugEstadoTitle">¿Cómo estás hoy?</h2>
+              <div class="sug-desc" id="sug-estado-desc" data-i18n="sugEstadoDesc">30 segundos. Tres preguntas.</div>
+            </div>
+            <button class="sug-inline-btn" id="sug-estado-btn" onclick="showEstadoDia()" data-i18n="registrar">Registrar →</button>
           </div>
-          <button class="sug-inline-btn sug-inline-btn--purple" onclick="startWeeklyReview()" data-i18n="comenzar">Comenzar →</button>
-        </div>
+        </section>
+
+        <section class="sug-card sug-card--purple" id="sug-review">
+          <span class="sug-card-eyebrow" data-i18n="sugCerrarSemana">Cerrar la semana</span>
+          <div class="sug-card-top">
+            <div>
+              <h2 class="sug-title" data-i18n="sugRevision">Revisión semanal</h2>
+              <div class="sug-desc" id="sug-review-text" data-i18n="sugRevisionDesc">Cerrá la semana con una reflexión corta.</div>
+            </div>
+            <button class="sug-inline-btn sug-inline-btn--purple" onclick="startWeeklyReview()" data-i18n="comenzar">Comenzar →</button>
+          </div>
+        </section>
       </div>
 
-      <!-- Pie — reemplaza el input "Preguntale a tu semana": Foquito flotante
-           ya es el canal de chat, no hace falta un segundo input acá. -->
-      <div class="sug-foot-hint" data-i18n="sugFootHint">¿Reorganizar algo? Pedíselo a Foquito.</div>
-
+      <button type="button" class="sug-foquito-link" onclick="openFoquitoFromSuggestions()">
+        <span data-i18n="sugFootHint">¿Reorganizar algo? Pedíselo a Foquito.</span>
+        <span aria-hidden="true">→</span>
+      </button>
     </div>
   </div>
 

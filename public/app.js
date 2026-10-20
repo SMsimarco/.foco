@@ -146,7 +146,13 @@ const I18N_UI = {
     registrar: 'Registrar →', sugPulso: 'Pulso', sugEstaSemana: 'Esta semana',
     sugCompletadas: 'completadas esta semana', sugInsight: 'Insight de tu semana',
     sugAnalizando: 'Analizando tu semana...', sugCerrarSemana: 'Cerrar la semana',
-    sugLead: 'Elegí un paso para seguir avanzando.', sugAction: 'Próximo paso',
+    sugLead: 'Un paso claro para seguir hoy.', sugAction: 'Próximo paso',
+    sugNextEyebrow: 'Para empezar', sugNextLoading: 'Buscando tu próximo paso...', sugNextLoadingDesc: 'Revisamos lo que tenés pendiente.',
+    sugNextEmpty: 'Tu semana está al día', sugNextEmptyDesc: 'No hay actividades pendientes esta semana. Podés planificar algo nuevo con Foquito.',
+    sugNextTaskDesc: 'Una actividad pendiente de tu agenda.', sugViewDay: 'Ver día →', sugPlanWithFoquito: 'Planificar con Foquito →',
+    sugTodayLabel: 'Hoy', sugTomorrowLabel: 'Mañana', sugConflictLabel: 'Horarios superpuestos',
+    sugConflictBetween: '“{first}” y “{second}” se superponen.', sugConflictTime: '{day} · {first} y {second}',
+    sugEstadoSaved: 'Pulso registrado hoy.', sugEstadoReturn: 'Volvé mañana o editalo.', sugEdit: 'Editar →',
     sugOfflineTip: 'Mientras tanto, elegí una tarea pendiente para hoy.',
     sugRevision: 'Revisión semanal', sugRevisionDesc: 'Cerrá la semana con una reflexión corta.',
     comenzar: 'Comenzar →', sugFootHint: '¿Reorganizar algo? Pedíselo a Foquito.',
@@ -196,7 +202,13 @@ const I18N_UI = {
     progresoTitulo: 'Progreso', progresoLead: 'Tu recorrido a lo largo del tiempo.', actividadUltimos6Meses: 'Actividad — últimos 6 meses',
     menos: 'Menos', mas: 'Más', completadasLabel: 'completadas', rachaActual: 'racha actual',
     tendencia: 'Tendencia',
-    tendenciaEmpty: 'Tu tendencia de tareas aparece acá cuando tengas un par de semanas registradas. Seguí un poco más.',
+    tendenciaEmpty: 'Completá una actividad para empezar a ver tu tendencia.',
+    progresoSemanaLabel: 'Esta semana', progresoSemanaTotal: 'de {total} actividades completadas',
+    progresoSemanaEmpty: 'Todavía no hay actividades esta semana.', progresoSemanaStart: 'Elegí una actividad y empezá por ahí.',
+    progresoSemanaDone: 'Vas construyendo constancia, paso a paso.', progresoYearLabel: 'completadas en 12 meses',
+    progresoStreakLabel: 'racha de registros', progresoHeatmapHelp: 'Cada cuadro es un día. El color muestra cuántas actividades completaste.',
+    progresoTrendHelp: 'Compará cómo avanzás con el tiempo.', progresoTrendPeriod: 'Período de la tendencia',
+    progresoTrendNoPeriod: 'Sin actividades completadas en este período.', tareaSingular: 'tarea', tareaPlural: 'tareas',
     periodoSem: 'Sem', periodoMes: 'Mes', periodoAnio: 'Año',
     diaSingular: 'día', diaPlural: 'días',
     subEstaSemana: 'esta semana', subUltimoMes: 'último mes', subEsteAnio: 'este año',
@@ -244,7 +256,13 @@ const I18N_UI = {
     registrar: 'Log →', sugPulso: 'Pulse', sugEstaSemana: 'This week',
     sugCompletadas: 'completed this week', sugInsight: 'Insight of your week',
     sugAnalizando: 'Analyzing your week...', sugCerrarSemana: 'Close the week',
-    sugLead: 'Choose one step to keep moving forward.', sugAction: 'Next step',
+    sugLead: 'One clear step for today.', sugAction: 'Next step',
+    sugNextEyebrow: 'Start here', sugNextLoading: 'Finding your next step...', sugNextLoadingDesc: 'Checking your pending activities.',
+    sugNextEmpty: 'Your week is up to date', sugNextEmptyDesc: 'No activities are pending this week. You can plan something new with Foquito.',
+    sugNextTaskDesc: 'A pending activity from your schedule.', sugViewDay: 'View day →', sugPlanWithFoquito: 'Plan with Foquito →',
+    sugTodayLabel: 'Today', sugTomorrowLabel: 'Tomorrow', sugConflictLabel: 'Overlapping times',
+    sugConflictBetween: '“{first}” and “{second}” overlap.', sugConflictTime: '{day} · {first} and {second}',
+    sugEstadoSaved: 'Check-in saved today.', sugEstadoReturn: 'Come back tomorrow or edit it.', sugEdit: 'Edit →',
     sugOfflineTip: 'In the meantime, choose one pending task for today.',
     sugRevision: 'Weekly review', sugRevisionDesc: 'Close the week with a short reflection.',
     comenzar: 'Start →', sugFootHint: 'Want to reorganize something? Ask Foquito.',
@@ -294,7 +312,13 @@ const I18N_UI = {
     progresoTitulo: 'Progress', progresoLead: 'Your journey over time.', actividadUltimos6Meses: 'Activity — last 6 months',
     menos: 'Less', mas: 'More', completadasLabel: 'completed', rachaActual: 'current streak',
     tendencia: 'Trend',
-    tendenciaEmpty: 'Your task trend shows up here once you have a couple of weeks logged. Keep going.',
+    tendenciaEmpty: 'Complete an activity to start seeing your trend.',
+    progresoSemanaLabel: 'This week', progresoSemanaTotal: 'of {total} activities completed',
+    progresoSemanaEmpty: 'No activities are scheduled this week yet.', progresoSemanaStart: 'Choose one activity to get started.',
+    progresoSemanaDone: 'You are building consistency, one step at a time.', progresoYearLabel: 'completed in 12 months',
+    progresoStreakLabel: 'check-in streak', progresoHeatmapHelp: 'Each square is one day. Its color shows how many activities you completed.',
+    progresoTrendHelp: 'See how your progress changes over time.', progresoTrendPeriod: 'Trend period',
+    progresoTrendNoPeriod: 'No activities completed in this period.', tareaSingular: 'task', tareaPlural: 'tasks',
     periodoSem: 'Wk', periodoMes: 'Mo', periodoAnio: 'Yr',
     diaSingular: 'day', diaPlural: 'days',
     subEstaSemana: 'this week', subUltimoMes: 'last month', subEsteAnio: 'this year',
@@ -2676,9 +2700,62 @@ async function renderPatrones() {
 // ── RENDER SUGERENCIAS ──────────────────────────────────────
 
 async function renderSugerencias() {
+  renderSuggestedNext();
   renderConflicts();
   generateAISummary();
   updateEstadoCard();
+}
+
+let suggestedNextDate = null;
+function renderSuggestedNext() {
+  const title = document.getElementById('sug-next-heading');
+  const desc = document.getElementById('sug-next-desc');
+  const meta = document.getElementById('sug-next-meta');
+  const button = document.getElementById('sug-next-btn');
+  if (!title || !desc || !meta || !button) return;
+
+  const today = toISO(new Date());
+  const weekEnd = toISO(getWeekDates(0)[6]);
+  const upcoming = Object.entries(eventsCache)
+    .filter(([date]) => date >= today && date <= weekEnd)
+    .flatMap(([date, events]) => (events || []).filter(ev => !ev.done && !ev.is_focus).map(ev => ({ ...ev, date })))
+    .sort((a, b) => a.date.localeCompare(b.date) || (a.start_time || '').localeCompare(b.start_time || ''));
+  const next = upcoming[0];
+  suggestedNextDate = next?.date || null;
+  if (!next) {
+    title.textContent = t('sugNextEmpty');
+    desc.textContent = t('sugNextEmptyDesc');
+    meta.textContent = '';
+    button.textContent = t('sugPlanWithFoquito');
+    return;
+  }
+
+  title.textContent = next.title;
+  desc.textContent = t('sugNextTaskDesc');
+  const tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate() + 1);
+  const day = next.date === today ? t('sugTodayLabel')
+    : next.date === toISO(tomorrow) ? t('sugTomorrowLabel')
+    : DAYS_FULL[new Date(`${next.date}T12:00:00`).getDay()];
+  meta.textContent = next.start_time ? `${day} · ${next.start_time}` : day;
+  button.textContent = t('sugViewDay');
+}
+
+function openSuggestedNext() {
+  if (!suggestedNextDate) { openFoquitoForAdd(); return; }
+  diaActual = new Date(`${suggestedNextDate}T12:00:00`);
+  diaActual.setHours(0, 0, 0, 0);
+  setView('semana');
+}
+
+function openFoquitoFromSuggestions() {
+  if (!_foqOpen) toggleFoquitoWidget();
+  document.getElementById('foq-input')?.focus();
+}
+
+function openConflictDay(date) {
+  diaActual = new Date(`${date}T12:00:00`);
+  diaActual.setHours(0, 0, 0, 0);
+  setView('semana');
 }
 
 function renderConflicts() {
@@ -2698,18 +2775,13 @@ function renderConflicts() {
         if (other && ev.id < other.id) {
           const card = document.createElement('div');
           card.className = 'sug-card conflict';
+          const name = t('sugConflictBetween').replace('{first}', escH(ev.title)).replace('{second}', escH(other.title));
+          const time = t('sugConflictTime').replace('{day}', DAYS_FULL[d.getDay()])
+            .replace('{first}', `${ev.start_time}–${ev.end_time}`).replace('{second}', `${other.start_time}–${other.end_time}`);
           card.innerHTML = `
-            <div class="sug-tag">
-              <div class="sug-tag-dot" style="background:#F43F5E"></div>
-              <span style="color:#F43F5E">Conflicto detectado</span>
-            </div>
-            <div class="sug-title">"${ev.title}" choca con "${other.title}"</div>
-            <div class="sug-desc">
-              ${DAYS_FULL[d.getDay()]} — ${ev.start_time} a ${ev.end_time} y ${other.start_time} a ${other.end_time} se superponen.
-            </div>
-            <div class="sug-btns">
-              <button class="sug-btn sug-btn-secondary" onclick="this.closest('.sug-card').style.opacity='0.2'">Ignorar</button>
-            </div>
+            <span class="sug-card-eyebrow" data-i18n="sugConflictLabel">${t('sugConflictLabel')}</span>
+            <div class="sug-conflict-body"><div><div class="sug-title">${name}</div><div class="sug-desc">${time}</div></div>
+              <button type="button" class="sug-inline-btn" onclick="openConflictDay('${toISO(d)}')" data-i18n="sugViewDay">${t('sugViewDay')}</button></div>
           `;
           container.appendChild(card);
         }
@@ -5090,16 +5162,16 @@ async function updateEstadoCard(alreadyFilled) {
     alreadyFilled = data && data.length > 0;
     if (alreadyFilled && data[0].como_estas && titleEl) {
       titleEl.textContent = `"${data[0].como_estas.slice(0, 50)}"`;
-      if (descEl) descEl.textContent = 'Pulso registrado hoy.';
-      if (btnEl) btnEl.textContent = 'Editar →';
+      if (descEl) descEl.textContent = t('sugEstadoSaved');
+      if (btnEl) btnEl.textContent = t('sugEdit');
       return;
     }
   }
 
   if (alreadyFilled) {
-    if (titleEl) titleEl.textContent = 'Pulso registrado hoy.';
-    if (descEl) descEl.textContent = 'Volvé mañana o editalo.';
-    if (btnEl) btnEl.textContent = 'Editar →';
+    if (titleEl) titleEl.textContent = t('sugEstadoSaved');
+    if (descEl) descEl.textContent = t('sugEstadoReturn');
+    if (btnEl) btnEl.textContent = t('sugEdit');
   }
 }
 
@@ -5393,7 +5465,7 @@ function showChartTip(idx, leftPct) {
   if (!tip) return;
   const val = tuanaChartVals[idx] ?? 0;
   const lbl = tuanaChartLabels[idx] ?? '';
-  tip.innerHTML = `<span class="tip-lbl">${lbl}</span><span class="tip-val">${val} ${val === 1 ? 'tarea' : 'tareas'}</span>`;
+  tip.innerHTML = `<span class="tip-lbl">${lbl}</span><span class="tip-val">${val} ${t(val === 1 ? 'tareaSingular' : 'tareaPlural')}</span>`;
   const clamped = Math.min(Math.max(leftPct, 10), 85);
   tip.style.left = `${clamped}%`;
   tip.style.display = 'flex';
@@ -5410,9 +5482,11 @@ function hideChartTip() {
 
 function setTuanaChartPeriod(p) {
   tuanaChartPeriod = p;
-  document.querySelectorAll('.tuana-period-btn').forEach(b =>
-    b.classList.toggle('active', b.dataset.p === p)
-  );
+  document.querySelectorAll('.tuana-period-btn').forEach(b => {
+    const selected = b.dataset.p === p;
+    b.classList.toggle('active', selected);
+    b.setAttribute('aria-pressed', String(selected));
+  });
   renderTuanaChart();
 }
 
@@ -5421,6 +5495,7 @@ function renderTuanaChart() {
   const labelsEl = document.getElementById('tu-chart-labels');
   const bigEl    = document.getElementById('tu-chart-big');
   const subEl    = document.getElementById('tu-chart-sub');
+  const emptyEl  = document.getElementById('tu-chart-empty');
   if (!chartEl) return;
 
   const done = tuanaEventsCache.filter(e => e.done);
@@ -5491,32 +5566,31 @@ function renderTuanaChart() {
 
   if (!vals.some(v => v > 0)) {
     chartEl.innerHTML = '';
+    chartEl.setAttribute('hidden', '');
     if (labelsEl) labelsEl.innerHTML = '';
+    if (emptyEl) emptyEl.hidden = false;
     return;
   }
+  chartEl.removeAttribute('hidden');
+  if (emptyEl) emptyEl.hidden = true;
 
   const line = curvePath(pts);
   const area = `${line} L${pts[pts.length-1].x.toFixed(1)},${floorY} L${pts[0].x.toFixed(1)},${floorY} Z`;
 
   const dots = pts.map((pt, i) => vals[i] > 0
-    ? `<circle cx="${pt.x.toFixed(1)}" cy="${pt.y.toFixed(1)}" r="2.5" fill="#818CF8"/>`
+    ? `<circle cx="${pt.x.toFixed(1)}" cy="${pt.y.toFixed(1)}" r="3" fill="var(--accent-text)"/>`
     : ''
   ).join('');
 
   chartEl.innerHTML = `
     <defs>
       <linearGradient id="ag" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0%"   stop-color="#818CF8" stop-opacity="0.3"/>
-        <stop offset="100%" stop-color="#818CF8" stop-opacity="0"/>
+        <stop offset="0%" style="stop-color:var(--accent)" stop-opacity="0.24"/>
+        <stop offset="100%" style="stop-color:var(--accent)" stop-opacity="0"/>
       </linearGradient>
-      <filter id="lg" x="-5%" y="-80%" width="110%" height="260%">
-        <feGaussianBlur stdDeviation="2" result="b"/>
-        <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
-      </filter>
     </defs>
     <path d="${area}" fill="url(#ag)"/>
-    <path d="${line}" fill="none" stroke="#4338CA" stroke-width="5" stroke-opacity="0.22" stroke-linejoin="round" stroke-linecap="round"/>
-    <path d="${line}" fill="none" stroke="#C7D2FE" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round" filter="url(#lg)"/>
+    <path d="${line}" fill="none" stroke="var(--accent-text)" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
     ${dots}
   `;
 
@@ -5562,17 +5636,39 @@ async function renderEquipo() {
   wrap.innerHTML = `
     <div class="tuana-wrap">
       <div class="tuana-header">
-        <div class="tuana-title">${t('progresoTitulo')}</div>
-        <p class="tuana-lead">${t('progresoLead')}</p>
+        <h1 class="tuana-title" data-i18n="progresoTitulo">${t('progresoTitulo')}</h1>
+        <p class="tuana-lead" data-i18n="progresoLead">${t('progresoLead')}</p>
       </div>
 
-      <div class="tuana-card">
-        <div class="tuana-section-label">${t('actividadUltimos6Meses')}</div>
+      <div class="tuana-overview">
+        <section class="tuana-week-card" aria-labelledby="tu-week-label">
+          <div class="tuana-section-label" id="tu-week-label" data-i18n="progresoSemanaLabel">${t('progresoSemanaLabel')}</div>
+          <div class="tuana-week-count"><strong id="tu-week-done">—</strong><span id="tu-week-total"></span></div>
+          <div class="tuana-week-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" data-i18n-aria="progresoSemanaLabel"><i id="tu-week-fill"></i></div>
+          <p id="tu-week-caption" data-i18n="progresoSemanaStart">${t('progresoSemanaStart')}</p>
+        </section>
+        <div class="tuana-highlights">
+          <div class="tuana-hl">
+            <div class="tuana-hl-val" id="tu-total-done">—</div>
+            <div class="tuana-hl-lbl" data-i18n="progresoYearLabel">${t('progresoYearLabel')}</div>
+          </div>
+          <div class="tuana-hl">
+            <div class="tuana-hl-val" id="tu-racha">—</div>
+            <div class="tuana-hl-lbl" data-i18n="progresoStreakLabel">${t('progresoStreakLabel')}</div>
+          </div>
+        </div>
+      </div>
+
+      <div id="tu-tendencia-card"></div>
+
+      <section class="tuana-card tuana-activity-card">
+        <div class="tuana-section-label" data-i18n="actividadUltimos6Meses">${t('actividadUltimos6Meses')}</div>
+        <p class="tuana-card-help" data-i18n="progresoHeatmapHelp">${t('progresoHeatmapHelp')}</p>
         <div class="tuana-heatmap-scroll">
           <div class="tuana-hm-grid" id="tu-heatmap"></div>
         </div>
         <div class="tuana-heatmap-legend">
-          <span>${t('menos')}</span>
+          <span data-i18n="menos">${t('menos')}</span>
           <div class="tuana-legend-dots">
             <div class="tuana-legend-dot" style="background:${heatmapColors()[0]}"></div>
             <div class="tuana-legend-dot" style="background:${heatmapColors()[1]}"></div>
@@ -5580,22 +5676,9 @@ async function renderEquipo() {
             <div class="tuana-legend-dot" style="background:${heatmapColors()[3]}"></div>
             <div class="tuana-legend-dot" style="background:${heatmapColors()[4]}"></div>
           </div>
-          <span>${t('mas')}</span>
+          <span data-i18n="mas">${t('mas')}</span>
         </div>
-      </div>
-
-      <div class="tuana-highlights">
-        <div class="tuana-hl">
-          <div class="tuana-hl-val" id="tu-total-done">—</div>
-          <div class="tuana-hl-lbl">${t('completadasLabel')}</div>
-        </div>
-        <div class="tuana-hl">
-          <div class="tuana-hl-val" id="tu-racha">—</div>
-          <div class="tuana-hl-lbl">${t('rachaActual')}</div>
-        </div>
-      </div>
-
-      <div id="tu-tendencia-card"></div>
+      </section>
     </div>
   `;
 
@@ -5609,7 +5692,21 @@ async function renderEquipo() {
 
   const events     = evRes.data      || [];
   const streakData = streakRes.data  || [];
-  tuanaEventsCache = events;
+  const todayISO = toISO(new Date());
+  tuanaEventsCache = events.filter(e => e.date <= todayISO);
+
+  const week = getWeekDates(0);
+  const weekEvents = events.filter(e => e.date >= toISO(week[0]) && e.date <= toISO(week[6]));
+  const weekDone = weekEvents.filter(e => e.done).length;
+  document.getElementById('tu-week-done').textContent = weekDone;
+  document.getElementById('tu-week-total').textContent = t('progresoSemanaTotal').replace('{total}', weekEvents.length);
+  const weekPct = weekEvents.length ? Math.round(weekDone / weekEvents.length * 100) : 0;
+  document.getElementById('tu-week-fill').style.width = `${weekPct}%`;
+  document.querySelector('.tuana-week-track').setAttribute('aria-valuenow', weekPct);
+  const weekCaption = document.getElementById('tu-week-caption');
+  const weekCaptionKey = !weekEvents.length ? 'progresoSemanaEmpty' : weekDone ? 'progresoSemanaDone' : 'progresoSemanaStart';
+  weekCaption.dataset.i18n = weekCaptionKey;
+  weekCaption.textContent = t(weekCaptionKey);
 
   // ── Heatmap ──────────────────────────────────────────────────
   const doneByDate = {};
@@ -5651,7 +5748,7 @@ async function renderEquipo() {
   // aparecían siempre vacías: no era falta de datos, el código ni llegaba
   // a ejecutarse. Sacar esta métrica de paso arregla el crash.
   const elDone = document.getElementById('tu-total-done');
-  if (elDone) elDone.textContent = events.filter(e => e.done).length;
+  if (elDone) elDone.textContent = tuanaEventsCache.filter(e => e.done).length;
 
   const elRacha = document.getElementById('tu-racha');
   let streak = 0;
@@ -5665,59 +5762,58 @@ async function renderEquipo() {
   }
 
   // ── Tendencia ────────────────────────────────────────────────
-  // Antes el gráfico quedaba en blanco sin avisar si no había completadas
-  // en el período. Ahora, si el usuario tiene poco recorrido en general
-  // (menos de ~2 semanas de días con algo completado), se muestra un
-  // estado vacío explícito en vez del gráfico — no hace falta ni mostrar
-  // el selector Sem/Mes/Año si no hay con qué compararlo todavía.
-  const diasConCompletadas = new Set(events.filter(e => e.done).map(e => e.date)).size;
-  renderTendenciaCard(diasConCompletadas >= 14);
+  // Una sola actividad completada alcanza para abrir el gráfico. Si todavía
+  // no hay ninguna, mostramos una explicación en vez de un SVG vacío.
+  const diasConCompletadas = new Set(tuanaEventsCache.filter(e => e.done).map(e => e.date)).size;
+  renderTendenciaCard(diasConCompletadas > 0);
 }
 
-// Card "Tendencia" — gráfico real si hay suficiente recorrido, si no un
-// estado vacío sobrio (nunca un SVG en blanco sin explicación).
+// Card "Tendencia" — gráfico real si hay completadas, estado vacío si no.
 function renderTendenciaCard(hayDatos) {
   const el = document.getElementById('tu-tendencia-card');
   if (!el) return;
 
   if (!hayDatos) {
     el.innerHTML = `
-      <div class="tuana-card">
-        <div class="tuana-section-label">${t('tendencia')}</div>
+      <section class="tuana-card tuana-trend-card">
+        <div class="tuana-section-label" data-i18n="tendencia">${t('tendencia')}</div>
+        <p class="tuana-card-help" data-i18n="progresoTrendHelp">${t('progresoTrendHelp')}</p>
         <div class="tuana-empty-state">
           <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
             <polyline points="4,30 14,20 20,25 36,8" stroke="var(--text3)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
             <circle cx="36" cy="8" r="2.5" fill="var(--text3)"/>
           </svg>
-          <div class="tuana-empty">${t('tendenciaEmpty')}</div>
+          <div class="tuana-empty" data-i18n="tendenciaEmpty">${t('tendenciaEmpty')}</div>
         </div>
-      </div>
+      </section>
     `;
     return;
   }
 
   el.innerHTML = `
-    <div class="tuana-card">
+    <section class="tuana-card tuana-trend-card">
       <div class="tuana-card-top">
         <div>
-          <div class="tuana-section-label">${t('tendencia')}</div>
+          <div class="tuana-section-label" data-i18n="tendencia">${t('tendencia')}</div>
+          <p class="tuana-card-help" data-i18n="progresoTrendHelp">${t('progresoTrendHelp')}</p>
           <div class="tuana-chart-stat">
             <span class="tuana-chart-big" id="tu-chart-big">—</span>
             <span class="tuana-chart-sub" id="tu-chart-sub"></span>
           </div>
         </div>
-        <div class="tuana-period-toggle">
-          <button class="tuana-period-btn${tuanaChartPeriod==='semana'?' active':''}" data-p="semana" onclick="setTuanaChartPeriod('semana')">${t('periodoSem')}</button>
-          <button class="tuana-period-btn${tuanaChartPeriod==='mes'?' active':''}" data-p="mes" onclick="setTuanaChartPeriod('mes')">${t('periodoMes')}</button>
-          <button class="tuana-period-btn${tuanaChartPeriod==='año'?' active':''}" data-p="año" onclick="setTuanaChartPeriod('año')">${t('periodoAnio')}</button>
+        <div class="tuana-period-toggle" role="group" aria-label="${t('progresoTrendPeriod')}" data-i18n-aria="progresoTrendPeriod">
+          <button class="tuana-period-btn${tuanaChartPeriod==='semana'?' active':''}" data-p="semana" aria-pressed="${tuanaChartPeriod==='semana'}" onclick="setTuanaChartPeriod('semana')" data-i18n="periodoSem">${t('periodoSem')}</button>
+          <button class="tuana-period-btn${tuanaChartPeriod==='mes'?' active':''}" data-p="mes" aria-pressed="${tuanaChartPeriod==='mes'}" onclick="setTuanaChartPeriod('mes')" data-i18n="periodoMes">${t('periodoMes')}</button>
+          <button class="tuana-period-btn${tuanaChartPeriod==='año'?' active':''}" data-p="año" aria-pressed="${tuanaChartPeriod==='año'}" onclick="setTuanaChartPeriod('año')" data-i18n="periodoAnio">${t('periodoAnio')}</button>
         </div>
       </div>
       <div class="tuana-chart-wrap">
         <div class="tuana-chart-tip" id="tu-chart-tip"></div>
+        <div class="tuana-chart-empty" id="tu-chart-empty" data-i18n="progresoTrendNoPeriod" hidden>${t('progresoTrendNoPeriod')}</div>
         <svg class="tuana-chart" id="tu-chart" viewBox="0 0 300 72" preserveAspectRatio="none"></svg>
       </div>
       <div class="tuana-chart-labels" id="tu-chart-labels"></div>
-    </div>
+    </section>
   `;
   renderTuanaChart();
 }
