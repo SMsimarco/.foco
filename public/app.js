@@ -1189,22 +1189,39 @@ async function toggleDone(id, dateISO) {
   if (newDone) {
     const dayEvs = eventsCache[dateISO] || [];
     const diaCompleto = dayEvs.length > 0 && dayEvs.every(e => e.done);
+    const reaction = foquitoCompletionState(ev);
     if (diaCompleto) {
       setTimeout(fireConfetti, 120);
       showToast('¡Día completado!', 'success');
       if (_foqCelebratedDate !== dateISO) {
         _foqCelebratedDate = dateISO;
-        setFoquitoState('celebrating');
         addFoqBubble(pickFoquitoCelebration(), 'foq');
-        setTimeout(() => setFoquitoState(null), 4000);
+        // La última actividad conserva su gesto propio antes del festejo.
+        if (reaction !== 'approving') {
+          showTimedFoquitoState(reaction, 1800);
+          setTimeout(() => {
+            if (_foqCurrentState === reaction) showTimedFoquitoState('celebrating', 3000);
+          }, 1400);
+        } else {
+          showTimedFoquitoState('celebrating', 4000);
+        }
+      } else {
+        showTimedFoquitoState(reaction, 1800);
       }
     } else {
-      // Completar UNA tarea (no el día entero, ese caso ya lo maneja
-      // "celebrating" arriba) — gesto corto de aprobación, sin bubble.
-      setFoquitoState('approving');
-      setTimeout(() => setFoquitoState(null), 1500);
+      showTimedFoquitoState(reaction, 1800);
     }
   }
+}
+
+// Reacción de presentación según la actividad completada. El área es la
+// señal principal; el título cubre actividades creadas sin área por Foquito.
+function foquitoCompletionState(ev) {
+  const title = (ev.title || '').toLocaleLowerCase();
+  if (/dorm|sleep|siesta|nap\b|descans|bedtime/.test(title)) return 'sleepy';
+  if (/leer|lectura|read\b|estudi|study|learn|aprend/.test(title)) return 'reading';
+  if (/entren|ejerc|gym|gimnas|correr|run\b|caminar|walk\b|yoga/.test(title)) return 'happy';
+  return ({ descanso: 'sleepy', aprendizaje: 'reading', salud: 'happy', relaciones: 'love' })[ev.area] || 'approving';
 }
 
 function pickFoquitoCelebration() {
@@ -2827,11 +2844,20 @@ const FOQ_STATE_IMAGES = {
   approving: '/foquito-approving.png'
 };
 const FOQ_STATES = Object.keys(FOQ_STATE_IMAGES);
+let _foqCurrentState = null;
+let _foqStateTimer = null;
+
+function showTimedFoquitoState(state, duration) {
+  setFoquitoState(state);
+  _foqStateTimer = setTimeout(() => setFoquitoState(null), duration);
+}
 
 // Actualiza TODOS los avatares visibles de Foquito, no solo el FAB — en
 // desktop (>=1024px) el FAB queda display:none (ver style.css) y el que
 // se ve es el ícono del header de #foq-panel, siempre abierto ahí.
 function setFoquitoState(state) {
+  if (_foqStateTimer) { clearTimeout(_foqStateTimer); _foqStateTimer = null; }
+  _foqCurrentState = state;
   const fabImg = document.querySelector('#foq-fab .foq-avatar-img');
   const panelImg = document.getElementById('foq-panel-avatar');
   const src = (state && FOQ_STATE_IMAGES[state]) || '/foquito-avatar.png';
@@ -2955,8 +2981,7 @@ function showFoquitoGreeting() {
   addFoqBubble(getFoquitoGreeting(), 'foq');
   const hour = new Date().getHours();
   if (hour >= 23 || hour < 6) {
-    setFoquitoState('sleepy');
-    setTimeout(() => setFoquitoState(null), 4000);
+    showTimedFoquitoState('sleepy', 4000);
   }
 }
 
@@ -4843,8 +4868,7 @@ Respondé SOLO con JSON válido sin markdown:
 
   // Cerrar la reflexión semanal es un momento más íntimo que completar
   // una tarea suelta — gesto de cariño en vez de aprobación genérica.
-  setFoquitoState('love');
-  setTimeout(() => setFoquitoState(null), 4000);
+  showTimedFoquitoState('love', 4000);
 }
 
 function closeReview() {
