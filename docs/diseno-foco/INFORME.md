@@ -47,3 +47,9 @@ Las columnas de Semana son estrechas en el celular: muestran hasta tres líneas 
 - Íconos PWA, Apple y favicon/ícono anclado usan PNG/ICO con alfa real; el favicon usa un recorte del rostro para ser legible pequeño. El service worker precarga las poses y subió a `foco-v64` para descartar íconos anteriores.
 
 Capturas de la app con pose de descanso: [390 oscuro](foquito-390-dark.png) · [390 claro](foquito-390-light.png) · [1280 oscuro](foquito-1280-dark.png) · [1280 claro](foquito-1280-light.png). Playwright usó un cliente Supabase simulado en memoria y verificó que completar “Dormir” muestra `foquito-sleepy.png` en el FAB y el panel. Los ocho PNG se revisaron sobre ambos fondos; `node --check`, alfa y tamaños de íconos, manifest y respuestas HTTP locales pasaron. La instalación/anclado del ícono en iOS/Windows todavía requiere comprobación en esos sistemas: pueden conservar el ícono anterior hasta volver a anclar la app.
+
+## Movimiento por estado
+
+Foquito ahora hace un gesto propio al entrar en cada estado: asentir al aprobar, saltar de alegría, festejar con un pequeño impulso, acercar el corazón, inclinarse al pensar, bajar la mirada al leer y cabecear suavemente al descansar. Son transformaciones de la imagen completa, duran entre 280 y 300 ms y no se repiten en bucle. La reacción grande de escritorio usa el mismo gesto; repetir una misma reacción vuelve a animarla. Con `prefers-reduced-motion: reduce` queda la pose estática.
+
+Playwright comprobó las siete animaciones, su duración, la repetición, el movimiento reducido, ausencia de desborde y posición estable del botón “Agregar” a 390 y 1280 px en claro y oscuro. Fotogramas de inspección: [celular en movimiento](motion-390-dark-peak.png) y [en reposo](motion-390-dark-settled.png); [escritorio en movimiento](motion-1280-light-peak.png) y [en reposo](motion-1280-light-settled.png). La animación completa se aprecia en la app, porque una captura fija sólo conserva un fotograma.
