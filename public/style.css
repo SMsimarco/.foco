@@ -1530,31 +1530,46 @@ html, body {
   flex-shrink: 0;
 }
 
-/* Estados de Foquito — cada uno cambia el PNG (ver FOQ_STATE_IMAGES en
-   app.js) y además un gesto simple sobre esa imagen. Clases van directo
-   en el <img> (setFoquitoState) para que funcionen igual en el FAB
-   (mobile) y en el header de #foq-panel (desktop, FAB queda oculto). */
-.foq-avatar-img.state-happy,
-.foq-avatar-img.state-celebrating,
-.foq-avatar-img.state-approving,
-.foq-avatar-img.state-love { animation: foqBounce .3s var(--ease); }
-.foq-avatar-img.state-thinking,
-.foq-avatar-img.state-reading { animation: foqPulse .3s var(--ease); }
-.foq-avatar-img.state-sleepy { animation: foqSleepy .3s var(--ease); }
+/* Cada pose comunica un estado con un gesto corto, sin mover el layout.
+   Se aplica al FAB móvil, al avatar del panel y a la reacción de escritorio. */
+.foq-avatar-img[class*="state-"] { transform-origin: 50% 80%; }
+.foq-avatar-img.state-approving   { animation: foqApprove .28s var(--ease); }
+.foq-avatar-img.state-happy       { animation: foqHappy .28s var(--ease); }
+.foq-avatar-img.state-celebrating { animation: foqCelebrate .3s var(--ease); }
+.foq-avatar-img.state-love        { animation: foqLove .3s var(--ease); }
+.foq-avatar-img.state-thinking    { animation: foqThink .28s var(--ease); }
+.foq-avatar-img.state-reading     { animation: foqRead .28s var(--ease); }
+.foq-avatar-img.state-sleepy      { animation: foqRest .3s var(--ease); }
 
-@keyframes foqBounce {
+@keyframes foqApprove {
+  0%, 100% { transform: rotate(0); }
+  45% { transform: rotate(-7deg) translateY(-2px); }
+}
+@keyframes foqHappy {
+  0%, 100% { transform: translateY(0) scale(1); }
+  45% { transform: translateY(-7px) scale(1.04); }
+}
+@keyframes foqCelebrate {
+  0% { transform: translateY(4px) scale(.88) rotate(-5deg); }
+  55% { transform: translateY(-6px) scale(1.1) rotate(4deg); }
+  100% { transform: translateY(0) scale(1) rotate(0); }
+}
+@keyframes foqLove {
   0%, 100% { transform: scale(1); }
-  40% { transform: scale(1.18); }
+  50% { transform: scale(1.09); }
 }
-
-@keyframes foqPulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.55; }
+@keyframes foqThink {
+  0%, 100% { transform: rotate(0); }
+  40% { transform: rotate(-7deg); }
+  70% { transform: rotate(3deg); }
 }
-
-@keyframes foqSleepy {
-  0%, 100% { opacity: 1; transform: translateY(0); }
-  50% { opacity: 0.7; transform: translateY(2px); }
+@keyframes foqRead {
+  0%, 100% { transform: translateY(0) rotate(0); }
+  45% { transform: translateY(2px) rotate(-3deg); }
+}
+@keyframes foqRest {
+  0%, 100% { transform: translateY(0) rotate(0); }
+  50% { transform: translateY(3px) rotate(-4deg); }
 }
 
 #foq-panel {
@@ -4958,7 +4973,6 @@ input:focus-visible, textarea:focus-visible, select:focus-visible {
 button { transition-timing-function: var(--ease); }
 button:active:not(:disabled) { filter: brightness(.94); }
 .foq-avatar-img, .boot-logo { animation: none; }
-.foq-avatar-img.state-reading, .foq-avatar-img.state-sleepy { animation-iteration-count: 1; }
 .foq-mic-btn.recording { animation: none; box-shadow: 0 0 0 3px rgba(var(--accent-rgb), .2); }
 .foq-input-bar:focus-within { border-top-color: var(--accent-text); }
 #toast-container { top: calc(64px + env(safe-area-inset-top, 0px)); max-width: calc(100vw - 24px); }

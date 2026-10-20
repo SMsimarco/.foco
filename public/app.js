@@ -2860,25 +2860,26 @@ function setFoquitoState(state) {
   _foqCurrentState = state;
   const fabImg = document.querySelector('#foq-fab .foq-avatar-img');
   const panelImg = document.getElementById('foq-panel-avatar');
+  const reactionImg = document.getElementById('foq-reaction-img');
   const src = (state && FOQ_STATE_IMAGES[state]) || '/foquito-avatar.png';
 
-  [fabImg, panelImg].forEach(img => {
+  [fabImg, panelImg, reactionImg].forEach(img => {
     if (!img) return;
+    const replay = state && img.classList.contains('state-' + state);
     img.classList.remove(...FOQ_STATES.map(s => 'state-' + s));
+    // Completar dos actividades iguales también debe repetir el gesto.
+    if (replay) void img.offsetWidth;
     if (state) img.classList.add('state-' + state);
     if (img.src.endsWith(src)) return;
     img.onerror = () => { img.onerror = null; img.src = '/foquito-avatar.png'; };
     img.src = src;
   });
 
-  // Burbuja grande arriba a la derecha — la reacción que de verdad se ve
-  // (el icono del header/FAB es chico y pasa desapercibido).
+  // La reacción grande se muestra junto al chat en escritorio; en celular
+  // el estado animado se ve en el FAB sin cubrir la agenda.
   const reaction = document.getElementById('foq-reaction');
-  const reactionImg = document.getElementById('foq-reaction-img');
   if (reaction && reactionImg) {
     if (state) {
-      reactionImg.onerror = () => { reactionImg.onerror = null; reactionImg.src = '/foquito-avatar.png'; };
-      reactionImg.src = src;
       reaction.classList.add('show');
     } else {
       reaction.classList.remove('show');
